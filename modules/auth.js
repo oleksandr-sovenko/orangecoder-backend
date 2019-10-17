@@ -1,5 +1,5 @@
-const   md5 = require('md5'),
-        fs = require('fs');
+const md5 = require('md5'),
+      fs = require('fs');
  
 async function routes(fastify, options) {
 
