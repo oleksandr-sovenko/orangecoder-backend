@@ -1,0 +1,1 @@
+[{"id":"38c1ba48-12bc-452a-b006-572a70d97c9c","name":"asdasdasdasdasdasd","device":"ds18b20","pins":{"out":"1"}},{"id":"86421ee8-21f4-4edd-b9a5-c7b4194ca8fc","name":"asdasdasdasd","device":"hc-sr04","pins":{"echo":"1","trig":"1"}}]
