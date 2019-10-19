@@ -17,7 +17,7 @@
     "uuid4": "^1.1.4"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nodejs app.js"
   },
   "author": "",
   "license": "ISC"

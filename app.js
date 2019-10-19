@@ -1,3 +1,20 @@
+// app.js
+// Copyright (C) 2019 Oleksandr Sovenko (info@oleksandrsovenko.com)
+// 
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 global.sessions = [];
 global.clients = {};
 
@@ -12,13 +29,10 @@ fastify.register(require('./modules/auth'))
 fastify.register(require('./modules/gpio'))
 fastify.register(require('./modules/gpio-devices'))
 
-fastify.listen(3000, '0.0.0.0', function(err, address) {
-	// if (err) {
-	// 	fastify.log.error(err)
-	// 	process.exit(1)
-	// }
-})
+fastify.listen(3000, '0.0.0.0');
 
+/**
+ */
 setInterval(function() {
 	var length = Object.keys(global.clients).length;
 
@@ -47,7 +61,8 @@ setInterval(function() {
 	}
 }, 3000);
 
-
+/** fastify.ready
+ */
 fastify.ready(function(err) {
  	fastify.ws.on('connection', function(socket) {
  		var id = Math.random()
@@ -64,18 +79,15 @@ fastify.ready(function(err) {
     });
 })
 
-/* =====================================
-	get_unix_timestamp()
-===================================== */
-
+/** get_unix_timestamp
+ */
 global.get_unix_timestamp = function() {
 	return Math.round(new Date().getTime() / 1000);
 }
 
-/* =====================================
-	is_authorized(request)
-===================================== */
-
+/** is_authorized
+ * @param request
+ */
 global.is_authorized = function(request) {
 	const timestamp = global.get_unix_timestamp();
 
@@ -88,10 +100,9 @@ global.is_authorized = function(request) {
 	}
 }
 
-/* =====================================
-	get_cpu_info(callback)
-===================================== */
-
+/** get_cpu_info
+ * @param callback
+ */
 global.get_cpu_info = function(callback) { 
     var cpus = os.cpus();
 	
@@ -125,10 +136,9 @@ global.get_cpu_info = function(callback) {
     };
 }
 
-/* =====================================
-	get_cpu_usage(callback)
-===================================== */
-
+/** get_cpu_usage
+ * @param callback
+ */
 global.get_cpu_usage = function(callback) { 
 	var result = [];
 
@@ -158,8 +168,18 @@ global.get_cpu_usage = function(callback) {
     }, 1000);
 }
 
+/** helper_pin_event_change
+ * @param pin
+ */
+global.helper_pin_event_change = function(pin) {
+	const { spawn } = require('child_process');
+	const child = spawn('./helpers/pin-event-change', ['output', pin, 100]);
 
+	child.stderr.on('data', (chunk) => {
+    	console.log(chunk.toString().trim());
+	});
 
-
-
+	// child.on('close', (_code, _signal) => {
+	// });
+};
 
