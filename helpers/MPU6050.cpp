@@ -2972,7 +2972,7 @@ bool MPU6050::writeMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t b
     setMemoryBank(bank);
     setMemoryStartAddress(address);
     uint8_t chunkSize;
-    uint8_t *verifyBuffer;
+    uint8_t *verifyBuffer = NULL;
     uint8_t *progBuffer = NULL; // Keep compiler quiet
     uint16_t i;
     uint8_t j;

@@ -18,7 +18,7 @@
 all: pin-event-change
 
 clean:
-	rm -f pin-event-change
+	rm -f pin-event-change test-mpu6050
 
 pin-event-change:
 	gcc -Wall -o pin-event-change pin-event-change.c -lwiringPi -lpthread
