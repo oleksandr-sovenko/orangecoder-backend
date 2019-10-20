@@ -22,3 +22,6 @@ clean:
 
 pin-event-change:
 	gcc -Wall -o pin-event-change pin-event-change.c -lwiringPi -lpthread
+
+test-mpu6050:
+	g++ -DDMP_FIFO_RATE=9 -Wall -g -O2 test-mpu6050.c MPU6050.cpp I2Cdev.cpp -o test-mpu6050 -lwiringPi -lpthread -lm
