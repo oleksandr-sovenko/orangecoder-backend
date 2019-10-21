@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-all: pin-event-change
+all: pin-event-change test-mpu6050
 
 clean:
 	rm -f pin-event-change test-mpu6050
