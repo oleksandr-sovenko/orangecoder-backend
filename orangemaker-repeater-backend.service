@@ -7,7 +7,7 @@ Type=simple
 Restart=always
 RestartSec=1
 User=root
-ExecStart=sh /opt/orangemaker-repeater-backend/app.sh
+ExecStart=/opt/orangemaker-repeater-backend/app.sh
  
 [Install]
 WantedBy=multi-user.target

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /opt/root/orangemaker-repeater-backend
+cd /opt/orangemaker-repeater-backend
 
 cd helpers
 make clean
