@@ -20,7 +20,58 @@ global.clients = {};
 
 const os = require('os');
 const fs = require('fs');
+const path = require('path');
 const fastify = require('fastify')({ logger: false })
+
+/** get_cpu_usage
+ * @param callback
+ */
+global.get_cpu_usage = function(callback) { 
+	var result = [];
+
+    var stats = global.get_cpu_info();
+    var startIdle = stats.idle;
+    var startTotal = stats.total;
+
+    setTimeout(function() {
+        var stats = global.get_cpu_info();
+        var endIdle = stats.idle;
+        var endTotal = stats.total;
+		
+		var cpus = os.cpus();
+ 		for (var cpu in cpus) {
+        	if (!cpus.hasOwnProperty(cpu)) continue;
+
+        	var idle  = endIdle[cpu]  - startIdle[cpu];
+        	var total = endTotal[cpu] - startTotal[cpu];
+
+			result.push({
+				percentage: Math.round(100 - ((idle / total) * 100))
+			});
+
+        }
+
+		callback(result);
+    }, 1000);
+}
+
+/** helper_pin_event_change
+ * @param pin
+ */
+global.helper_pin_event_change = function(args) {
+	const { spawn } = require('child_process');
+	const child = spawn('./helpers/pin-event-change', args);
+
+	child.stderr.on('data', function(data) {
+		for (var id in global.clients)
+			global.clients[id].send(data.toString().trim());
+	});
+
+	return child
+};
+
+// var child = helper_pin_event_change(['hc-sr501', '9']);
+// console.log(child.pid);
 
 fastify.register(require('fastify-cors'))
 fastify.register(require('fastify-ws'))
@@ -28,6 +79,15 @@ fastify.register(require('fastify-ws'))
 fastify.register(require('./modules/auth'))
 fastify.register(require('./modules/gpio'))
 fastify.register(require('./modules/gpio-devices'))
+fastify.register(require('fastify-static'), {
+	root: path.join(__dirname, 'public'),
+	prefix: '/public/',
+})
+
+fastify.get('/another/path', function (req, reply) {
+	reply.sendFile('myHtml.html')
+	// serving path.join(__dirname, 'public', 'myHtml.html') directly
+})
 
 fastify.listen(3000, '0.0.0.0');
 
@@ -136,50 +196,9 @@ global.get_cpu_info = function(callback) {
     };
 }
 
-/** get_cpu_usage
- * @param callback
- */
-global.get_cpu_usage = function(callback) { 
-	var result = [];
 
-    var stats = global.get_cpu_info();
-    var startIdle = stats.idle;
-    var startTotal = stats.total;
 
-    setTimeout(function() {
-        var stats = global.get_cpu_info();
-        var endIdle = stats.idle;
-        var endTotal = stats.total;
-		
-		var cpus = os.cpus();
- 		for (var cpu in cpus) {
-        	if (!cpus.hasOwnProperty(cpu)) continue;
 
-        	var idle  = endIdle[cpu]  - startIdle[cpu];
-        	var total = endTotal[cpu] - startTotal[cpu];
 
-			result.push({
-				percentage: Math.round(100 - ((idle / total) * 100))
-			});
 
-        }
-
-		callback(result);
-    }, 1000);
-}
-
-/** helper_pin_event_change
- * @param pin
- */
-global.helper_pin_event_change = function(pin) {
-	const { spawn } = require('child_process');
-	const child = spawn('./helpers/pin-event-change', ['output', pin, 100]);
-
-	child.stderr.on('data', (chunk) => {
-    	console.log(chunk.toString().trim());
-	});
-
-	// child.on('close', (_code, _signal) => {
-	// });
-};
 

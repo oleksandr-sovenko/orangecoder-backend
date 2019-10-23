@@ -9,6 +9,7 @@
     "fastify-websocket": "^0.6.0"
   },
   "devDependencies": {
+    "fastify-static": "^2.5.0",
     "fastify-ws": "^1.0.3",
     "fs": "0.0.1-security",
     "md5": "^2.2.1",

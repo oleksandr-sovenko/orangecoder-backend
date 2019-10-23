@@ -21,6 +21,9 @@
 
 #include <wiringPi.h>
 
+#define JSON_HC_SR501 "{\"device\":\"hc-sr501\",\"id\":\"%s\",\"pins\":{\"out\":{\"id\":%d,\"value\":%d}},\"action\":\"changes\"}\n"
+#define JSON_HC_SR04  "{\"device\":\"hc-sr04\",\"id\":\"%s\",\"pins\":{\"trig\":{\"id\":%d,\"value\":\"-\"},\"echo\":{\"id\":%d,\"value\":%d}},\"action\":\"changes\"}\n"
+
 /** device_hc_sr04
  * @param trig
  * @param echo
@@ -70,9 +73,38 @@ int main(int argc, char *argv[]) {
 	wiringPiSetup();
 
 	/** HC-SR501
+	 * @command ./device-changes hc-sr501 8b15de19-122a-4fa9-98f2-8e90f226276b out:9
  	 */
 	if (!strcmp(device, "hc-sr501")) {
+		if (argc < 4) {
+			return EXIT_FAILURE;
+		}
 
+		char *id = argv[2];
+		int out = -1;
+
+		if (strstr(argv[3], "out:") != NULL)
+			out = atoi(argv[3] + 4);
+
+		if (out == -1) {
+			return EXIT_FAILURE;
+		}
+
+		pinMode(out, INPUT);
+		int old_status = digitalRead(out);
+
+		delay(500);
+
+		for (;;) {
+			int new_status = digitalRead(out);
+
+			if (new_status != old_status) {
+				fprintf(stderr, JSON_HC_SR501, id, out, new_status);
+				old_status = new_status;
+			}
+
+			delay(500);
+		}
 	}
 
  	/** MPU-6050
@@ -82,15 +114,32 @@ int main(int argc, char *argv[]) {
 	}
 
 	/** HC-SR04
-	 * $example: ./pin-event-change hc-sr04 9 8
+	 * @command ./device-changes hc-sr04 8b15de19-122a-4fa9-98f2-8e90f226276b trig:9 argv:8
  	 */
 	if (!strcmp(device, "hc-sr04")) {
-		if (argc < 4) {
+		if (argc < 5) {
 			return EXIT_FAILURE;
 		}
 
-		int trig = atoi(argv[2]);
-		int echo = atoi(argv[3]);
+		char *id = argv[2];
+		int trig = -1;
+		int echo = -1;
+
+		if (strstr(argv[3], "trig:") != NULL)
+			trig = atoi(argv[3] + 5);
+
+		if (strstr(argv[4], "trig:") != NULL)
+			trig = atoi(argv[4] + 5);
+
+		if (strstr(argv[3], "echo:") != NULL)
+			echo = atoi(argv[3] + 5);
+
+		if (strstr(argv[4], "echo:") != NULL)
+			echo = atoi(argv[4] + 5);
+
+		if (trig == -1 || echo == -1) {
+			return EXIT_FAILURE;
+		}
 
 		device_hc_sr04(trig, echo);
 
@@ -100,11 +149,11 @@ int main(int argc, char *argv[]) {
 			int new_distance = device_hc_sr04_getcm(trig, echo);
 
 			if (new_distance != old_distance) {
-				fprintf(stderr, "{\"device\":\"hc-sr04\",\"pin\":{\"trig\":%d,\"echo\":%d},\"distance-cm\":%d}\n", trig, echo, new_distance);
+				fprintf(stderr, JSON_HC_SR04, id, trig, echo, new_distance);
 				old_distance = new_distance;
 			}
 
-			delay(1000);
+			delay(500);
 		}
 	}
 
