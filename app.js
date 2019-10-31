@@ -1,32 +1,37 @@
 // app.js
 // Copyright (C) 2019 Oleksandr Sovenko (info@oleksandrsovenko.com)
-// 
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
 // as published by the Free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+
 global.sessions = [];
 global.clients = {};
+
 
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
-const fastify = require('fastify')({ logger: false })
+const fastify = require('fastify')({ logger: false });
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+
 
 /** get_cpu_usage
  * @param callback
  */
-global.get_cpu_usage = function(callback) { 
+global.get_cpu_usage = function(callback) {
 	var result = [];
 
     var stats = global.get_cpu_info();
@@ -37,7 +42,7 @@ global.get_cpu_usage = function(callback) {
         var stats = global.get_cpu_info();
         var endIdle = stats.idle;
         var endTotal = stats.total;
-		
+
 		var cpus = os.cpus();
  		for (var cpu in cpus) {
         	if (!cpus.hasOwnProperty(cpu)) continue;
@@ -55,6 +60,7 @@ global.get_cpu_usage = function(callback) {
     }, 1000);
 }
 
+
 /** helper_pin_event_change
  * @param pin
  */
@@ -70,11 +76,10 @@ global.helper_pin_event_change = function(args) {
 	return child
 };
 
-// var child = helper_pin_event_change(['hc-sr501', '9']);
-// console.log(child.pid);
 
 fastify.register(require('fastify-cors'))
 fastify.register(require('fastify-ws'))
+
 
 fastify.register(require('./modules/auth'))
 fastify.register(require('./modules/gpio'))
@@ -84,42 +89,15 @@ fastify.register(require('fastify-static'), {
 	prefix: '/public/',
 })
 
+
 fastify.get('/another/path', function (req, reply) {
 	reply.sendFile('myHtml.html')
 	// serving path.join(__dirname, 'public', 'myHtml.html') directly
 })
 
+
 fastify.listen(3000, '0.0.0.0');
 
-/**
- */
-setInterval(function() {
-	var length = Object.keys(global.clients).length;
-
-	if (length) {
-
-		global.get_cpu_usage(function(usage) {
-			var temperature = Math.round(parseFloat(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp')) / 1000);
-
-			for (var id in global.clients) {
-				global.clients[id].send(JSON.stringify({
-					action: 'status',
-					data: {
-						memory: {
-							free: os.freemem(),
-							total: os.totalmem(),
-						},
-						cpu: {
-							temperature: temperature,
-							usage: usage
-						}
-					},
-				}));
-			}
-		});	
-
-	}
-}, 3000);
 
 /** fastify.ready
  */
@@ -139,11 +117,13 @@ fastify.ready(function(err) {
     });
 })
 
+
 /** get_unix_timestamp
  */
 global.get_unix_timestamp = function() {
 	return Math.round(new Date().getTime() / 1000);
 }
+
 
 /** is_authorized
  * @param request
@@ -160,19 +140,20 @@ global.is_authorized = function(request) {
 	}
 }
 
+
 /** get_cpu_info
  * @param callback
  */
-global.get_cpu_info = function(callback) { 
+global.get_cpu_info = function(callback) {
     var cpus = os.cpus();
-	
+
     var user  = {};
     var nice  = {};
     var sys   = {};
     var idle  = {};
     var irq   = {};
     var total = {};
-	
+
     for(var cpu in cpus){
         if (!cpus.hasOwnProperty(cpu)) continue;
 
@@ -189,16 +170,49 @@ global.get_cpu_info = function(callback) {
         idle[cpu] += cpus[cpu].times.idle;
     	total[cpu] = user[cpu] + nice[cpu] + sys[cpu] + idle[cpu] + irq[cpu];
     }
-	
+
     return {
-        'idle': idle, 
+        'idle': idle,
         'total': total
     };
 }
 
 
+/**
+ *
+ */
+setInterval(async function() {
+	const disk_total = await exec('df -h | grep "/$" | awk \'{ print $2 }\''),
+		  disk_free  = await exec('df -h | grep "/$" | awk \'{ print $4 }\''),
+	      length     = Object.keys(global.clients).length;
 
 
+	if (length) {
+		global.get_cpu_usage(function(usage) {
+			var temperature = Math.round(parseFloat(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp')) / 1000);
 
-
-
+			for (var id in global.clients) {
+				global.clients[id].send(JSON.stringify({
+					action: 'status',
+					data: {
+						memory: {
+							free: os.freemem(),
+							total: os.totalmem(),
+						},
+						disk: {
+							free: parseInt(disk_free.stdout) * 1073741824,
+							total: parseInt(disk_total.stdout) * 1073741824,
+						},
+						cpu: {
+							temperature: temperature,
+							usage: usage
+						},
+						release: os.release(),
+						loadavg: os.loadavg(),
+						uptime: os.uptime(),
+					},
+				}));
+			}
+		});
+	}
+}, 3000);
