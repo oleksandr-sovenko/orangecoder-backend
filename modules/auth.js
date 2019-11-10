@@ -32,7 +32,7 @@ async function routes(fastify, options) {
               is_authorized = global.is_authorized(request);
 
         if (is_authorized)
-            return { success: true, msg: 'Already authorized', data: request.headers.authorization };
+            return { success: true, msg: 'Already authorized', data: request.headers['Backend-Authorization'] };
 
         if (request.body.username === undefined || request.body.password === undefined)
             return { success: false, msg: 'Require username and password' };
@@ -50,10 +50,10 @@ async function routes(fastify, options) {
      *
      */
     fastify.post('/signout', async function(request, reply) {
-        if (request.headers.authorization !== undefined && global.sessions[request.headers.authorization] !== undefined) {
+        if (request.headers['Backend-Authorization'] !== undefined && global.sessions[request.headers['Backend-Authorization']] !== undefined) {
 
         } else {
-            delete global.sessions[request.headers.authorization];
+            delete global.sessions[request.headers['Backend-Authorization']];
         }
 
         return { success: true, msg: 'Successfully' }

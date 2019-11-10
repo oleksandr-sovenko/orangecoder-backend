@@ -136,9 +136,9 @@ global.get_unix_timestamp = function() {
 global.is_authorized = function(request) {
 	const timestamp = global.get_unix_timestamp();
 
-	if (request.headers.authorization !== undefined &&
-	    global.sessions[request.headers.authorization] !== undefined &&
-	    global.sessions[request.headers.authorization].expire > timestamp) {
+	if (request.headers['Backend-Authorization'] !== undefined &&
+	    global.sessions[request.headers['Backend-Authorization']] !== undefined &&
+	    global.sessions[request.headers['Backend-Authorization']].expire > timestamp) {
 		return true;
 	} else {
 	    return false;
