@@ -25,19 +25,18 @@ async function routes(fastify, options) {
     /**
      *
      */
-    fastify.post('/signin', async function(request, reply) {
+    fastify.post('/signin', async function(req, rep) {
         const credentials = JSON.parse(fs.readFileSync('./data/credentials.json', 'utf8')),
               session_id = md5(Math.random()),
-              timestamp = global.get_unix_timestamp(),
-              is_authorized = global.is_authorized(request);
+              timestamp = global.get_unix_timestamp();
 
-        if (is_authorized)
-            return { success: true, msg: 'Already authorized', data: request.headers['Backend-Authorization'] };
+        if (is_authorized(req))
+            return { success: true, msg: 'Already authorized', data: req.headers['backend-authorization'] };
 
-        if (request.body.username === undefined || request.body.password === undefined)
+        if (req.body === null || req.body.username === undefined || req.body.password === undefined)
             return { success: false, msg: 'Require username and password' };
 
-        if (credentials.username !== request.body.username || credentials.password !== md5(request.body.password))
+        if (credentials.username !== req.body.username || credentials.password !== md5(req.body.password))
             return { success: false, msg: 'Wrong username or password' };
 
         global.sessions[session_id] = { expire: timestamp + 3600 };
@@ -49,11 +48,11 @@ async function routes(fastify, options) {
     /**
      *
      */
-    fastify.post('/signout', async function(request, reply) {
-        if (request.headers['Backend-Authorization'] !== undefined && global.sessions[request.headers['Backend-Authorization']] !== undefined) {
+    fastify.post('/signout', async function(req, rep) {
+        if (req.headers['backend-authorization'] !== undefined && global.sessions[req.headers['backend-authorization']] !== undefined) {
 
         } else {
-            delete global.sessions[request.headers['Backend-Authorization']];
+            delete global.sessions[req.headers['backend-authorization']];
         }
 
         return { success: true, msg: 'Successfully' }

@@ -30,6 +30,22 @@ global.exec    = util.promisify(require('child_process').exec);
 global.readdir = util.promisify(fs.readdir);
 
 
+/** is_authorized
+ * @param request
+ */
+global.is_authorized = function(req) {
+	const timestamp = global.get_unix_timestamp();
+
+	if (req.headers['backend-authorization'] !== undefined &&
+	    global.sessions[req.headers['backend-authorization']] !== undefined &&
+	    global.sessions[req.headers['backend-authorization']].expire > timestamp) {
+		return true;
+	} else {
+	    return false;
+	}
+}
+
+
 /** get_cpu_usage
  * @param callback
  */
@@ -130,22 +146,6 @@ global.get_unix_timestamp = function() {
 }
 
 
-/** is_authorized
- * @param request
- */
-global.is_authorized = function(request) {
-	const timestamp = global.get_unix_timestamp();
-
-	if (request.headers['Backend-Authorization'] !== undefined &&
-	    global.sessions[request.headers['Backend-Authorization']] !== undefined &&
-	    global.sessions[request.headers['Backend-Authorization']].expire > timestamp) {
-		return true;
-	} else {
-	    return false;
-	}
-}
-
-
 /** get_cpu_info
  * @param callback
  */
@@ -197,26 +197,30 @@ setInterval(async function() {
 			var temperature = Math.round(parseFloat(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp')) / 1000);
 
 			for (var id in global.clients) {
-				global.clients[id].send(JSON.stringify({
-					action: 'status',
-					data: {
-						memory: {
-							free: os.freemem(),
-							total: os.totalmem(),
+				try {
+					global.clients[id].send(JSON.stringify({
+						action: 'status',
+						data: {
+							memory: {
+								free: os.freemem(),
+								total: os.totalmem(),
+							},
+							disk: {
+								free: parseInt(disk_free.stdout) * 1073741824,
+								total: parseInt(disk_total.stdout) * 1073741824,
+							},
+							cpu: {
+								temperature: temperature,
+								usage: usage
+							},
+							release: os.release(),
+							loadavg: os.loadavg(),
+							uptime: os.uptime(),
 						},
-						disk: {
-							free: parseInt(disk_free.stdout) * 1073741824,
-							total: parseInt(disk_total.stdout) * 1073741824,
-						},
-						cpu: {
-							temperature: temperature,
-							usage: usage
-						},
-						release: os.release(),
-						loadavg: os.loadavg(),
-						uptime: os.uptime(),
-					},
-				}));
+					}));
+				} catch(e) {
+					console.log(e);
+				}
 			}
 		});
 	}

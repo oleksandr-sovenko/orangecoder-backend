@@ -30,10 +30,8 @@ async function routes(fastify, options) {
     /** Get list of devices
      * @endpoint /gpio-devices
      */
-    fastify.get('/gpio-devices', async function(request, reply) {
-        const is_authorized = global.is_authorized(request);
-
-        if (!is_authorized)
+    fastify.get('/gpio-devices', async function(req, rep) {
+        if (!is_authorized(req))
             return { success: false, msg: 'Authorization required' }
 
         if (fs.existsSync(filename))
@@ -48,13 +46,11 @@ async function routes(fastify, options) {
     /** Add new device
      * @endpoint /gpio-devices/add
      */
-    fastify.post('/gpio-devices/add', async function(request, reply) {
-        const is_authorized = global.is_authorized(request);
-
-        if (!is_authorized)
+    fastify.post('/gpio-devices/add', async function(req, rep) {
+        if (!is_authorized(req))
             return { success: false, msg: 'Authorization required' }
 
-        if (request.body.name === undefined || request.body.device === undefined || request.body.pins === undefined)
+        if (req.body.name === undefined || req.body.device === undefined || req.body.pins === undefined)
             return { success: false, msg: 'Require name, device and pins' };
 
         if (fs.existsSync(filename))
@@ -62,7 +58,7 @@ async function routes(fastify, options) {
         else
             var devices = [];
 
-        devices.push({ id: uuid4(), name: request.body.name,  device: request.body.device,  pins: request.body.pins })
+        devices.push({ id: uuid4(), name: req.body.name,  device: req.body.device,  pins: req.body.pins })
 
         fs.writeFileSync(filename, JSON.stringify(devices));
 
@@ -75,10 +71,8 @@ async function routes(fastify, options) {
     /** Update a device
      * @endpoint /gpio-devices/update
      */
-    fastify.post('/gpio-devices/update', async function(request, reply) {
-        const is_authorized = global.is_authorized(request);
-
-        if (!is_authorized)
+    fastify.post('/gpio-devices/update', async function(req, rep) {
+        if (!is_authorized(req))
             return { success: false, msg: 'Authorization required' }
 
         spawn_helpers();
@@ -90,13 +84,11 @@ async function routes(fastify, options) {
     /** Remove a device
      * @endpoint /gpio-devices/remove
      */
-    fastify.post('/gpio-devices/remove', async function(request, reply) {
-        const is_authorized = global.is_authorized(request);
-
-        if (!is_authorized)
+    fastify.post('/gpio-devices/remove', async function(req, rep) {
+        if (!is_authorized(req))
             return { success: false, msg: 'Authorization required' }
 
-        if (request.body.id === undefined)
+        if (req.body.id === undefined)
             return { success: false, msg: 'Require id' };
 
         if (fs.existsSync(filename)) {
@@ -104,7 +96,7 @@ async function routes(fastify, options) {
                 filter = [];
 
             for (var i in devices) {
-                if (devices[i].id !== request.body.id)
+                if (devices[i].id !== req.body.id)
                     filter.push(devices[i]);
             }
 
