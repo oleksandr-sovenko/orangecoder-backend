@@ -20,12 +20,14 @@ global.sessions = [];
 global.clients = {};
 
 
-const os = require('os');
-const fs = require('fs');
-const path = require('path');
-const fastify = require('fastify')({ logger: false });
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
+global.os      = require('os');
+global.fs      = require('fs');
+global.path    = require('path');
+global.fastify = require('fastify')({ logger: false });
+global.util    = require('util');
+global.md5     = require('md5');
+global.exec    = util.promisify(require('child_process').exec);
+global.readdir = util.promisify(fs.readdir);
 
 
 /** get_cpu_usage
@@ -68,6 +70,8 @@ global.helper_pin_event_change = function(args) {
 	const { spawn } = require('child_process');
 	const child = spawn('./helpers/pin-event-change', args);
 
+	console.log('./helpers/pin-event-change', args);
+
 	child.stderr.on('data', function(data) {
 		for (var id in global.clients)
 			global.clients[id].send(data.toString().trim());
@@ -83,6 +87,7 @@ fastify.register(require('fastify-ws'))
 
 fastify.register(require('./modules/auth'))
 fastify.register(require('./modules/gpio'))
+fastify.register(require('./modules/w1'))
 fastify.register(require('./modules/gpio-devices'))
 fastify.register(require('fastify-static'), {
 	root: path.join(__dirname, 'public'),

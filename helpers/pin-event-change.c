@@ -23,6 +23,7 @@
 
 #define JSON_HC_SR501 "{\"device\":\"hc-sr501\",\"id\":\"%s\",\"pins\":{\"out\":{\"id\":%d,\"value\":%d}},\"action\":\"changes\"}\n"
 #define JSON_HC_SR04  "{\"device\":\"hc-sr04\",\"id\":\"%s\",\"pins\":{\"trig\":{\"id\":%d,\"value\":\"-\"},\"echo\":{\"id\":%d,\"value\":%d}},\"action\":\"changes\"}\n"
+#define JSON_DS18B20  "{\"device\":\"ds18b20\",\"id\":\"%s\",\"pins\":{\"out\":{\"addr\":\"%s\",\"value\":%.2f}},\"action\":\"changes\"}\n"
 
 /** device_hc_sr04
  * @param trig
@@ -81,7 +82,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		char *id = argv[2];
-		int out = -1;
+		int  out = -1;
 
 		if (strstr(argv[3], "out:") != NULL)
 			out = atoi(argv[3] + 4);
@@ -158,9 +159,48 @@ int main(int argc, char *argv[]) {
 	}
 
  	/** DS18B20
+	 * @command ./pin-event-change ds18b20 8b15de19-122a-4fa9-98f2-8e90f226276b 28-011564cfe7ff
  	 */
 	if (!strcmp(device, "ds18b20")) {
+		if (argc < 4) {
+			return EXIT_FAILURE;
+		}
 
+		FILE  *file;
+		char  buffer[1024];
+		char  *addr    = NULL;
+		char  *id      = argv[2];
+		float old_temp = 0;
+		float new_temp = 0;
+
+		if (strstr(argv[3], "addr:") != NULL)
+			addr = argv[3] + 5;
+
+		if (addr == NULL) {
+			return EXIT_FAILURE;
+		}
+
+		for (;;) {
+			strcpy(buffer, "/sys/bus/w1/devices/");
+			strcat(buffer, addr);
+			strcat(buffer, "/w1_slave");
+
+			if (file = fopen(buffer, "r")) {
+				fread(&buffer, sizeof(buffer), 1, file);
+				fclose(file);
+
+				char *t = strstr(buffer, "t=");
+				new_temp = (float) atoi(t + 2) / 1000;
+			} else {
+				new_temp = 0;
+				delay(500);
+			}
+
+			if (new_temp != old_temp) {
+				fprintf(stderr, JSON_DS18B20, id, addr, new_temp);
+				old_temp = new_temp;
+			}
+		}
 	}
 
 	return EXIT_SUCCESS;
