@@ -20,6 +20,41 @@
  *
  */
 async function routes(fastify, options) {
+    /**
+     *
+     */
+    fastify.post('/change-password', async function(req, rep) {
+        var credentials = JSON.parse(fs.readFileSync('./data/credentials.json', 'utf8')),
+            session_id  = md5(Math.random()),
+            timestamp   = global.getUnixTimestamp();
+
+        if (!is_authorized(req))
+            return { success: false, msg: 'Authorization required' }
+
+        if (req.body === null ||
+            req.body.password_current === undefined ||
+            req.body.password_new === undefined ||
+            req.body.password_confirm === undefined
+        )
+            return { success: false, msg: 'Required password_current, password_new, password_confirm.' };
+
+        if (credentials.password !== md5(req.body.password_current))
+            return { success: false, msg: 'Wrong current password' };
+
+        if (req.body.password_new === '')
+            return { success: false, msg: "New password can't be empty" };
+
+        if (req.body.password_new !== req.body.password_confirm)
+            return { success: false, msg: 'Passwords do not match' };
+
+        fs.writeFileSync('./data/credentials.json', JSON.stringify({ "username": "admin", "password": md5(req.body.password_new) }));
+        credentials = JSON.parse(fs.readFileSync('./data/credentials.json', 'utf8'))
+
+        if (credentials.password === md5(req.body.password_new))
+            return { success: true, msg: 'Password changed' };
+        else
+            return { success: false, msg: 'Something went wrong' };
+    })
 
 
     /**
@@ -28,13 +63,13 @@ async function routes(fastify, options) {
     fastify.post('/signin', async function(req, rep) {
         const credentials = JSON.parse(fs.readFileSync('./data/credentials.json', 'utf8')),
               session_id = md5(Math.random()),
-              timestamp = global.get_unix_timestamp();
+              timestamp = global.getUnixTimestamp();
 
         if (is_authorized(req))
             return { success: true, msg: 'Already authorized', data: req.headers['backend-authorization'] };
 
         if (req.body === null || req.body.username === undefined || req.body.password === undefined)
-            return { success: false, msg: 'Require username and password' };
+            return { success: false, msg: 'Required username and password' };
 
         if (credentials.username !== req.body.username || credentials.password !== md5(req.body.password))
             return { success: false, msg: 'Wrong username or password' };
@@ -49,7 +84,8 @@ async function routes(fastify, options) {
      *
      */
     fastify.post('/signout', async function(req, rep) {
-        if (req.headers['backend-authorization'] !== undefined && global.sessions[req.headers['backend-authorization']] !== undefined) {
+        if (req.headers['backend-authorization'] !== undefined &&
+            global.sessions[req.headers['backend-authorization']] !== undefined) {
 
         } else {
             delete global.sessions[req.headers['backend-authorization']];

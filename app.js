@@ -30,11 +30,49 @@ global.exec    = util.promisify(require('child_process').exec);
 global.readdir = util.promisify(fs.readdir);
 
 
+/** getDeviceInfo
+ *
+ */
+global.getDeviceInfo = function(){
+	var model = 'Unknown',
+		serial = 'Unknown',
+		version = '';
+
+	if (fs.existsSync('/etc/armbian-release')) {
+		model = fs.readFileSync('/etc/armbian-release')
+				.toString()
+				.replace(/.*BOARD_NAME="/s, '')
+				.replace(/".*/s, '').trim();
+
+		version = fs.readFileSync('/etc/armbian-release')
+				.toString()
+				.replace(/.*VERSION=/s, '')
+				.replace(/\n.*/s, '').trim();
+	}
+
+	if (fs.existsSync('/proc/cpuinfo'))
+		serial = fs.readFileSync('/proc/cpuinfo')
+				.toString()
+				.replace(/.*Serial		: /s, '').trim();
+
+	return {
+		platform: 'Linux',
+    	version: os.release() + (version !== '' ? ', Armbian ' + version : ''),
+    	model: model,
+    	manufacturer: 'Xunlong',
+    	serial: serial
+	}
+}
+
+
+global.device = getDeviceInfo();
+
+
 /** is_authorized
- * @param request
+ *  @param request
  */
 global.is_authorized = function(req) {
-	const timestamp = global.get_unix_timestamp();
+	const timestamp = global.getUnixTimestamp();
 
 	if (req.headers['backend-authorization'] !== undefined &&
 	    global.sessions[req.headers['backend-authorization']] !== undefined &&
@@ -46,18 +84,18 @@ global.is_authorized = function(req) {
 }
 
 
-/** get_cpu_usage
- * @param callback
+/** getCpuUsage
+ *  @param callback
  */
-global.get_cpu_usage = function(callback) {
+global.getCpuUsage = function(callback) {
 	var result = [];
 
-    var stats = global.get_cpu_info();
+    var stats = global.getCpuInfo();
     var startIdle = stats.idle;
     var startTotal = stats.total;
 
     setTimeout(function() {
-        var stats = global.get_cpu_info();
+        var stats = global.getCpuInfo();
         var endIdle = stats.idle;
         var endTotal = stats.total;
 
@@ -79,10 +117,10 @@ global.get_cpu_usage = function(callback) {
 }
 
 
-/** helper_pin_event_change
- * @param pin
+/** helperPinEventChange
+ *  @param pin
  */
-global.helper_pin_event_change = function(args) {
+global.helperPinEventChange = function(args) {
 	const { spawn } = require('child_process');
 	const child = spawn('./helpers/pin-event-change', args);
 
@@ -111,9 +149,17 @@ fastify.register(require('fastify-static'), {
 })
 
 
-fastify.get('/another/path', function (req, reply) {
-	reply.sendFile('myHtml.html')
+//fastify.get('/another/path', function (req, reply) {
+//	reply.sendFile('myHtml.html')
 	// serving path.join(__dirname, 'public', 'myHtml.html') directly
+//})
+
+
+/**
+ *
+ */
+fastify.get('/device', async function(req, rep) {
+	return device
 })
 
 
@@ -121,6 +167,7 @@ fastify.listen(3000, '0.0.0.0');
 
 
 /** fastify.ready
+ *
  */
 fastify.ready(function(err) {
  	fastify.ws.on('connection', function(socket) {
@@ -139,17 +186,18 @@ fastify.ready(function(err) {
 })
 
 
-/** get_unix_timestamp
+/** getUnixTimestamp
+ *
  */
-global.get_unix_timestamp = function() {
+global.getUnixTimestamp = function() {
 	return Math.round(new Date().getTime() / 1000);
 }
 
 
-/** get_cpu_info
- * @param callback
+/** getCpuInfo
+ *  @param callback
  */
-global.get_cpu_info = function(callback) {
+global.getCpuInfo = function(callback) {
     var cpus = os.cpus();
 
     var user  = {};
@@ -193,7 +241,7 @@ setInterval(async function() {
 
 
 	if (length) {
-		global.get_cpu_usage(function(usage) {
+		global.getCpuUsage(function(usage) {
 			var temperature = Math.round(parseFloat(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp')) / 1000);
 
 			for (var id in global.clients) {
@@ -213,7 +261,6 @@ setInterval(async function() {
 								temperature: temperature,
 								usage: usage
 							},
-							release: os.release(),
 							loadavg: os.loadavg(),
 							uptime: os.uptime(),
 						},

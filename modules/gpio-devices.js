@@ -137,7 +137,7 @@ function spawn_helpers() {
                     .replace(/,/g, ' ')
                     .replace(/}/g, '');
 
-        global.helper_pin_event_change([devices[i].device, devices[i].id, pins]);
+        global.helperPinEventChange([devices[i].device, devices[i].id, pins]);
     }
 }
 
