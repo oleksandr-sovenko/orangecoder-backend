@@ -16,9 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-// var e = base64.encode('asdasdasdasdasdasd');
-// console.log(e, base64.decode(e));
-// console.log(uuid4());
+const { fork } = require('child_process');
 
 
 const directory = './data/algorithms',
@@ -65,7 +63,7 @@ async function routes(fastify, options) {
             title      : req.body.title,
             description: req.body.description
         });
-        
+
         fs.writeFileSync(directory + '/' + id, base64.decode(req.body.code));
         fs.writeFileSync(filename, JSON.stringify(algorithms));
 
@@ -158,6 +156,63 @@ async function routes(fastify, options) {
         }
 
         return { success: true, msg: 'Successfully' }
+    });
+
+
+    /** Execute a algorithm
+     *  @endpoint /algorithm/run/:id
+     *  @method   POST
+     */
+    fastify.post('/algorithm/run/:id', async function(req, rep) {
+        if (!is_authorized(req))
+            return { success: false, msg: 'Authorization required' }
+
+        if (fs.existsSync(filename)) {
+            var algorithms = JSON.parse(fs.readFileSync(filename, 'utf8')),
+                id = uuid4();
+
+            for (var i in algorithms) {
+                if (algorithms[i].id === req.params.id) {
+
+                    global.algorithm_process[id] = fork('./helpers/context.algorithm.js', [algorithms[i].id]);
+                    // global.algorithm_process[id].send({ test: 456 });
+                    // global.algorithm_process[id].on('message', async function(message) {
+                    //    console.log('parent:', message);
+                    // });
+
+                    return { success: true, msg: 'Successfully' };
+                }
+            }
+        }
+
+        return { success: false, msg: '' };
+    });
+
+
+    /** Stop a algorithm
+     *  @endpoint /algorithm/stop/:id
+     *  @method   POST
+     */
+    fastify.post('/algorithm/stop/:id', async function(req, rep) {
+        if (!is_authorized(req))
+            return { success: false, msg: 'Authorization required' }
+
+        if (fs.existsSync(filename)) {
+            var algorithms = JSON.parse(fs.readFileSync(filename, 'utf8'));
+
+            for (var i in algorithms) {
+                if (algorithms[i].id === req.params.id) {
+
+                    global.algorithm_process[id].kill();
+
+                    delete global.algorithm_process[id];
+
+                    return { success: true, msg: 'Successfully' };
+                }
+            }
+        }
+
+        return { success: false, msg: '' };
     });
 }
 

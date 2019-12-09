@@ -6,14 +6,19 @@
   "dependencies": {
     "fastify": "^2.10.0",
     "fastify-cors": "^2.1.3",
-    "fastify-websocket": "^0.6.0"
+    "fastify-websocket": "^0.6.0",
+    "js-base64": "^2.5.1",
+    "request-promise": "^4.2.5",
+    "request-promise-native": "^1.0.8"
   },
   "devDependencies": {
+    "fastify-formbody": "^3.1.0",
     "fastify-static": "^2.5.0",
     "fastify-ws": "^1.0.3",
     "fs": "0.0.1-security",
     "md5": "^2.2.1",
     "os-utils": "0.0.14",
+    "request": "^2.88.0",
     "system-health-monitor": "^1.2.0",
     "uuid4": "^1.1.4"
   },

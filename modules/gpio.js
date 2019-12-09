@@ -145,7 +145,7 @@ async function routes(fastify, options) {
             return { success: false, msg: 'Require name, device and pins' };
 
         if (req.body.name === '' || req.body.device === '' || Object.keys(req.body.pins).length === 0)
-            return { success: false, msg: "Fields name, device, pins can't be empty." };        
+            return { success: false, msg: "Fields name, device, pins can't be empty." };
 
         if (fs.existsSync(filename)) {
             var devices = JSON.parse(fs.readFileSync(filename, 'utf8')),

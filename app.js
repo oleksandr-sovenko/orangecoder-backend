@@ -18,17 +18,23 @@
 
 global.sessions = [];
 global.clients = {};
+global.algorithm_process = {};
 
-
+global.events  = require('events');
+global.vm      = require('vm');
 global.os      = require('os');
 global.fs      = require('fs');
 global.path    = require('path');
+global.uuid4   = require('uuid4')
 global.fastify = require('fastify')({ logger: false });
 global.util    = require('util');
 global.md5     = require('md5');
+global.base64  = require('js-base64').Base64;
+global.request = require('request-promise-native');
 global.exec    = util.promisify(require('child_process').exec);
 global.readdir = util.promisify(fs.readdir);
 
+// require('./modules/vm');
 
 /** getDeviceInfo
  *
@@ -124,7 +130,7 @@ global.helperPinEventChange = function(args) {
 	const { spawn } = require('child_process');
 	const child = spawn('./helpers/pin-event-change', args);
 
-	console.log('./helpers/pin-event-change', args);
+	// console.log('./helpers/pin-event-change', args);
 
 	child.stderr.on('data', function(data) {
 		for (var id in global.clients)
@@ -137,22 +143,25 @@ global.helperPinEventChange = function(args) {
 
 fastify.register(require('fastify-cors'))
 fastify.register(require('fastify-ws'))
-
-
-fastify.register(require('./modules/auth'))
-fastify.register(require('./modules/gpio'))
-fastify.register(require('./modules/w1'))
-fastify.register(require('./modules/gpio-devices'))
+fastify.register(require('fastify-formbody'))
 fastify.register(require('fastify-static'), {
 	root: path.join(__dirname, 'public'),
-	prefix: '/public/',
 })
 
 
-//fastify.get('/another/path', function (req, reply) {
-//	reply.sendFile('myHtml.html')
-	// serving path.join(__dirname, 'public', 'myHtml.html') directly
-//})
+fastify.register(require('./modules/cloud'));
+fastify.register(require('./modules/auth'));
+fastify.register(require('./modules/gpio'));
+fastify.register(require('./modules/w1'));
+fastify.register(require('./modules/algorithms'));
+
+
+/**
+ *
+ */
+fastify.get('/', function(req, reply) {
+	reply.sendFile('index.html');
+})
 
 
 /**
@@ -163,13 +172,13 @@ fastify.get('/device', async function(req, rep) {
 })
 
 
-fastify.listen(3000, '0.0.0.0');
+fastify.listen(80, '0.0.0.0');
 
 
 /** fastify.ready
  *
  */
-fastify.ready(function(err) {
+fastify.ready(async function(err) {
  	fastify.ws.on('connection', function(socket) {
  		var id = Math.random()
 

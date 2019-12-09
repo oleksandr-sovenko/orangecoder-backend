@@ -16,7 +16,69 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-var CLOUD = new events();
+async function routes(fastify, options) {
+    /** Get list of pins
+     *  @endpoint /gpio
+     */
+    fastify.get('/gpio', async function(request, reply) {
+        return { success: true, msg:'', data: data }
+    })
+
+
+    /** Get list of devices
+     *  @endpoint /gpio/devices
+     *  @method   GET
+     */
+    fastify.get('/gpio/devices', async function(req, rep) {
+        return { success: true, msg:'', data: devices }
+    })
+
+
+    /** Add new device
+     *  @endpoint /gpio/device
+     *  @method   PUT
+     */
+    fastify.put('/gpio/device', async function(req, rep) {
+        return { success: true, msg:'' }
+    })
+
+
+    /** Get data of the device
+     *  @endpoint /gpio/device/:id
+     *  @method   GET
+     */
+    fastify.get('/gpio/device/:id', async function(req, rep) {
+        return {}
+    })
+
+
+    /** Update a device
+     *  @endpoint /gpio/device/:id
+     *  @method   POST
+     */
+    fastify.post('/gpio/device/:id', async function(req, rep) {
+        return { success: true, msg:'' }
+    })
+}
+
+module.exports = routes
+
+
+
+
+
+
+
+/*
+// https://stackoverflow.com/questions/11652530/node-js-vm-how-to-cancel-script-runinnewcontext?lq=1
+// https://itnext.io/multi-threading-and-multi-process-in-node-js-ffa5bb5cde98
+
+global.CLOUD   = new events();
+global.HTTP    = new events();
+global.STORAGE = new events();
+
+
+// CLOUD
 
 CLOUD.sendNotification = function(args) {
 	console.log('sendNotification', args);
@@ -30,54 +92,98 @@ CLOUD.get = function() {
 
 };
 
-var STORAGE = {
-	set: function(name, value) {
 
-	},
+// HTTP
 
-	get: function(name) {
+HTTP.get = function() {
 
-	},
+};
 
-	unset: function(name) {
+HTTP.post = function() {
 
-	}
-}
+};
 
-var HTTP = {
-	get: function(url) {
-		console.log(url)
-	},
+HTTP.put = function() {
 
-	post: function(url) {
-		console.log(url)
-	},
+};
 
-	put: function(url) {
-		console.log(url)
-	},
+HTTP.delete = function() {
 
-	delete: function(url) {
-		console.log(url)
-	},
-}
-
-try {
-	result = vm.runInNewContext(
-	`
+};
 
 
-	` + true, {
-		CLOUD: CLOUD,
-		HTTP: HTTP,
-		STORAGE: STORAGE,
-		console: console,
-	}, { /*timeout: 10000,*/ });
-} catch(e) {
-	result = e.toString();
-}
-console.log(result);
+// try {
+// 	result = vm.runInNewContext(
+// 	`
 
-setInterval(function() {
-	CLOUD.emit('change-value', Math.floor(Math.random() * Math.floor(1000)));
-}, 5000);
+// 	function asdasd() {
+// 		setInterval(function() {
+// 			console.log('111')
+// 		}, 1000);
+// 	}
+
+// 	asdasd();
+
+// 	` + true, {
+// 		CLOUD: CLOUD,
+// 		HTTP: HTTP,
+// 		STORAGE: STORAGE,
+// 		console: console,
+// 		setInterval: setInterval
+// 	}, { contextName: 'context-1' });
+// } catch(e) {
+// 	result = e.toString();
+// }
+
+// console.log(result);
+
+
+
+// setTimeout(function() {
+// 	try {
+// 		result = vm.runInNewContext(
+// 		`
+// 		function asdasd() {
+// 			setInterval(function() {
+// 				console.log('222')
+// 			}, 1000);
+// 		}
+
+// 		asdasd();
+	
+// 		` + true, {
+// 			CLOUD: CLOUD,
+// 			HTTP: HTTP,
+// 			STORAGE: STORAGE,
+// 			console: console,
+// 			setInterval: setInterval
+// 		}, { contextName: 'context-1' });
+// 	} catch(e) {
+// 		result = e.toString();
+// 	}
+	
+// 	console.log(result);
+// }, 5000);
+
+
+
+
+
+const { fork } = require('child_process');
+const process = fork('./modules/send_email.js');
+process.send({ test: 456 });
+process.on('message', async function(message) {
+	console.log('parent:', message);
+});
+
+setTimeout(function() {
+	process.kill();
+}, 10000)
+*/
+
+
+
+
+
+
+
