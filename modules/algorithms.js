@@ -16,11 +16,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const { fork } = require('child_process');
-
-
-const directory = './data/algorithms',
+const { fork } = require('child_process'),
+      directory = './data/algorithms',
       filename  = directory + '/index.json';
+
+
+var algorithm_process = {};
 
 
 async function routes(fastify, options) {
@@ -31,9 +32,11 @@ async function routes(fastify, options) {
     fastify.get('/algorithms', async function(req, rep) {
         var files = fs.readdirSync('./data/algorithms');
 
-        if (fs.existsSync(filename))
+        if (fs.existsSync(filename)) {
             var algorithms = JSON.parse(fs.readFileSync(filename, 'utf8'));
-        else
+            for (var i in algorithms)
+                algorithms[i].running = algorithm_process[algorithms[i].id] !== undefined ? true : false;
+        } else
             var algorithms = [];
 
         return algorithms;
@@ -169,16 +172,15 @@ async function routes(fastify, options) {
 
         if (fs.existsSync(filename)) {
             var algorithms = JSON.parse(fs.readFileSync(filename, 'utf8')),
-                id = uuid4();
+                id = req.params.id;
 
             for (var i in algorithms) {
-                if (algorithms[i].id === req.params.id) {
+                if (algorithms[i].id === id) {
 
-                    global.algorithm_process[id] = fork('./helpers/context.algorithm.js', [algorithms[i].id]);
-                    // global.algorithm_process[id].send({ test: 456 });
-                    // global.algorithm_process[id].on('message', async function(message) {
-                    //    console.log('parent:', message);
-                    // });
+                    algorithm_process[id] = fork('./helpers/context.algorithm.js', [algorithms[i].id]);
+                    algorithm_process[id].on('message', async function(message) {
+                        appWSSendForAll(JSON.stringify({ action: 'console', data: id + ', ' + message }));
+                    });
 
                     return { success: true, msg: 'Successfully' };
                 }
@@ -197,23 +199,24 @@ async function routes(fastify, options) {
         if (!is_authorized(req))
             return { success: false, msg: 'Authorization required' }
 
-        if (fs.existsSync(filename)) {
-            var algorithms = JSON.parse(fs.readFileSync(filename, 'utf8'));
+        var id = req.params.id;
 
-            for (var i in algorithms) {
-                if (algorithms[i].id === req.params.id) {
+        algorithm_process[id].kill();
 
-                    global.algorithm_process[id].kill();
+        delete algorithm_process[id];
 
-                    delete global.algorithm_process[id];
-
-                    return { success: true, msg: 'Successfully' };
-                }
-            }
-        }
-
-        return { success: false, msg: '' };
+        return { success: true, msg: 'Successfully' };
     });
+}
+
+
+/**
+ *
+ *
+ */
+global.appAlgorithmProcessSendForAll = function(data) {
+    for (var id in algorithm_process)
+        algorithm_process[id].send(data);
 }
 
 

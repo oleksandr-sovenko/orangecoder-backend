@@ -17,8 +17,6 @@
 
 
 global.sessions = [];
-global.clients = {};
-global.algorithm_process = {};
 
 global.events  = require('events');
 global.vm      = require('vm');
@@ -33,6 +31,12 @@ global.base64  = require('js-base64').Base64;
 global.request = require('request-promise-native');
 global.exec    = util.promisify(require('child_process').exec);
 global.readdir = util.promisify(fs.readdir);
+
+
+
+let clients = {};
+
+
 
 // require('./modules/vm');
 
@@ -130,11 +134,17 @@ global.helperPinEventChange = function(args) {
 	const { spawn } = require('child_process');
 	const child = spawn('./helpers/pin-event-change', args);
 
-	// console.log('./helpers/pin-event-change', args);
-
 	child.stderr.on('data', function(data) {
-		for (var id in global.clients)
-			global.clients[id].send(data.toString().trim());
+		let json_data = {};
+
+		try {
+			json_data = JSON.parse(data.toString().trim());
+		} catch(e) {
+			json_data = {};
+		}
+
+		appAlgorithmProcessSendForAll(json_data);
+		appWSSendForAll(data.toString().trim());
 	});
 
 	return child
@@ -182,14 +192,14 @@ fastify.ready(async function(err) {
  	fastify.ws.on('connection', function(socket) {
  		var id = Math.random()
 
- 		global.clients[id] = socket;
+ 		clients[id] = socket;
 
 		socket.on('message', function(msg) {
 			socket.send(msg)
 		})
 
 		socket.on('close', function() {
-			delete global.clients[id];
+			delete clients[id];
 		});
     });
 })
@@ -243,41 +253,49 @@ global.getCpuInfo = function(callback) {
 /**
  *
  */
+global.appWSSendForAll = function(data) {
+    for (var id in clients) {
+        try {
+            clients[id].send(data);
+        } catch(e) {
+            console.log(e);
+        }
+    }
+}
+
+
+/**
+ *
+ */
 setInterval(async function() {
 	const disk_total = await exec('df -h | grep "/$" | awk \'{ print $2 }\''),
 		  disk_free  = await exec('df -h | grep "/$" | awk \'{ print $4 }\''),
-	      length     = Object.keys(global.clients).length;
+	      length     = Object.keys(clients).length;
 
 
 	if (length) {
 		global.getCpuUsage(function(usage) {
 			var temperature = Math.round(parseFloat(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp')) / 1000);
 
-			for (var id in global.clients) {
-				try {
-					global.clients[id].send(JSON.stringify({
-						action: 'status',
-						data: {
-							memory: {
-								free: os.freemem(),
-								total: os.totalmem(),
-							},
-							disk: {
-								free: parseInt(disk_free.stdout) * 1073741824,
-								total: parseInt(disk_total.stdout) * 1073741824,
-							},
-							cpu: {
-								temperature: temperature,
-								usage: usage
-							},
-							loadavg: os.loadavg(),
-							uptime: os.uptime(),
-						},
-					}));
-				} catch(e) {
-					console.log(e);
-				}
-			}
+			appWSSendForAll(JSON.stringify({
+				action: 'status',
+				data: {
+					memory: {
+						free: os.freemem(),
+						total: os.totalmem(),
+					},
+					disk: {
+						free: parseInt(disk_free.stdout) * 1073741824,
+						total: parseInt(disk_total.stdout) * 1073741824,
+					},
+					cpu: {
+						temperature: temperature,
+						usage: usage
+					},
+					loadavg: os.loadavg(),
+					uptime: os.uptime(),
+				},
+			}));
 		});
 	}
 }, 3000);

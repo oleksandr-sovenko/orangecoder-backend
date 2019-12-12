@@ -17,19 +17,27 @@
 
 
 const events = require('events'),
-	  fs = require('fs');
+	  path = require('path'),
+	  moment = require('moment'),
+	  fs = require('fs'),
 	  vm = require('vm');
 
-console.log(process.argv[2]);
+const filename = path.join(__dirname, '..', 'data', 'algorithms', process.argv[2]);
 
 
+var jscode = '';
+
+if (fs.existsSync(filename))
+	jscode = fs.readFileSync(filename, 'utf8');
+else
+	process.exit();
+
+
+let GPIO    = new events();
 let CLOUD   = new events();
 let HTTP    = new events();
 let STORAGE = new events();
-
-
-// if (fs.existsSync(filename)) {
-// jscode = '';
+let CONSOLE = new events();
 
 
 // CLOUD
@@ -57,25 +65,58 @@ HTTP.post = function() {
 
 };
 
-HTTP.put = function() {
 
+// CONSOLE
+
+CONSOLE.log = function(message) {
+	process.send(message);
 };
 
-HTTP.delete = function() {
 
-};
+// DATETIME
+
+const DATETIME = {
+	timestamp: function() {
+		return moment().unix();
+	}
+}
 
 
-// try {
-// 	result = vm.runInNewContext(jscode + true, {
-// 		CLOUD: CLOUD,
-// 		HTTP: HTTP,
-// 		STORAGE: STORAGE,
-// 		console: console,
-// 		setInterval: setInterval
-// 	}, { contextName: 'context-1' });
-// } catch(e) {
-// 	result = e.toString();
-// }
+// GPIO
 
-// console.log(result);
+// GPIO.get = function() {
+
+// };
+
+// GPIO.post = function() {
+
+// };
+
+
+try {
+	result = vm.runInNewContext(jscode + ';' + true, {
+		CLOUD: CLOUD,
+		HTTP: HTTP,
+		GPIO: GPIO,
+		STORAGE: STORAGE,
+		CONSOLE: CONSOLE,
+		DATETIME: DATETIME,
+
+		setInterval: setInterval,
+		clearInterval: clearInterval,
+		setTimeout: setTimeout,
+		clearTimeout: clearTimeout,
+	});
+} catch(e) {
+	result = e.toString();
+}
+
+
+process.on('message', function(data) {
+	GPIO.emit('change', data);
+});
+
+
+if (result !== true)
+	process.send(result);
+

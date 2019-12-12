@@ -17,6 +17,7 @@
     "fastify-ws": "^1.0.3",
     "fs": "0.0.1-security",
     "md5": "^2.2.1",
+    "moment": "^2.24.0",
     "os-utils": "0.0.14",
     "request": "^2.88.0",
     "system-health-monitor": "^1.2.0",
