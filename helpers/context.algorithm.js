@@ -38,6 +38,7 @@ let CLOUD   = new events();
 let HTTP    = new events();
 let STORAGE = new events();
 let CONSOLE = new events();
+let FILE    = new events();
 
 
 // CLOUD
@@ -73,11 +74,38 @@ CONSOLE.log = function(message) {
 };
 
 
+// FILE
+
+FILE.read = function(filename) {
+	var content = '';
+
+	try {
+		content = fs.readFileSync(filename);
+	} catch(e) {
+		content = '';
+	}
+
+	return content;
+};
+
+FILE.write = function(filename, data) {
+	fs.writeFileSync(filename, data);
+};
+
+FILE.append = function(filename, data) {
+	fs.appendFileSync(filename, data);
+};
+
+
 // DATETIME
 
 const DATETIME = {
 	timestamp: function() {
 		return moment().unix();
+	},
+
+	format: function(format) {
+		return moment().format(format);
 	}
 }
 
@@ -101,6 +129,7 @@ try {
 		STORAGE: STORAGE,
 		CONSOLE: CONSOLE,
 		DATETIME: DATETIME,
+		FILE: FILE,
 
 		setInterval: setInterval,
 		clearInterval: clearInterval,

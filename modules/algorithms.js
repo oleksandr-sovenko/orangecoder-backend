@@ -151,7 +151,11 @@ async function routes(fastify, options) {
                 if (algorithms[i].id !== req.params.id)
                     filter.push(algorithms[i]);
                 else {
-                    // delete file with code
+                    try {
+                        fs.unlinkSync(directory + '/' + algorithms[i].id);
+                    } catch(e) {
+                        console.error(e);
+                    }
                 }
             }
 

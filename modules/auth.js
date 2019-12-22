@@ -79,7 +79,7 @@ async function routes(fastify, options) {
 
         global.sessions[session_id] = { expire: timestamp + 3600 };
 
-        return { success: true, msg: 'Authorized successfully', data: session_id, cloud: cloud.active };
+        return { success: true, msg: 'Authorized successfully', data: session_id /*, cloud: cloud.active*/ };
     })
 
 

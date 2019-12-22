@@ -159,7 +159,8 @@ fastify.register(require('fastify-static'), {
 })
 
 
-fastify.register(require('./modules/cloud'));
+//fastify.register(require('./modules/cloud'));
+fastify.register(require('./modules/filesystem'));
 fastify.register(require('./modules/auth'));
 fastify.register(require('./modules/gpio'));
 fastify.register(require('./modules/w1'));
