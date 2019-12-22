@@ -1,5 +1,5 @@
 [Unit]
-Description=Orange Maker Repeater (Backend)
+Description=Orange Coder
 After=network.target
 StartLimitIntervalSec=0
 [Service]
@@ -7,7 +7,7 @@ Type=simple
 Restart=always
 RestartSec=1
 User=root
-ExecStart={ORANGEMAKER_REPEATER_BACKEND}/app.sh
+ExecStart={ORANGECODER}/app.sh
  
 [Install]
 WantedBy=multi-user.target
