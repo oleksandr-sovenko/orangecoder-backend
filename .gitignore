@@ -1,2 +1,4 @@
+bin
 node_modules
-
+share/orangecoder/public/
+share/orangecoder/helpers/pin-event-change

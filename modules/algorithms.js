@@ -16,9 +16,10 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const { fork } = require('child_process'),
-      directory = './data/algorithms',
-      filename  = directory + '/index.json';
+const { fork }           = require('child_process'),
+    algorithms_dir       = global.config.dir.data + '/algorithms',
+    index_json           = algorithms_dir + '/index.json',
+    context_algorithm_js = global.config.dir.helpers + '/context.algorithm.js';
 
 
 var algorithm_process = {};
@@ -30,10 +31,10 @@ async function routes(fastify, options) {
      *  @method   GET
      */
     fastify.get('/algorithms', async function(req, rep) {
-        var files = fs.readdirSync('./data/algorithms');
+        var files = fs.readdirSync(algorithms_dir);
 
-        if (fs.existsSync(filename)) {
-            var algorithms = JSON.parse(fs.readFileSync(filename, 'utf8'));
+        if (fs.existsSync(index_json)) {
+            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8'));
             for (var i in algorithms)
                 algorithms[i].running = algorithm_process[algorithms[i].id] !== undefined ? true : false;
         } else
@@ -56,8 +57,8 @@ async function routes(fastify, options) {
 
         var id = uuid4();
 
-        if (fs.existsSync(filename))
-            var algorithms = JSON.parse(fs.readFileSync(filename, 'utf8'));
+        if (fs.existsSync(index_json))
+            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8'));
         else
             var algorithms = [];
 
@@ -67,8 +68,8 @@ async function routes(fastify, options) {
             description: req.body.description
         });
 
-        fs.writeFileSync(directory + '/' + id, base64.decode(req.body.code));
-        fs.writeFileSync(filename, JSON.stringify(algorithms));
+        fs.writeFileSync(algorithms_dir + '/' + id, base64.decode(req.body.code));
+        fs.writeFileSync(index_json, JSON.stringify(algorithms));
 
         return { success: true, msg: 'Successfully' };
     });
@@ -82,13 +83,13 @@ async function routes(fastify, options) {
         if (!is_authorized(req))
             return { success: false, msg: 'Authorization required' }
 
-        if (fs.existsSync(filename)) {
-            var algorithms = JSON.parse(fs.readFileSync(filename, 'utf8'));
+        if (fs.existsSync(index_json)) {
+            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8'));
 
             for (var i in algorithms) {
                 if (algorithms[i].id === req.params.id) {
-                    if (fs.existsSync(filename))
-                        algorithms[i].code = base64.encode(fs.readFileSync(directory + '/' + algorithms[i].id, 'utf8'));
+                    if (fs.existsSync(index_json))
+                        algorithms[i].code = base64.encode(fs.readFileSync(algorithms_dir + '/' + algorithms[i].id, 'utf8'));
                     else
                         algorithms[i].code = '';
 
@@ -112,8 +113,8 @@ async function routes(fastify, options) {
         if (req.body.title === undefined || req.body.description === undefined || req.body.code === undefined)
             return { success: false, msg: 'Required fields: string(title), string(description), base64(code)' };
 
-        if (fs.existsSync(filename)) {
-            var algorithms = JSON.parse(fs.readFileSync(filename, 'utf8'));
+        if (fs.existsSync(index_json)) {
+            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8'));
 
             for (var i in algorithms) {
                 if (algorithms[i].id === req.params.id) {
@@ -123,8 +124,8 @@ async function routes(fastify, options) {
                         description: req.body.description
                     };
 
-                    fs.writeFileSync(directory + '/' + algorithms[i].id, base64.decode(req.body.code));
-                    fs.writeFileSync(filename, JSON.stringify(algorithms));
+                    fs.writeFileSync(algorithms_dir + '/' + algorithms[i].id, base64.decode(req.body.code));
+                    fs.writeFileSync(index_json, JSON.stringify(algorithms));
 
                     return { success: true, msg: 'Successfully' }
                 }
@@ -143,8 +144,8 @@ async function routes(fastify, options) {
         if (!is_authorized(req))
             return { success: false, msg: 'Authorization required' }
 
-        if (fs.existsSync(filename)) {
-            var algorithms = JSON.parse(fs.readFileSync(filename, 'utf8')),
+        if (fs.existsSync(index_json)) {
+            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8')),
                 filter = [];
 
             for (var i in algorithms) {
@@ -152,14 +153,14 @@ async function routes(fastify, options) {
                     filter.push(algorithms[i]);
                 else {
                     try {
-                        fs.unlinkSync(directory + '/' + algorithms[i].id);
+                        fs.unlinkSync(algorithms_dir + '/' + algorithms[i].id);
                     } catch(e) {
                         console.error(e);
                     }
                 }
             }
 
-            fs.writeFileSync(filename, JSON.stringify(filter));
+            fs.writeFileSync(index_json, JSON.stringify(filter));
         }
 
         return { success: true, msg: 'Successfully' }
@@ -174,14 +175,14 @@ async function routes(fastify, options) {
         if (!is_authorized(req))
             return { success: false, msg: 'Authorization required' }
 
-        if (fs.existsSync(filename)) {
-            var algorithms = JSON.parse(fs.readFileSync(filename, 'utf8')),
+        if (fs.existsSync(index_json)) {
+            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8')),
                 id = req.params.id;
 
             for (var i in algorithms) {
                 if (algorithms[i].id === id) {
 
-                    algorithm_process[id] = fork('./helpers/context.algorithm.js', [algorithms[i].id]);
+                    algorithm_process[id] = fork(context_algorithm_js, [algorithms[i].id]);
                     algorithm_process[id].on('message', async function(message) {
                         appWSSendForAll(JSON.stringify({ action: 'console', data: id + ', ' + message }));
                     });

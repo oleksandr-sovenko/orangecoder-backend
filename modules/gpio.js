@@ -18,7 +18,7 @@
 
 const fs = require('fs'),
       { spawn } = require('child_process'),
-      filename = './data/gpio-devices.json';
+      gpio_json = global.config.dir.data + '/gpio.json';
 
 
 global.childs = [];
@@ -71,8 +71,8 @@ async function routes(fastify, options) {
         if (!is_authorized(req))
             return { success: false, msg: 'Authorization required' }
 
-        if (fs.existsSync(filename))
-            var devices = JSON.parse(fs.readFileSync(filename, 'utf8'));
+        if (fs.existsSync(gpio_json))
+            var devices = JSON.parse(fs.readFileSync(gpio_json, 'utf8'));
         else
             var devices = [];
 
@@ -94,18 +94,15 @@ async function routes(fastify, options) {
         if (req.body.name === '' || req.body.device === '' || Object.keys(req.body.pins).length === 0)
             return { success: false, msg: "Fields name, device, pins can't be empty." };
 
-        if (fs.existsSync(filename))
-            var devices = JSON.parse(fs.readFileSync(filename, 'utf8'));
+        if (fs.existsSync(gpio_json))
+            var devices = JSON.parse(fs.readFileSync(gpio_json, 'utf8'));
         else
             var devices = [];
 
         devices.push({ id: uuid4(), name: req.body.name,  device: req.body.device,  pins: req.body.pins })
-
-        fs.writeFileSync(filename, JSON.stringify(devices));
-
+        fs.writeFileSync(gpio_json, JSON.stringify(devices));
         spawn_helpers();
 
-        console.log(Object.keys(req.body.pins).length);
 
         return { success: true, msg:'' }
     })
@@ -119,8 +116,8 @@ async function routes(fastify, options) {
         if (!is_authorized(req))
             return { success: false, msg: 'Authorization required' }
 
-        if (fs.existsSync(filename)) {
-            var devices = JSON.parse(fs.readFileSync(filename, 'utf8')),
+        if (fs.existsSync(gpio_json)) {
+            var devices = JSON.parse(fs.readFileSync(gpio_json, 'utf8')),
                 filter = [];
 
             for (var i in devices) {
@@ -147,8 +144,8 @@ async function routes(fastify, options) {
         if (req.body.name === '' || req.body.device === '' || Object.keys(req.body.pins).length === 0)
             return { success: false, msg: "Fields name, device, pins can't be empty." };
 
-        if (fs.existsSync(filename)) {
-            var devices = JSON.parse(fs.readFileSync(filename, 'utf8')),
+        if (fs.existsSync(gpio_json)) {
+            var devices = JSON.parse(fs.readFileSync(gpio_json, 'utf8')),
                 filter = [];
 
             for (var i in devices) {
@@ -161,7 +158,7 @@ async function routes(fastify, options) {
                     };
             }
 
-            fs.writeFileSync(filename, JSON.stringify(devices));
+            fs.writeFileSync(gpio_json, JSON.stringify(devices));
         }
 
         spawn_helpers();
@@ -178,8 +175,8 @@ async function routes(fastify, options) {
         if (!is_authorized(req))
             return { success: false, msg: 'Authorization required' }
 
-        if (fs.existsSync(filename)) {
-            var devices = JSON.parse(fs.readFileSync(filename, 'utf8')),
+        if (fs.existsSync(gpio_json)) {
+            var devices = JSON.parse(fs.readFileSync(gpio_json, 'utf8')),
                 filter = [];
 
             for (var i in devices) {
@@ -187,7 +184,7 @@ async function routes(fastify, options) {
                     filter.push(devices[i]);
             }
 
-            fs.writeFileSync(filename, JSON.stringify(filter));
+            fs.writeFileSync(gpio_json, JSON.stringify(filter));
         }
 
         spawn_helpers();
@@ -205,8 +202,8 @@ function spawn_helpers() {
 
     global.childs = [];
 
-    if (fs.existsSync(filename))
-        var devices = JSON.parse(fs.readFileSync(filename, 'utf8'));
+    if (fs.existsSync(gpio_json))
+        var devices = JSON.parse(fs.readFileSync(gpio_json, 'utf8'));
     else
         var devices = [];
 

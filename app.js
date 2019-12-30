@@ -16,6 +16,27 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+// pkg -t node12.2.0-linux-armv7 -o orangecoder-node12.2.0-linux-armv7-1.0 app.js
+
+
+global.config = {
+	'dir': {
+		'root': '/opt/orangecoder'
+	}
+};
+
+
+global.config.dir.public =
+	global.config.dir.root + '/share/orangecoder/public';
+global.config.dir.data =
+	global.config.dir.root + '/share/orangecoder/data';
+global.config.dir.helpers =
+	global.config.dir.root + '/share/orangecoder/helpers';
+
+
+/**
+ *
+ */
 global.sessions = [];
 
 global.events  = require('events');
@@ -32,10 +53,56 @@ global.request = require('request-promise-native');
 global.exec    = util.promisify(require('child_process').exec);
 global.readdir = util.promisify(fs.readdir);
 
-
-
 let clients = {};
 
+
+/** @command install
+ *
+ */
+if (process.argv[2] === 'install') {
+	let service = '' +
+		'[Unit]\n' +
+		'Description=Orange Coder\n' +
+		'After=network.target\n' +
+		'StartLimitIntervalSec=0\n' +
+		'[Service]\n' +
+		'Type=simple\n' +
+		'Restart=always\n' +
+		'RestartSec=1\n' +
+		'User=root\n' +
+		'ExecStart=' + process.argv[0] + '\n' +
+		'' +
+		'[Install]\n' +
+		'WantedBy=multi-user.target\n';
+
+	try {
+		fs.writeFileSync('/etc/systemd/system/orangecoder.service', service);
+	} catch(e) {
+
+	}
+
+	exec('systemctl enable orangecoder');
+
+	process.exit();
+}
+
+
+/** @command uninstall
+ *
+ */
+if (process.argv[2] === 'uninstall') {
+	exec('systemctl disable orangecoder');
+
+	try {
+		fs.unlinkSync('/etc/systemd/system/orangecoder.service');
+	} catch(e) {
+
+	}
+
+	process.exit();
+}
+
+//console.log(process.argv[2]);
 
 
 // require('./modules/vm');
@@ -155,7 +222,7 @@ fastify.register(require('fastify-cors'))
 fastify.register(require('fastify-ws'))
 fastify.register(require('fastify-formbody'))
 fastify.register(require('fastify-static'), {
-	root: path.join(__dirname, 'public'),
+	root: global.config.dir.public,
 })
 
 

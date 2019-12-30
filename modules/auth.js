@@ -20,14 +20,14 @@
  *
  */
 async function routes(fastify, options) {
-
+    let credentials_json = global.config.dir.data + '/credentials.json';
 
 
     /**
      *
      */
     fastify.post('/change-password', async function(req, rep) {
-        var credentials = JSON.parse(fs.readFileSync('./data/credentials.json', 'utf8')),
+        var credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8')),
             session_id  = md5(Math.random()),
             timestamp   = global.getUnixTimestamp();
 
@@ -50,8 +50,8 @@ async function routes(fastify, options) {
         if (req.body.password_new !== req.body.password_confirm)
             return { success: false, msg: 'Passwords do not match' };
 
-        fs.writeFileSync('./data/credentials.json', JSON.stringify({ "username": "admin", "password": md5(req.body.password_new) }));
-        credentials = JSON.parse(fs.readFileSync('./data/credentials.json', 'utf8'))
+        fs.writeFileSync(credentials_json, JSON.stringify({ "username": "admin", "password": md5(req.body.password_new) }));
+        credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8'))
 
         if (credentials.password === md5(req.body.password_new))
             return { success: true, msg: 'Password changed' };
@@ -64,7 +64,7 @@ async function routes(fastify, options) {
      *
      */
     fastify.post('/signin', async function(req, rep) {
-        const credentials = JSON.parse(fs.readFileSync('./data/credentials.json', 'utf8')),
+        const credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8')),
               session_id = md5(Math.random()),
               timestamp = global.getUnixTimestamp();
 
