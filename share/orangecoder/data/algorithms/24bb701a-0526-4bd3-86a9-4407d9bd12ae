@@ -1,0 +1,3 @@
+setInterval(function() {
+    CONSOLE.log(DATETIME.timestamp())
+}, 5000)
