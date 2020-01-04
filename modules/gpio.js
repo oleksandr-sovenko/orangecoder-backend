@@ -198,24 +198,24 @@ async function routes(fastify, options) {
  *
  */
 function spawn_helpers() {
-    spawn('killall', ['pin-event-change']);
+    // spawn('killall', ['pin-event-change']);
 
-    global.childs = [];
+    // global.childs = [];
 
-    if (fs.existsSync(gpio_json))
-        var devices = JSON.parse(fs.readFileSync(gpio_json, 'utf8'));
-    else
-        var devices = [];
+    // if (fs.existsSync(gpio_json))
+    //     var devices = JSON.parse(fs.readFileSync(gpio_json, 'utf8'));
+    // else
+    //     var devices = [];
 
-    for (var i in devices) {
-        var pins =  JSON.stringify(devices[i].pins)
-                    .replace(/{/g, '')
-                    .replace(/"/g, '')
-                    .replace(/,/g, ' ')
-                    .replace(/}/g, '');
+    // for (var i in devices) {
+    //     var pins =  JSON.stringify(devices[i].pins)
+    //                 .replace(/{/g, '')
+    //                 .replace(/"/g, '')
+    //                 .replace(/,/g, ' ')
+    //                 .replace(/}/g, '');
 
-        global.helperPinEventChange([devices[i].device, devices[i].id, pins]);
-    }
+    //     global.helperPinEventChange([devices[i].device, devices[i].id, pins]);
+    // }
 }
 
 

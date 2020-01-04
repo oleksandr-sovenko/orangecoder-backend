@@ -1,3 +1,12 @@
+var value = 0;
+
 setInterval(function() {
-    CONSOLE.log(DATETIME.timestamp())
-}, 5000)
+    value = GPIO.digitalRead(7);
+
+    if (value == 1)
+        value = 0;
+    else
+        value = 1;
+        
+    GPIO.digitalWrite(7, value);
+}, 500)

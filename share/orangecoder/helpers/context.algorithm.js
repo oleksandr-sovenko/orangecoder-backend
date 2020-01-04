@@ -16,11 +16,45 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const events = require('events'),
-	  path = require('path'),
-	  moment = require('moment'),
-	  fs = require('fs'),
-	  vm = require('vm');
+// const { stdout, stderr } = await exec('gpio readall');
+
+//         var temp = stdout.split('\n'),
+//             data = [],
+//             fields = [];
+
+//         for (var i in temp) {
+//             var items = temp[i].split('|');
+
+//             if (items.length > 1 && !/Physical/.test(temp[i])) {
+//                 data.push({
+//                     'H2+': items[1].trim(),
+//                     'wPi': items[2].trim(),
+//                     'Name': items[3].trim(),
+//                     'Mode': items[4].trim(),
+//                     'V': items[5].trim(),
+//                     'Physical': items[6].trim()
+//                 });
+
+//                 data.push({
+//                     'H2+': items[13].trim(),
+//                     'wPi': items[12].trim(),
+//                     'Name': items[11].trim(),
+//                     'Mode': items[10].trim(),
+//                     'V': items[9].trim(),
+//                     'Physical': items[8].trim()
+//                 });
+//             }
+//         }
+
+//         return { success: true, msg:'', data: data }
+
+
+const	events       = require('events'),
+	  	path         = require('path'),
+	  	moment       = require('moment'),
+	  	fs           = require('fs'),
+	  	vm           = require('vm'),
+		{ execSync } = require('child_process');
 
 const filename = path.join(__dirname, '..', 'data', 'algorithms', process.argv[2]);
 
@@ -110,15 +144,16 @@ const DATETIME = {
 }
 
 
+
 // GPIO
 
-// GPIO.get = function() {
+GPIO.digitalRead = function(pin) {
+	return execSync('gpio read ' + pin).toString().trim();
+};
 
-// };
-
-// GPIO.post = function() {
-
-// };
+GPIO.digitalWrite = function(pin, value) {
+	return execSync('gpio write ' + pin + ' ' + value).toString().trim();
+};
 
 
 try {

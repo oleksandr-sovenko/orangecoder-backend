@@ -47,10 +47,10 @@ global.path    = require('path');
 global.uuid4   = require('uuid4')
 global.fastify = require('fastify')({ logger: false });
 global.util    = require('util');
+global.exec    = util.promisify(require('child_process').exec);
 global.md5     = require('md5');
 global.base64  = require('js-base64').Base64;
 global.request = require('request-promise-native');
-global.exec    = util.promisify(require('child_process').exec);
 global.readdir = util.promisify(fs.readdir);
 
 let clients = {};
