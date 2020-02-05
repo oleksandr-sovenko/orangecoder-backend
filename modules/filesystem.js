@@ -16,13 +16,23 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+const config = require('../config'),
+      { DIR, FILE } = require('./namespace');
+
+
 async function routes(fastify, options) {
     /**
-     *  @endpoint /filesystem/list
+     *  @endpoint /filesystem/list*
      *  @method   GET
      */
-    fastify.get('/filesystem/list', async function(req, rep) {
+    fastify.get('/filesystem/list*', async function(req, rep) {
+        var list = [],
+            directory = req.params['*'];
 
+        return DIR.list(directory);
+
+        //return { success: false, data: list, msg: 'Directory does not exist' };
+        //return { success: true, data: list };
     });
 
 
@@ -31,7 +41,7 @@ async function routes(fastify, options) {
      *  @method   PUT
      */
     fastify.put('/filesystem/file', async function(req, rep) {
-
+        // FILE.write(filename);
     });
 
 
@@ -40,7 +50,7 @@ async function routes(fastify, options) {
      *  @method   GET
      */
     fastify.get('/filesystem/file/:id', async function(req, rep) {
-
+        // FILE.read(filename);
     });
 
 
@@ -49,7 +59,7 @@ async function routes(fastify, options) {
      *  @method   DELETE
      */
     fastify.delete('/filesystem/file/:id', async function(req, rep) {
-
+        // FILE.remove(filename);
     });
 
 
@@ -58,16 +68,7 @@ async function routes(fastify, options) {
      *  @method   PUT
      */
     fastify.put('/filesystem/directory', async function(req, rep) {
-
-    });
-
-
-    /**
-     *  @endpoint /filesystem/directory/:id
-     *  @method   GET
-     */
-    fastify.get('/filesystem/directory/:id', async function(req, rep) {
-
+        // DIR.create(directory);
     });
 
 
@@ -76,7 +77,7 @@ async function routes(fastify, options) {
      *  @method   DELETE
      */
     fastify.delete('/filesystem/directory/:id', async function(req, rep) {
-
+        // DIR.remove(directory);
     });    
 }
 

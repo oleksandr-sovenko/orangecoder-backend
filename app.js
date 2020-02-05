@@ -19,41 +19,14 @@
 // pkg -t node12.2.0-linux-armv7 -o orangecoder-node12.2.0-linux-armv7-1.0 app.js
 
 
-global.config = {
-	'dir': {
-		'root': '/opt/orangecoder'
-	}
-};
-
-
-global.config.dir.public =
-	global.config.dir.root + '/share/orangecoder/public';
-global.config.dir.data =
-	global.config.dir.root + '/share/orangecoder/data';
-global.config.dir.helpers =
-	global.config.dir.root + '/share/orangecoder/helpers';
-
-
-/**
- *
- */
-global.sessions = [];
-
-global.events  = require('events');
-global.vm      = require('vm');
-global.os      = require('os');
-global.fs      = require('fs');
-global.path    = require('path');
-global.uuid4   = require('uuid4')
-global.fastify = require('fastify')({ logger: false });
-global.util    = require('util');
-global.exec    = util.promisify(require('child_process').exec);
-global.md5     = require('md5');
-global.base64  = require('js-base64').Base64;
-global.request = require('request-promise-native');
-global.readdir = util.promisify(fs.readdir);
-
-let clients = {};
+const config  = require('./config'),
+	  net     = require('net'),
+	  vm      = require('vm'),
+	  fs      = require('fs'),
+	  fastify = require('fastify')({ logger: false }),
+	  path    = require('path'),
+	  { fork, execSync } = require('child_process'),
+	  { HASH, DATETIME, W1, I2C, GPIO, FILE } = require('./modules/namespace');
 
 
 /** @command install
@@ -62,7 +35,7 @@ let clients = {};
 if (process.argv[2] === 'install') {
 	let service = '' +
 		'[Unit]\n' +
-		'Description=Orange Coder\n' +
+		'Description=OrangeCoder.org\n' +
 		'After=network.target\n' +
 		'StartLimitIntervalSec=0\n' +
 		'[Service]\n' +
@@ -70,7 +43,7 @@ if (process.argv[2] === 'install') {
 		'Restart=always\n' +
 		'RestartSec=1\n' +
 		'User=root\n' +
-		'ExecStart=' + process.argv[0] + '\n' +
+		'ExecStart=' + process.argv[0] + ' serve\n' +
 		'' +
 		'[Install]\n' +
 		'WantedBy=multi-user.target\n';
@@ -78,10 +51,10 @@ if (process.argv[2] === 'install') {
 	try {
 		fs.writeFileSync('/etc/systemd/system/orangecoder.service', service);
 	} catch(e) {
-
+		console.log(e);
 	}
 
-	exec('systemctl enable orangecoder');
+	execSync('systemctl enable orangecoder');
 
 	process.exit();
 }
@@ -91,279 +64,171 @@ if (process.argv[2] === 'install') {
  *
  */
 if (process.argv[2] === 'uninstall') {
-	exec('systemctl disable orangecoder');
+	execSync('systemctl disable orangecoder');
 
 	try {
 		fs.unlinkSync('/etc/systemd/system/orangecoder.service');
 	} catch(e) {
-
+		console.log(e);
 	}
 
 	process.exit();
 }
 
-//console.log(process.argv[2]);
 
-
-// require('./modules/vm');
-
-/** getDeviceInfo
+/** @command wm
  *
  */
-global.getDeviceInfo = function(){
-	var model = 'Unknown',
-		serial = 'Unknown',
-		version = '';
+if (process.argv[2] === 'vm') {
+	var filename = process.argv[3],
+		jscode = '';
 
-	if (fs.existsSync('/etc/armbian-release')) {
-		model = fs.readFileSync('/etc/armbian-release')
-				.toString()
-				.replace(/.*BOARD_NAME="/s, '')
-				.replace(/".*/s, '').trim();
 
-		version = fs.readFileSync('/etc/armbian-release')
-				.toString()
-				.replace(/.*VERSION=/s, '')
-				.replace(/\n.*/s, '').trim();
-	}
+	if (fs.existsSync(filename))
+		jscode = fs.readFileSync(filename, 'utf8');
+	else
+		process.exit();
 
-	if (fs.existsSync('/proc/cpuinfo'))
-		serial = fs.readFileSync('/proc/cpuinfo')
-				.toString()
-				.replace(/.*Serial		: /s, '').trim();
 
-	return {
-		platform: 'Linux',
-    	version: os.release() + (version !== '' ? ', Armbian ' + version : ''),
-    	model: model,
-    	manufacturer: 'Xunlong',
-    	serial: serial
-	}
+	// namespace CONSOLE {
+		const CONSOLE = {
+			log: function(message) {
+				try {
+					client.write(JSON.stringify({ type: 'console', process: { pid: process.pid}, message: message }));
+				} catch(e) {
+					console.log(e);
+				}
+			},
+		}
+	// }
+
+
+	// Execution JS code {
+		try {
+			result = vm.runInNewContext(jscode + ';' + true, {
+				W1            : W1,
+				I2C           : I2C,
+				GPIO          : GPIO,
+				CONSOLE       : CONSOLE,
+				DATETIME      : DATETIME,
+				FILE          : FILE,
+				HASH          : HASH,
+		
+				setInterval   : setInterval,
+				clearInterval : clearInterval,
+				setTimeout    : setTimeout,
+				clearTimeout  : clearTimeout,
+			}, {
+				breakOnSigint: true,
+				displayErrors: false
+			});
+		} catch(e) {
+			result = e.toString();
+		}
+	// }
+	
+
+	// Inter Process Communications {
+		var client = net.connect({ path: config.socket.ipc }, function() {
+
+		});
+		
+		client.on('data', function(data) {
+			GPIO.emit('change', data);
+		});
+		
+		client.on('end', function() {
+			// console.log('disconnected from server');
+		});
+		
+		client.on('error', function(err) {
+			// console.log(err);
+		});
+	// }
+
+
+	if (result !== true)
+		client.write(JSON.stringify({ type: 'error', process: { pid: process.pid}, message: result }));
 }
 
 
-global.device = getDeviceInfo();
-
-
-/** is_authorized
- *  @param request
+/** @command serve
+ *
  */
-global.is_authorized = function(req) {
-	const timestamp = global.getUnixTimestamp();
+if (process.argv[2] === 'serve') {
+	// Inter Process Communications {
+		const connectedSockets = new Set();
 
-	if (req.headers['backend-authorization'] !== undefined &&
-	    global.sessions[req.headers['backend-authorization']] !== undefined &&
-	    global.sessions[req.headers['backend-authorization']].expire > timestamp) {
-		return true;
-	} else {
-	    return false;
-	}
-}
+		// connectedSockets.broadcast = function(data, except) {
+		//     for (let sock of this) {
+		//         if (sock !== except) {
+		//             sock.write(data);
+		//         }
+		//     }
+		// }
 
+		var server = net.createServer(function(client) {
+			connectedSockets.add(client);
 
-/** getCpuUsage
- *  @param callback
- */
-global.getCpuUsage = function(callback) {
-	var result = [];
+			client.on('data',function(data) {
+				var message = {};
 
-    var stats = global.getCpuInfo();
-    var startIdle = stats.idle;
-    var startTotal = stats.total;
+				try {
+					message = JSON.parse(data.toString());
+				} catch(e) {
+					message = {};
+				}
 
-    setTimeout(function() {
-        var stats = global.getCpuInfo();
-        var endIdle = stats.idle;
-        var endTotal = stats.total;
-
-		var cpus = os.cpus();
- 		for (var cpu in cpus) {
-        	if (!cpus.hasOwnProperty(cpu)) continue;
-
-        	var idle  = endIdle[cpu]  - startIdle[cpu];
-        	var total = endTotal[cpu] - startTotal[cpu];
-
-			result.push({
-				percentage: Math.round(100 - ((idle / total) * 100))
+				if (message.type !== undefined) {
+					if (message.type === 'console' || message.type === 'error')
+						console.log(DATETIME.format('YYYY-MM-DD hh:mm:ss'), message.process.pid, message.message);
+				}
 			});
 
-        }
+			client.on('end', function() {
+		    	// console.log('client disconnected');
+		    	connectedSockets.delete(client);
+			});
+		});
 
-		callback(result);
-    }, 1000);
-}
+		server.on('error', function (e) {
+			if (e.code == 'EADDRINUSE') {
+		    	var clientSocket = new net.Socket();
 
+		    	clientSocket.on('error', function(e) {
+		        	if (e.code == 'ECONNREFUSED') {
+		            	fs.unlinkSync(config.socket.ipc);
 
-/** helperPinEventChange
- *  @param pin
- */
-global.helperPinEventChange = function(args) {
-	const { spawn } = require('child_process');
-	const child = spawn('./helpers/pin-event-change', args);
+		            	server.listen(config.socket.ipc, function() {
+		                	// console.log('server recovered');
+		            	});
+		        	}
+		    	});
 
-	child.stderr.on('data', function(data) {
-		let json_data = {};
+		    	clientSocket.connect({ path: config.socket.ipc }, function() {
+		        	// console.log('Server running, giving up...');
+		        	process.exit();
+		    	});
+			}
+		});
 
-		try {
-			json_data = JSON.parse(data.toString().trim());
-		} catch(e) {
-			json_data = {};
-		}
-
-		appAlgorithmProcessSendForAll(json_data);
-		appWSSendForAll(data.toString().trim());
-	});
-
-	return child
-};
-
-
-fastify.register(require('fastify-cors'))
-fastify.register(require('fastify-ws'))
-fastify.register(require('fastify-formbody'))
-fastify.register(require('fastify-static'), {
-	root: global.config.dir.public,
-})
+		server.listen(config.socket.ipc, function() {
+			// console.log('PID [' + process.pid + '] TCP Server listening');
+		});
+	// }
 
 
-//fastify.register(require('./modules/cloud'));
-fastify.register(require('./modules/filesystem'));
-fastify.register(require('./modules/auth'));
-fastify.register(require('./modules/gpio'));
-fastify.register(require('./modules/w1'));
-fastify.register(require('./modules/algorithms'));
-
-
-/**
- *
- */
-fastify.get('/', function(req, reply) {
-	reply.sendFile('index.html');
-})
-
-
-/**
- *
- */
-fastify.get('/device', async function(req, rep) {
-	return device
-})
-
-
-fastify.listen(80, '0.0.0.0');
-
-
-/** fastify.ready
- *
- */
-fastify.ready(async function(err) {
- 	fastify.ws.on('connection', function(socket) {
- 		var id = Math.random()
-
- 		clients[id] = socket;
-
-		socket.on('message', function(msg) {
-			socket.send(msg)
+	// fastify {
+		fastify.register(require('fastify-cors'))
+		fastify.register(require('fastify-ws'))
+		fastify.register(require('fastify-formbody'))
+		fastify.register(require('fastify-static'), {
+			root: config.dir.public,
 		})
 
-		socket.on('close', function() {
-			delete clients[id];
-		});
-    });
-})
-
-
-/** getUnixTimestamp
- *
- */
-global.getUnixTimestamp = function() {
-	return Math.round(new Date().getTime() / 1000);
+		fastify.register(require('./modules/filesystem'));
+	
+		fastify.listen(80, '0.0.0.0');
+	// }
 }
 
-
-/** getCpuInfo
- *  @param callback
- */
-global.getCpuInfo = function(callback) {
-    var cpus = os.cpus();
-
-    var user  = {};
-    var nice  = {};
-    var sys   = {};
-    var idle  = {};
-    var irq   = {};
-    var total = {};
-
-    for(var cpu in cpus){
-        if (!cpus.hasOwnProperty(cpu)) continue;
-
-        if (user[cpu] === undefined) user[cpu] = 0;
-        if (nice[cpu] === undefined) nice[cpu] = 0;
-        if (sys[cpu]  === undefined) sys[cpu]  = 0;
-        if (irq[cpu]  === undefined) irq[cpu]  = 0;
-        if (idle[cpu] === undefined) idle[cpu] = 0;
-
-        user[cpu] += cpus[cpu].times.user;
-        nice[cpu] += cpus[cpu].times.nice;
-        sys[cpu]  += cpus[cpu].times.sys;
-        irq[cpu]  += cpus[cpu].times.irq;
-        idle[cpu] += cpus[cpu].times.idle;
-    	total[cpu] = user[cpu] + nice[cpu] + sys[cpu] + idle[cpu] + irq[cpu];
-    }
-
-    return {
-        'idle': idle,
-        'total': total
-    };
-}
-
-
-/**
- *
- */
-global.appWSSendForAll = function(data) {
-    for (var id in clients) {
-        try {
-            clients[id].send(data);
-        } catch(e) {
-            console.log(e);
-        }
-    }
-}
-
-
-/**
- *
- */
-setInterval(async function() {
-	const disk_total = await exec('df -h | grep "/$" | awk \'{ print $2 }\''),
-		  disk_free  = await exec('df -h | grep "/$" | awk \'{ print $4 }\''),
-	      length     = Object.keys(clients).length;
-
-
-	if (length) {
-		global.getCpuUsage(function(usage) {
-			var temperature = Math.round(parseFloat(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp')) / 1000);
-
-			appWSSendForAll(JSON.stringify({
-				action: 'status',
-				data: {
-					memory: {
-						free: os.freemem(),
-						total: os.totalmem(),
-					},
-					disk: {
-						free: parseInt(disk_free.stdout) * 1073741824,
-						total: parseInt(disk_total.stdout) * 1073741824,
-					},
-					cpu: {
-						temperature: temperature,
-						usage: usage
-					},
-					loadavg: os.loadavg(),
-					uptime: os.uptime(),
-				},
-			}));
-		});
-	}
-}, 3000);
