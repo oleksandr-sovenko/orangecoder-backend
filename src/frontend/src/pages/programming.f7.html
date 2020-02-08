@@ -82,10 +82,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                                                 <i class="material-icons">play_arrow</i>
                                             </a>
                                         {{/if}}
-                                        <a class="link icon-only" @click="openPopup('.popup-edit-algorithm', '{{id}}', 'editAlgorithm')">
+                                        <a class="link icon-only {{js 'this.running ? "disabled" : ""'}}" @click="openPopup('.popup-edit-algorithm', '{{id}}', 'editAlgorithm')">
                                             <i class="material-icons">edit</i>
                                         </a>
-                                        <a class="link icon-only" @click="removeAlgorithm">
+                                        <a class="link icon-only {{js 'this.running ? "disabled" : ""'}}" @click="removeAlgorithm">
                                             <i class="material-icons">delete</i>
                                         </a>
                                     </td>
@@ -103,7 +103,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         </div>
 
         <!-- popup-add-algorithm -->
-        <div class="popup popup-add-algorithm">
+        <div class="popup popup-add-algorithm popup-tablet-fullscreen">
             <div class="block-title">{{_t 'New Algorithm'}}</div>
             <div class="list no-hairlines block-top" style="margin: 0px;">
                 <form>
@@ -140,7 +140,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
         <!-- /popup-add-algorithm -->
 
         <!-- popup-edit-algorithm -->
-        <div class="popup popup-edit-algorithm">
+        <div class="popup popup-edit-algorithm popup-tablet-fullscreen">
             <div class="block-title">{{_t 'Edit Algorithm'}}</div>
             <div class="list no-hairlines block-top" style="margin: 0px;">
                 <form>
@@ -166,12 +166,26 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     </ul>
                 </form>
             </div>
-            <div style="border: 1px solid #e0e0e0;" class="editor"></div>
+
+            <div class="toolbar tabbar toolbar-top">
+                <div class="toolbar-inner">
+                    <a href="#editor" class="tab-link tab-link-active">{{_t 'Editor'}}</a>
+                    <a href="#console" class="tab-link">{{_t 'Console'}}</a>
+                </div>
+            </div>
+            <div class="tabs">
+                <div id="editor" class="tab tab-active">
+                    <div style="border: 1px solid #e0e0e0;" class="editor"></div>
+                </div>
+                <div id="console" class="tab">
+                </div>
+            </div>
+
             <div class="block block-bottom">
                 <p class="row">
-                    <!-- button class="col button button-raised button-fill">{{_t 'Run'}}</button -->
+                    <button class="col button button-raised button-fill color-green run" data-label-run="{{_t 'Run'}}" data-label-stop="{{_t 'Stop'}}">{{_t 'Run'}}</button>
                     <button class="col button button-raised button-fill submit">{{_t 'Save'}}</button>
-                    <button class="col button button-raised popup-close">{{_t 'Cancel'}}</button>
+                    <button class="col button button-raised close">{{_t 'Cancel'}}</button>
                 </p>
             </div>
         </div>
@@ -333,19 +347,26 @@ export default {
             var self = this,
                 popup = self.$$(self.$$(class_name)[0].cloneNode(true));
 
+            popup.find('#editor').attr('id', 'editor-clone');
+            popup.find('#console').attr('id', 'console-clone');
+
+            popup.find('[href="#editor"]').attr('href', '#editor-clone');
+            popup.find('[href="#console"]').attr('href', '#console-clone');
+
             self.$app.popup.open(popup);
 
             popup.on('popup:closed', function(e) {
                 popup.remove();
             });
 
-            var height = popup.height() - (popup.find('.block-top').height() + popup.find('.block-bottom').height() + 70);
+            var height = popup.height() - (popup.find('.block-top').height() + popup.find('.block-bottom').height() + 110);
             popup.find('.editor').css({ height: height + 'px' })
 
             var editor = ace.edit(popup.find('.editor')[0]);
             editor.setTheme('ace/theme/chrome');
             editor.session.setMode('ace/mode/javascript');
             editor.setShowPrintMargin(false);
+            editor.changes = false;
 
             if (id !== null) {
                 self.$app.request({
@@ -354,14 +375,35 @@ export default {
                     dataType: 'json',
                     success: function(fields, status, xhr) {
                         for (var name in fields) {
-                            if (name == 'code')
+                            if (name == 'code') {
                                 editor.setValue(base64.decode(fields[name]));
-                            else
+                                editor.getSession().on('change', function() {
+                                    editor.changes = true;
+                                });
+                            } else
                                 popup.find('[name="' + name + '"]').val(fields[name]).trigger('change');
                         }
                     }
                 });
             }
+
+            popup.find('.run').on('click', function() {
+                var el = self.$$(this);
+
+                if (el.hasClass('color-green')) {
+                    el.removeClass('color-green').addClass('color-red').text(el.data('label-stop'));
+                    editor.setReadOnly(true);
+                    popup.find('.ace_scroller').css({ opacity: 0.5 });
+                    popup.find('.submit,.close').addClass('disabled');
+                    popup.find('[href="#console-clone"]').click();
+                } else {
+                    el.removeClass('color-red').addClass('color-green').text(el.data('label-run'));
+                    editor.setReadOnly(false);
+                    popup.find('.ace_scroller').css({ opacity: 1 });
+                    popup.find('.submit,.close').removeClass('disabled');
+                    popup.find('[href="#editor-clone"]').click();
+                }
+            });
 
             popup.find('.submit').on('click', function() {
                 if (method !== undefined) {
@@ -371,6 +413,17 @@ export default {
 
                     self[method](data, popup);
                 }
+            });
+
+            popup.find('.close').on('click', function() {
+                if (editor.changes) {
+                    self.$app.dialog.confirm('Do you want to save the changes you made?', "Your changes will be lost if you don\'t save them.", function() {
+                        popup.find('.submit').click();
+                    }, function() {
+                        self.$app.popup.close(popup);
+                    });
+                } else
+                    self.$app.popup.close(popup);
             });
         }
     },
