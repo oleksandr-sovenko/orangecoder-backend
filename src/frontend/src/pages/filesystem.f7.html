@@ -1,0 +1,156 @@
+<!--
+filesystem.f7.html
+Copyright (C) 2019 Oleksandr Sovenko (info@oleksandrsovenko.com)
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+
+<template>
+    <div class="page" data-name="filesystem">
+        <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner sliding">
+                <div class="left">
+                    <a href="#" class="link back">
+                        <i class="icon icon-back"></i>
+                        <span class="if-not-md">{{_t 'Back'}}</span>
+                    </a>
+                </div>
+                <div class="title">{{_t 'File System'}}</div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="block-title">{{_t 'List of files and directories'}}</div>
+
+            <div class="data-table data-table-init card">
+                <div class="card-header">
+                    <div class="data-table-links">
+                        <!--a class="link">
+                        	<i class="material-icons">folder</i> {{_t 'Add Directory'}}
+                        </a>
+
+                        <a class="link">
+                            <i class="material-icons">insert_drive_file</i> {{_t 'Add File'}}
+                        </a-->
+
+                        <div>
+                            /var/asdasd/asdasdasd
+                        </div>
+                    </div>
+                    <!--div class="data-table-actions">
+                        <a class="link icon-only">
+                            <i class="icon f7-icons if-not-md">sort</i>
+                            <i class="icon material-icons md-only">sort</i>
+                        </a>
+                        <a class="link icon-only">
+                            <i class="icon f7-icons if-not-md">more_vertical_round</i>
+                            <i class="icon material-icons md-only">more_vert</i>
+                        </a>
+                    </div-->
+                </div>
+                <div class="card-content">
+                    <table>
+                         <thead>
+                            <tr>
+                                <th class="label-cell"></th>
+                                <th class="label-cell">{{_t 'Name'}}</th>
+                                <th class="label-cell">{{_t 'Date'}}</th>
+                                <th class="label-cell">{{_t 'Size'}}</th>
+                                <th class="label-cell">{{_t 'Action'}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each filesystem.files}}
+                                <tr data-id="{{id}}" class="fm-item">
+                                    <td class="label-cell" nowrap>
+                                        <i class="material-icons">{{js ' this.type == "directory" ? "folder_open" : "insert_drive_file" '}}</i>
+                                    </td>
+                                    <td class="label-cell" width="100%">{{name}}</td>
+                                    <td class="label-cell" nowrap>
+                                        {{#js_if ' this.name != ".." '}}
+                                            {{date}}
+                                        {{/js_if}}
+                                    </td>
+                                    <td class="label-cell" nowrap>
+                                        {{#js_if ' this.name != ".." '}}
+                                            {{size}}
+                                        {{/js_if}}
+                                    </td>
+                                    <td class="actions-cell" nowrap>
+                                        {{#js_if ' this.name != ".." '}}
+                                            {{#js_if ' this.type == "file" '}}
+                                                <a class="link icon-only">
+                                                    <i class="material-icons">cloud_download</i>
+                                                </a>
+                                            {{/js_if}}
+                                            <a class="link icon-only">
+                                                <i class="material-icons">delete</i>
+                                            </a>
+                                        {{/js_if}}
+                                    </td>
+                                </tr>
+                            {{else}}
+                                <tr>
+                                    <td colspan="6" class="text-align-center" data-ua="Ще немає пристроїв" data-ru="устройств пока нет">{{_t 'No files and directories yet'}}</td>
+                                </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer"></div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+export default {
+    style: `
+        .fm-item {
+            cursor: pointer;
+        }
+
+        .fm-item .material-icons {
+            color: var(--f7-theme-color);
+        }
+    `,
+    methods: {
+    },
+
+    data: function() {
+        return {
+            filesystem: {
+                files: [
+                    { name: '..', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'file', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'file', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'file', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'file', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                    { name: 'Test1', type: 'file', date: '12-Jan-2019 11:22', size: '1.5 MB' },
+                ]
+            }
+        }
+    },
+};
+</script>

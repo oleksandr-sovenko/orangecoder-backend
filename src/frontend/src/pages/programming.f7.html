@@ -1,0 +1,386 @@
+<!--
+programming.f7.html
+Copyright (C) 2019 Oleksandr Sovenko (info@oleksandrsovenko.com)
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+
+<template>
+    <div class="page" data-name="programming">
+        <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner sliding">
+                <div class="left">
+                    <a href="#" class="link back">
+                        <i class="icon icon-back"></i>
+                        <span class="if-not-md">{{_t 'Back'}}</span>
+                    </a>
+                </div>
+                <div class="title">{{_t 'Programming'}}</div>
+                <div class="right">
+                    <a href="#" class="link popup-open" data-popup=".popup-console">
+                        <i class="material-icons">airplay</i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content">
+            <div class="block-title">{{_t 'List of algorithms'}}</div>
+
+            <div class="data-table data-table-init card">
+                <div class="card-header">
+                    <div class="data-table-links">
+                        <a class="link" @click="openPopup('.popup-add-algorithm', null, 'addAlgorithm')">
+                            <i class="material-icons">add_circle_outline</i> {{_t 'Add'}}
+                        </a>
+                    </div>
+                    <div class="data-table-actions">
+                        <a class="link icon-only">
+                            <i class="icon f7-icons if-not-md">sort</i>
+                            <i class="icon material-icons md-only">sort</i>
+                        </a>
+                        <a class="link icon-only">
+                            <i class="icon f7-icons if-not-md">more_vertical_round</i>
+                            <i class="icon material-icons md-only">more_vert</i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <table>
+                         <thead>
+                            <tr>
+                                <th class="label-cell">{{_t 'Title'}}</th>
+                                <th class="label-cell">{{_t 'Description'}}</th>
+                                <th class="label-cell">{{_t 'Action'}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each programming.algorithms}}
+                                <tr data-id="{{id}}">
+                                    <td class="label-cell" nowrap>{{title}}</td>
+                                    <td class="label-cell" width="100%">{{description}}</td>
+                                    <td class="actions-cell" nowrap>
+                                        {{#if running}}
+                                            <a class="link icon-only" @click="stopAlgorithm">
+                                                <i class="material-icons">stop</i>
+                                            </a>
+                                        {{else}}
+                                            <a class="link icon-only" @click="runAlgorithm">
+                                                <i class="material-icons">play_arrow</i>
+                                            </a>
+                                        {{/if}}
+                                        <a class="link icon-only" @click="openPopup('.popup-edit-algorithm', '{{id}}', 'editAlgorithm')">
+                                            <i class="material-icons">edit</i>
+                                        </a>
+                                        <a class="link icon-only" @click="removeAlgorithm">
+                                            <i class="material-icons">delete</i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {{else}}
+                                <tr>
+                                    <td colspan="6" class="text-align-center">{{_t 'No algorithms yet'}}</td>
+                                </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer"></div>
+            </div>
+        </div>
+
+        <!-- popup-add-algorithm -->
+        <div class="popup popup-add-algorithm">
+            <div class="block-title">{{_t 'New Algorithm'}}</div>
+            <div class="list no-hairlines block-top" style="margin: 0px;">
+                <form>
+                    <ul>
+                        <li class="item-content item-input item-input-with-info">
+                            <div class="item-inner">
+                                <div class="item-title item-label">{{_t 'Title'}}</div>
+                                <div class="item-input-wrap">
+                                    <input name="title" type="text" placeholder="{{_t 'Arbitrary name'}}">
+                                    <span class="input-clear-button"></span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="item-content item-input item-input-with-info">
+                            <div class="item-inner">
+                                <div class="item-title item-label">{{_t 'Description'}}</div>
+                                <div class="item-input-wrap">
+                                    <textarea style="height: 40px;" name="description" placeholder="{{_t 'Short description'}}"></textarea>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+            <div style="border: 1px solid #e0e0e0;" class="editor"></div>
+            <div class="block block-bottom">
+                <p class="row">
+                    <!-- button class="col button button-raised button-fill">{{_t 'Run'}}</button -->
+                    <button class="col button button-raised button-fill submit">{{_t 'Add'}}</button>
+                    <button class="col button button-raised popup-close">{{_t 'Cancel'}}</button>
+                </p>
+            </div>
+        </div>
+        <!-- /popup-add-algorithm -->
+
+        <!-- popup-edit-algorithm -->
+        <div class="popup popup-edit-algorithm">
+            <div class="block-title">{{_t 'Edit Algorithm'}}</div>
+            <div class="list no-hairlines block-top" style="margin: 0px;">
+                <form>
+                    <input type="hidden" name="id" value="">
+                    <ul>
+                        <li class="item-content item-input item-input-with-info">
+                            <div class="item-inner">
+                                <div class="item-title item-label">{{_t 'Title'}}</div>
+                                <div class="item-input-wrap">
+                                    <input name="title" type="text" placeholder="{{_t 'Arbitrary name'}}">
+                                    <span class="input-clear-button"></span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="item-content item-input item-input-with-info">
+                            <div class="item-inner">
+                                <div class="item-title item-label">{{_t 'Description'}}</div>
+                                <div class="item-input-wrap">
+                                    <textarea style="height: 40px;" name="description" placeholder="{{_t 'Short description'}}"></textarea>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+            <div style="border: 1px solid #e0e0e0;" class="editor"></div>
+            <div class="block block-bottom">
+                <p class="row">
+                    <!-- button class="col button button-raised button-fill">{{_t 'Run'}}</button -->
+                    <button class="col button button-raised button-fill submit">{{_t 'Save'}}</button>
+                    <button class="col button button-raised popup-close">{{_t 'Cancel'}}</button>
+                </p>
+            </div>
+        </div>
+        <!-- /popup-edit-algorithm -->
+
+        <!-- popup-console -->
+        <div class="popup popup-console">
+            <div class="block-title">{{_t 'Console'}}</div>
+
+            <div class="card-content console" style="border: 1px solid #e0e0e0; padding: 10px; overflow-y: scroll; height: calc(100% - 120px);"></div>
+
+            <div class="block block-bottom">
+                <button class="col button button-raised popup-close">{{_t 'Close'}}</button>
+            </div>
+        </div>
+        <!-- /popup-console -->
+
+    </div>
+</template>
+
+<script>
+export default {
+    methods: {
+        /**
+         *
+         */
+        runAlgorithm: function(el) {
+            var self = this,
+                id = self.$$(el.target).closest('tr').data('id');
+
+            self.$app.request({
+                url: self.$app.data.url + '/algorithm/run/' + id,
+                contentType: 'application/json',
+                method: 'POST',
+                dataType: 'json',
+                success: function(data, status, xhr) {
+
+                    self.$app.methods.programming.algorithms(function(algorithms) {
+                        self.programming.algorithms = algorithms;
+                        self.$update();
+                    });
+
+                }
+            });
+        },
+
+
+        /**
+         *
+         */
+        stopAlgorithm: function(el) {
+            var self = this,
+                id = self.$$(el.target).closest('tr').data('id');
+
+            self.$app.request({
+                url: self.$app.data.url + '/algorithm/stop/' + id,
+                contentType: 'application/json',
+                method: 'POST',
+                dataType: 'json',
+                success: function(data, status, xhr) {
+
+                    self.$app.methods.programming.algorithms(function(algorithms) {
+                        self.programming.algorithms = algorithms;
+                        self.$update();
+                    });
+
+                }
+            });
+        },
+
+        /**
+         *
+         */
+        removeAlgorithm: function(el) {
+            var self = this,
+                id = this.$$(el.target).closest('tr').data('id');
+
+            self.$app.dialog.confirm('Remove algorithm ' + id + '?', 'Delete', function() {
+                self.$app.request({
+                    url: self.$app.data.url + '/algorithm/' + id,
+                    contentType: 'application/json',
+                    method: 'DELETE',
+                    dataType: 'json',
+                    success: function(data, status, xhr) {
+
+                        self.$app.methods.programming.algorithms(function(algorithms) {
+                            self.programming.algorithms = algorithms;
+                            self.$update();
+                        });
+
+                    }
+                });
+            });
+        },
+
+
+        /**
+         *
+         */
+        addAlgorithm: function(data, popup) {
+            var self = this;
+
+            self.$app.request({
+                url: self.$app.data.url + '/algorithm',
+                data: data,
+                contentType: 'application/json',
+                method: 'PUT',
+                dataType: 'json',
+                success: function(data, status, xhr) {
+                    if (data.success) {
+                        self.$app.methods.programming.algorithms(function(algorithms) {
+                            self.programming.algorithms = algorithms;
+                            self.$update();
+
+                            if (popup !== undefined)
+                                self.$app.popup.close(popup);
+                        });
+                    } else {
+                        self.$app.dialog.alert(data.msg, 'Error');
+                    }
+                }
+            });
+        },
+
+
+        /** Edit a device
+         *
+         */
+        editAlgorithm(data, popup) {
+            var self = this;
+
+            self.$app.request({
+                url: self.$app.data.url + '/algorithm/' + data.id,
+                data: data,
+                contentType: 'application/json',
+                method: 'POST',
+                dataType: 'json',
+                success: function(data, status, xhr) {
+                    if (data.success) {
+                        self.$app.methods.programming.algorithms(function(algorithms) {
+                            self.programming.algorithms = algorithms;
+                            self.$update();
+
+                            if (popup !== undefined)
+                                self.$app.popup.close(popup);
+                        });
+                    } else {
+                        self.$app.dialog.alert(data.msg, 'Error');
+                    }
+                }
+            });
+        },
+
+
+        /** Open a popup
+         *
+         */
+        openPopup(class_name, id, method) {
+            var self = this,
+                popup = self.$$(self.$$(class_name)[0].cloneNode(true));
+
+            self.$app.popup.open(popup);
+
+            popup.on('popup:closed', function(e) {
+                popup.remove();
+            });
+
+            var height = popup.height() - (popup.find('.block-top').height() + popup.find('.block-bottom').height() + 70);
+            popup.find('.editor').css({ height: height + 'px' })
+
+            var editor = ace.edit(popup.find('.editor')[0]);
+            editor.setTheme('ace/theme/chrome');
+            editor.session.setMode('ace/mode/javascript');
+            editor.setShowPrintMargin(false);
+
+            if (id !== null) {
+                self.$app.request({
+                    url: self.$app.data.url + '/algorithm/' + id,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(fields, status, xhr) {
+                        for (var name in fields) {
+                            if (name == 'code')
+                                editor.setValue(base64.decode(fields[name]));
+                            else
+                                popup.find('[name="' + name + '"]').val(fields[name]).trigger('change');
+                        }
+                    }
+                });
+            }
+
+            popup.find('.submit').on('click', function() {
+                if (method !== undefined) {
+                    var data = self.$app.form.convertToData(popup.find('form'));
+
+                    data.code = base64.encode(editor.getValue());
+
+                    self[method](data, popup);
+                }
+            });
+        }
+    },
+
+    data: function() {
+        return {
+            programming: {
+                algorithms: this.$app.data.programming.algorithms
+            }
+        }
+    },
+};
+</script>

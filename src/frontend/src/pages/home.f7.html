@@ -1,0 +1,277 @@
+<!--
+home.f7.html
+Copyright (C) 2019 Oleksandr Sovenko (info@oleksandrsovenko.com)
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+
+
+<template>
+    <div class="page" data-name="home">
+        <!-- Top Navbar -->
+        <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+                <div class="left">
+                    <a href="#" class="link icon-only panel-open" data-panel="left">
+                        <i class="material-icons">menu</i>
+                    </a>
+                </div>
+                <div class="title">Orange Coder Repeater</div>
+                <div class="right">
+                    <a href="#" class="link icon-only popup-open" data-popup=".popup-settings">
+                        <i class="material-icons">settings_applications</i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="block-title">CPU</div>
+            <div class="block block-strong">
+                <!--p>Usage</p-->
+                <div class="row">
+                    <div class="col text-align-center cpu-usage">
+                        <div
+                          class="gauge-init cpu-usage-0"
+                          data-type="semicircle"
+                          data-value="0"
+                          data-value-text="0%"
+                          data-value-text-color="green"
+                          data-border-color="green"
+                        ></div>
+                    </div>
+                    <div class="col text-align-center cpu-usage">
+                        <div
+                          class="gauge-init cpu-usage-1"
+                          data-type="semicircle"
+                          data-value="0"
+                          data-value-text="0%"
+                          data-value-text-color="green"
+                          data-border-color="green"
+                        ></div>
+                    </div>
+                    <div class="col text-align-center cpu-usage">
+                        <div
+                          class="gauge-init cpu-usage-2"
+                          data-type="semicircle"
+                          data-value="0"
+                          data-value-text="0%"
+                          data-value-text-color="green"
+                          data-border-color="green"
+                        ></div>
+                    </div>
+                    <div class="col text-align-center cpu-usage">
+                        <div
+                          class="gauge-init cpu-usage-3"
+                          data-type="semicircle"
+                          data-value="0"
+                          data-value-text="0%"
+                          data-value-text-color="green"
+                          data-border-color="green"
+                        ></div>
+                    </div>
+                </div>
+                <p>Temperature</p>
+                <div>
+                    <p><span data-progress="0" class="progressbar cpu-temperature"></span></p>
+                </div>
+            </div>
+
+            <div class="block-title">Determinate Progress Bar</div>
+            <div class="block block-strong">
+                <div class="row">
+                    <div class="col">
+                        <p>Disk Usage</p>
+                        <div>
+                            <p><span data-progress="0" class="progressbar disk-usage"></span></p>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <p>RAM Usage</p>
+                        <div>
+                            <p><span data-progress="0" class="progressbar ram-usage"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="popup popup-settings">
+            <div class="block-title" data-ua="Settings" data-ru="Settings">Settings</div>
+            <div class="toolbar tabbar toolbar-top">
+                <div class="toolbar-inner">
+                    <a href="#general" class="tab-link tab-link-active">General</a>
+                    <a href="#upgrade" class="tab-link">Upgrade</a>
+                    <a href="#reboot" class="tab-link">Reboot</a>
+                </div>
+            </div>
+            <div class="tabs">
+                <div id="general" class="tab tab-active">
+                	<div class="block-title">General</div>
+                	<div class="block">
+						<div class="list">
+							<ul>
+								<li>
+									<div class="item-inner">
+										<div class="item-title">Timezone</div>
+										<div class="item-after">
+											<select>
+									            {{#each timezones}}
+									    		   <option>{{this}}</option>
+									            {{/each}}
+											</select>
+										</div>
+									</div>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class="block-title">Change password</div>
+					<div class="block">
+						<form class="list form-change-password">
+							<ul>
+								<li>
+									<div class="item-input">
+										<div class="item-inner">
+											<div class="item-title item-label">Old password</div>
+											<div class="item-input-wrap">
+												<input type="password" name="password_current" placeholder="Current your password">
+											</div>
+										</div>
+									</div>
+								</li>
+								<li>
+									<div class="item-input">
+										<div class="item-inner">
+											<div class="item-title item-label">New password</div>
+											<div class="item-input-wrap">
+												<input type="password" name="password_new" placeholder="Your new password">
+											</div>
+										</div>
+									</div>
+								</li>
+								<li>
+									<div class="item-input">
+										<div class="item-inner">
+											<div class="item-title item-label">Confirm password</div>
+											<div class="item-input-wrap">
+												<input type="password" name="password_confirm" placeholder="Enter your new password again">
+											</div>
+										</div>
+									</div>
+								</li>
+							</ul>
+						</form>
+					    <button class="col button button-fill" @click="changePassword">Change password</button>
+					</div>
+                </div>
+                <div id="upgrade" class="tab">
+                	<div class="block-title">Current version</div>
+                	<div class="block">
+                		<p>Upgrade to obtain new functionalities. And some bugs and malfunctions may be fixed in new version. Please refer to the release notes for details. It will take minutes to upload and upgrade, please be patient.</p>
+                	</div>
+					<div class="list">
+                        <ul>
+                            <li>
+                                <div class="item-content">
+                                    <div class="item-inner">
+                                        <div class="item-title">Front-end (latest version at the moment)</div>
+                                        <div class="item-after">1.2</div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="item-content">
+                                    <div class="item-inner">
+                                        <div class="item-title">Back-end (latest version at the moment)</div>
+                                        <div class="item-after">1.2</div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+					</div>
+                    <div class="block">
+                        <button class="col button button-fill" disabled>Upgrade</button>
+                    </div>
+                </div>
+                <div id="reboot" class="tab">
+                	<div class="block">
+                		<p>You can reboot the system if the computer are working abnormally.</p>
+                	</div>
+                    <div class="block bottom">
+                        <button class="col button button-fill">Reboot</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="block bottom block-bottom">
+                <button class="col button button-raised popup-close">Close</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+
+<script>
+// const QRCode = require('qrcode');
+const moment = require('moment-timezone');
+
+var timezones = moment.tz.names();
+
+export default {
+  	on: {
+        pageInit: function(e, page) {
+        	var self = this,
+        		canvas = document.getElementById('canvas');
+
+        	self.$app.methods.device(function(device) {
+				// QRCode.toCanvas(canvas, JSON.stringify(device), function (error) {
+				//  if (error) console.error(error)
+				//	console.log('success!');
+				// });
+        	});
+        }
+    },
+
+    data: function() {
+        return {
+            timezones: timezones
+        }
+    },
+
+    methods: {
+        /** changePassword
+         *
+         */
+        changePassword() {
+            var self = this,
+                data = self.$app.form.convertToData('.form-change-password')
+
+            self.$app.request.postJSON(self.$app.data.url + '/change-password', data, function(data, status, xhr) {
+                if (data.success) {
+                    self.$app.dialog.alert(data.msg, 'Successfully', function() {
+                        self.$app.popup.close('.popup-settings');
+                        self.$app.methods.signout();
+                    });
+                } else {
+                    self.$app.dialog.alert(data.msg, 'Error');
+                }
+            },function(xhr, status) {
+
+            });
+        },
+    }
+}
+</script>
