@@ -90,6 +90,25 @@ if (process.argv[2] === 'vm') {
 		process.exit();
 
 
+	// Inter Process Communications {
+		var client = net.connect({ path: config.socket.ipc }, function() {
+
+		});
+
+		client.on('data', function(data) {
+			GPIO.emit('change', data);
+		});
+
+		client.on('end', function() {
+			// console.log('disconnected from server');
+		});
+
+		client.on('error', function(err) {
+			// console.log(err);
+		});
+	// }
+
+
 	// namespace CONSOLE {
 		const CONSOLE = {
 			log: function(message) {
@@ -113,7 +132,7 @@ if (process.argv[2] === 'vm') {
 				DATETIME      : DATETIME,
 				FILE          : FILE,
 				HASH          : HASH,
-		
+
 				setInterval   : setInterval,
 				clearInterval : clearInterval,
 				setTimeout    : setTimeout,
@@ -126,26 +145,6 @@ if (process.argv[2] === 'vm') {
 			result = e.toString();
 		}
 	// }
-	
-
-	// Inter Process Communications {
-		var client = net.connect({ path: config.socket.ipc }, function() {
-
-		});
-		
-		client.on('data', function(data) {
-			GPIO.emit('change', data);
-		});
-		
-		client.on('end', function() {
-			// console.log('disconnected from server');
-		});
-		
-		client.on('error', function(err) {
-			// console.log(err);
-		});
-	// }
-
 
 	if (result !== true)
 		client.write(JSON.stringify({ type: 'error', process: { pid: process.pid}, message: result }));
@@ -226,8 +225,38 @@ if (process.argv[2] === 'serve') {
 			root: config.dir.public,
 		})
 
+		fastify.register(require('./modules/auth'));
+		fastify.register(require('./modules/algorithms'));
 		fastify.register(require('./modules/filesystem'));
-	
+
+		var clients = {};
+
+		// global.appWSSendForAll = function(data) {
+		//     for (var id in clients) {
+		//         try {
+		//             clients[id].send(data);
+		//         } catch(e) {
+		//             console.log(e);
+		//         }
+		//     }
+		// }
+
+		fastify.ready(async function(err) {
+ 			fastify.ws.on('connection', function(socket) {
+ 				var id = Math.random()
+
+ 				clients[id] = socket;
+
+				socket.on('message', function(msg) {
+					socket.send(msg)
+				})
+
+				socket.on('close', function() {
+					delete clients[id];
+				});
+    		});
+		});
+
 		fastify.listen(80, '0.0.0.0');
 	// }
 }

@@ -22,6 +22,7 @@ const ROOT_DIR = '/opt/orangecoder';
 const config = {
 	'dir': {
 		'root'     : ROOT_DIR,
+		'conf'     : ROOT_DIR + '/conf',
 		'algoritms': ROOT_DIR + '/algoritms',
 		'public'   : ROOT_DIR + '/public',
 		'storage'  : ROOT_DIR + '/storage',
