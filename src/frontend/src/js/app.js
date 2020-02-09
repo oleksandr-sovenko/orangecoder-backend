@@ -47,6 +47,8 @@ Template7.global = {
     locale: 'ua',
     i18n: {
         'ua': {
+            'Action': 'Дія',
+
             'Username': 'І\'мя користувача',
             'Password': 'Пароль',
             'version': 'версія',
@@ -101,12 +103,12 @@ var app = new Framework7({
     root: '#app', // App root element
     animate: false,
 
-    name: 'Orange Maker Repeater', // App name
+    name: 'Orange Maker', // App name
     theme: 'aurora', // Automatic theme detection
     // App root data
     data: function () {
         return {
-            url: '//' + host,
+            url: 'http://100.168.210.102', //'//' + host,
             device: {},
             programming: {
                 algorithms: []
@@ -202,12 +204,12 @@ var app = new Framework7({
                     if (callback !== undefined)
                         callback(res.data);
 
-                    app.methods.gpio.devices();
-                    app.methods.gpio.readall();
-                    app.methods.w1.devices();
+                    // app.methods.gpio.devices();
+                    // app.methods.gpio.readall();
+                    // app.methods.w1.devices();
                     app.methods.programming.algorithms();
 
-                    rws_start();
+                    // rws_start();
                 } else {
                     if (data === undefined)
                         app.loginScreen.open('.login-screen');
@@ -217,7 +219,7 @@ var app = new Framework7({
                     if (callback !== undefined)
                         callback(res.data);
 
-                    rws_stop();
+                    // rws_stop();
                 }
             },function(xhr, status) {
                 if (callback !== undefined)
