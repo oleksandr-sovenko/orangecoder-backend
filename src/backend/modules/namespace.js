@@ -19,7 +19,9 @@
 const config = require('../config'),
       fs     = require('fs'),
 	  md5    = require('md5'),
+	  base64 = require('js-base64').Base64,
 	  path   = require('path'),
+	  uuid4  = require('uuid4'),
 	  moment = require('moment'),
 	  { execSync } = require('child_process');
 
@@ -29,6 +31,18 @@ const config = require('../config'),
 		md5: function(data) {
 			return md5(data);
 		},
+
+		base64_decode: function(data) {
+			return base64.decode(data);
+		},
+
+		base64_encode: function(data) {
+			return base64.encode(data);	
+		},
+
+		uuid4: function() {
+			return uuid4();
+		}
 	}
 // }
 
@@ -38,7 +52,7 @@ const config = require('../config'),
 		timestamp: function() {
 			return moment().unix();
 		},
-	
+
 		format: function(format) {
 			return moment().format(format);
 		}
@@ -74,7 +88,7 @@ const config = require('../config'),
 
 			return value;
 		},
-	
+
 		write: function(pin, value) {
 			execSync('gpio write ' + pin + ' ' + value);
 		},
@@ -115,7 +129,7 @@ const config = require('../config'),
 	const FILE = {
 		remove: function(filename) {
 			var filename = (config.dir.storage + filename).replace(/\.\.\//g, '');
-			
+
 			fs.unlinkSync(filename);
 		},
 
@@ -128,16 +142,16 @@ const config = require('../config'),
 		read: function(filename) {
 			var filename = (config.dir.storage + filename).replace(/\.\.\//g, ''),
 				content = '';
-	
+
 			try {
 				content = fs.readFileSync(filename);
 			} catch(e) {
 				content = '';
 			}
-	
+
 			return content;
 		},
-	
+
 		write: function(filename, data) {
 			var filename = (config.dir.storage + filename).replace(/\.\.\//g, '');
 
@@ -148,7 +162,7 @@ const config = require('../config'),
 					execSync('sync -f ' + filename);
 			}
 		},
-	
+
 		append: function(filename, data) {
 			var filename = (config.dir.storage + filename).replace(/\.\.\//g, '');
 
@@ -161,4 +175,4 @@ const config = require('../config'),
 // }
 
 
-module.exports = { HASH, DATETIME, W1, I2C, GPIO, DIR, FILE }
+module.exports = { HASH, DATETIME, W1, I2C, GPIO, DIR, FILE };

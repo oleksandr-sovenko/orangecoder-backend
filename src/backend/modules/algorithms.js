@@ -16,27 +16,69 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const { fork }           = require('child_process'),
-    algorithms_dir       = global.config.dir.data + '/algorithms',
-    index_json           = algorithms_dir + '/index.json',
-    context_algorithm_js = global.config.dir.helpers + '/context.algorithm.js';
+const fs       = require('fs'),
+      { spawn } = require('child_process'),
+      CONFIG   = require('../config'),
+      SESSION  = require('./session'),
+      { HASH } = require('./namespace');
 
 
-var algorithm_process = {};
+/**
+ *
+ *
+ */
+const PROCESS = {
+    childs: [],
+
+    list: function() {
+        return this.childs;
+    },
+
+    run: function(id) {
+        var child = spawn(process.argv[0], [process.argv[1], 'vm', CONFIG.dir.algoritms + '/' + id]);
+        this.childs[id] = child;
+    },
+
+    kill: function(id) {
+        try {
+            this.childs[id].kill();
+            delete this.childs[id];
+        } catch (e) {
+
+        }
+    }
+}
 
 
 async function routes(fastify, options) {
+    var index = CONFIG.dir.algoritms + '/index.json';
+
+
+    /**
+     *
+     *
+     */
+    if (fs.existsSync(index)) {
+        var algorithms = JSON.parse(fs.readFileSync(index, 'utf8'));
+
+        for (var i in algorithms) {
+            if (algorithms[i].running === true)
+                PROCESS.run(algorithms[i].id);
+        }
+    }
+
+
     /** Get list of algorithms
      *  @endpoint /algorithms
      *  @method   GET
      */
     fastify.get('/algorithms', async function(req, rep) {
-        var files = fs.readdirSync(algorithms_dir);
+        // var files = fs.readdirSync(CONFIG.dir.algoritms);
 
-        if (fs.existsSync(index_json)) {
-            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8'));
+        if (fs.existsSync(index)) {
+            var algorithms = JSON.parse(fs.readFileSync(index, 'utf8'));
             for (var i in algorithms)
-                algorithms[i].running = algorithm_process[algorithms[i].id] !== undefined ? true : false;
+                algorithms[i].running = PROCESS.childs[algorithms[i].id] !== undefined ? true : false;
         } else
             var algorithms = [];
 
@@ -49,16 +91,16 @@ async function routes(fastify, options) {
      *  @method   PUT
      */
     fastify.put('/algorithm', async function(req, rep) {
-        if (!is_authorized(req))
-            return { success: false, msg: 'Authorization required' }
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
 
         if (req.body.title === undefined || req.body.description === undefined || req.body.code === undefined)
             return { success: false, msg: 'Required fields: string(title), string(description), base64(code)' };
 
-        var id = uuid4();
+        var id = HASH.uuid4();
 
-        if (fs.existsSync(index_json))
-            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8'));
+        if (fs.existsSync(index))
+            var algorithms = JSON.parse(fs.readFileSync(index, 'utf8'));
         else
             var algorithms = [];
 
@@ -68,8 +110,8 @@ async function routes(fastify, options) {
             description: req.body.description
         });
 
-        fs.writeFileSync(algorithms_dir + '/' + id, base64.decode(req.body.code));
-        fs.writeFileSync(index_json, JSON.stringify(algorithms));
+        fs.writeFileSync(CONFIG.dir.algoritms + '/' + id, HASH.base64_decode(req.body.code));
+        fs.writeFileSync(index, JSON.stringify(algorithms));
 
         return { success: true, msg: 'Successfully' };
     });
@@ -80,16 +122,16 @@ async function routes(fastify, options) {
      *  @method   GET
      */
     fastify.get('/algorithm/:id', async function(req, rep) {
-        if (!is_authorized(req))
-            return { success: false, msg: 'Authorization required' }
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
 
-        if (fs.existsSync(index_json)) {
-            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8'));
+        if (fs.existsSync(index)) {
+            var algorithms = JSON.parse(fs.readFileSync(index, 'utf8'));
 
             for (var i in algorithms) {
                 if (algorithms[i].id === req.params.id) {
-                    if (fs.existsSync(index_json))
-                        algorithms[i].code = base64.encode(fs.readFileSync(algorithms_dir + '/' + algorithms[i].id, 'utf8'));
+                    if (fs.existsSync(index))
+                        algorithms[i].code = HASH.base64_encode(fs.readFileSync(CONFIG.dir.algoritms + '/' + algorithms[i].id, 'utf8'));
                     else
                         algorithms[i].code = '';
 
@@ -107,14 +149,14 @@ async function routes(fastify, options) {
      *  @method   POST
      */
     fastify.post('/algorithm/:id', async function(req, rep) {
-        if (!is_authorized(req))
-            return { success: false, msg: 'Authorization required' }
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
 
         if (req.body.title === undefined || req.body.description === undefined || req.body.code === undefined)
             return { success: false, msg: 'Required fields: string(title), string(description), base64(code)' };
 
-        if (fs.existsSync(index_json)) {
-            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8'));
+        if (fs.existsSync(index)) {
+            var algorithms = JSON.parse(fs.readFileSync(index, 'utf8'));
 
             for (var i in algorithms) {
                 if (algorithms[i].id === req.params.id) {
@@ -124,8 +166,8 @@ async function routes(fastify, options) {
                         description: req.body.description
                     };
 
-                    fs.writeFileSync(algorithms_dir + '/' + algorithms[i].id, base64.decode(req.body.code));
-                    fs.writeFileSync(index_json, JSON.stringify(algorithms));
+                    fs.writeFileSync(CONFIG.dir.algoritms + '/' + algorithms[i].id, HASH.base64_decode(req.body.code));
+                    fs.writeFileSync(index, JSON.stringify(algorithms));
 
                     return { success: true, msg: 'Successfully' }
                 }
@@ -141,11 +183,11 @@ async function routes(fastify, options) {
      *  @method   DELETE
      */
     fastify.delete('/algorithm/:id', async function(req, rep) {
-        if (!is_authorized(req))
-            return { success: false, msg: 'Authorization required' }
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
 
-        if (fs.existsSync(index_json)) {
-            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8')),
+        if (fs.existsSync(index)) {
+            var algorithms = JSON.parse(fs.readFileSync(index, 'utf8')),
                 filter = [];
 
             for (var i in algorithms) {
@@ -153,14 +195,14 @@ async function routes(fastify, options) {
                     filter.push(algorithms[i]);
                 else {
                     try {
-                        fs.unlinkSync(algorithms_dir + '/' + algorithms[i].id);
+                        fs.unlinkSync(CONFIG.dir.algoritms + '/' + algorithms[i].id);
                     } catch(e) {
                         console.error(e);
                     }
                 }
             }
 
-            fs.writeFileSync(index_json, JSON.stringify(filter));
+            fs.writeFileSync(index, JSON.stringify(filter));
         }
 
         return { success: true, msg: 'Successfully' }
@@ -172,20 +214,20 @@ async function routes(fastify, options) {
      *  @method   POST
      */
     fastify.post('/algorithm/run/:id', async function(req, rep) {
-        if (!is_authorized(req))
-            return { success: false, msg: 'Authorization required' }
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
 
-        if (fs.existsSync(index_json)) {
-            var algorithms = JSON.parse(fs.readFileSync(index_json, 'utf8')),
+        if (fs.existsSync(index)) {
+            var algorithms = JSON.parse(fs.readFileSync(index, 'utf8')),
                 id = req.params.id;
 
             for (var i in algorithms) {
                 if (algorithms[i].id === id) {
 
-                    algorithm_process[id] = fork(context_algorithm_js, [algorithms[i].id]);
-                    algorithm_process[id].on('message', async function(message) {
-                        appWSSendForAll(JSON.stringify({ action: 'console', data: id + ', ' + message }));
-                    });
+                    algorithms[i].running = true;
+                    PROCESS.run(id);
+
+                    fs.writeFileSync(index, JSON.stringify(algorithms));
 
                     return { success: true, msg: 'Successfully' };
                 }
@@ -201,27 +243,71 @@ async function routes(fastify, options) {
      *  @method   POST
      */
     fastify.post('/algorithm/stop/:id', async function(req, rep) {
-        if (!is_authorized(req))
-            return { success: false, msg: 'Authorization required' }
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
+
+        if (fs.existsSync(index)) {
+            var algorithms = JSON.parse(fs.readFileSync(index, 'utf8')),
+                id = req.params.id;
+
+            for (var i in algorithms) {
+                if (algorithms[i].id === id) {
+
+                    algorithms[i].running = false;
+                    PROCESS.kill(id);
+
+                    fs.writeFileSync(index, JSON.stringify(algorithms));
+
+                    return { success: true, msg: 'Successfully' };
+                }
+            }
+        }
+
+        return { success: false, msg: '' };
+    });
+
+
+    /**
+     *
+     *
+     */
+    fastify.post('/algorithm/runcode', async function(req, rep) {
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
+
+        if (req.body.code === undefined)
+            return { success: false, msg: 'Required fields: base64(code)' };
+
+        var id = 'temp-' + HASH.uuid4();
+
+        fs.writeFileSync(CONFIG.dir.algoritms + '/' + id, HASH.base64_decode(req.body.code));
+
+        PROCESS.run(id);
+
+        return { success: true, msg: 'Successfully', data: id };
+    });
+
+
+    /**
+     *
+     *
+     */
+    fastify.post('/algorithm/stopcode/:id', async function(req, rep) {
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
 
         var id = req.params.id;
 
-        algorithm_process[id].kill();
+        PROCESS.kill(id);
 
-        delete algorithm_process[id];
+        try {
+            fs.unlinkSync(CONFIG.dir.algoritms + '/' + id);
+        } catch(e) {
+
+        }
 
         return { success: true, msg: 'Successfully' };
     });
-}
-
-
-/**
- *
- *
- */
-global.appAlgorithmProcessSendForAll = function(data) {
-    for (var id in algorithm_process)
-        algorithm_process[id].send(data);
 }
 
 

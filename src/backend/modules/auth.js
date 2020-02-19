@@ -16,23 +16,27 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+const fs      = require('fs'),
+      CONFIG  = require('../config'),
+      SESSION = require('./session'),
+      { DATETIME, HASH } = require('./namespace')
+
+
 /**
  *
  */
 async function routes(fastify, options) {
-    let credentials_json = global.config.dir.data + '/credentials.json';
+    var credentials_json = CONFIG.dir.conf + '/credentials.json';
 
 
     /**
      *
      */
     fastify.post('/change-password', async function(req, rep) {
-        var credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8')),
-            session_id  = md5(Math.random()),
-            timestamp   = global.getUnixTimestamp();
+        var credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8'));
 
-        if (!is_authorized(req))
-            return { success: false, msg: 'Authorization required' }
+         if (!SESSION.get(req.headers['backend-authorization']))
+             return { success: false, msg: 'Authorization required' }
 
         if (req.body === null ||
             req.body.password_current === undefined ||
@@ -41,7 +45,7 @@ async function routes(fastify, options) {
         )
             return { success: false, msg: 'Required password_current, password_new, password_confirm.' };
 
-        if (credentials.password !== md5(req.body.password_current))
+        if (credentials.password !== HASH.md5(req.body.password_current))
             return { success: false, msg: 'Wrong current password' };
 
         if (req.body.password_new === '')
@@ -50,10 +54,10 @@ async function routes(fastify, options) {
         if (req.body.password_new !== req.body.password_confirm)
             return { success: false, msg: 'Passwords do not match' };
 
-        fs.writeFileSync(credentials_json, JSON.stringify({ "username": "admin", "password": md5(req.body.password_new) }));
+        fs.writeFileSync(credentials_json, JSON.stringify({ "username": "admin", "password": HASH.md5(req.body.password_new) }));
         credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8'))
 
-        if (credentials.password === md5(req.body.password_new))
+        if (credentials.password === HASH.md5(req.body.password_new))
             return { success: true, msg: 'Password changed' };
         else
             return { success: false, msg: 'Something went wrong' };
@@ -64,22 +68,25 @@ async function routes(fastify, options) {
      *
      */
     fastify.post('/signin', async function(req, rep) {
-        const credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8')),
-              session_id = md5(Math.random()),
-              timestamp = global.getUnixTimestamp();
+        const credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8'));
 
-        if (is_authorized(req))
-            return { success: true, msg: 'Already authorized', data: req.headers['backend-authorization'] };
+        if (req.headers['backend-authorization'] !== undefined)
+            session_id = req.headers['backend-authorization'];
+        else
+            session_id  = HASH.md5(Math.random());
+
+        if (SESSION.get(session_id))
+            return { success: true, msg: 'Already authorized', data: session_id };
 
         if (req.body === null || req.body.username === undefined || req.body.password === undefined)
             return { success: false, msg: 'Required username and password' };
 
-        if (credentials.username !== req.body.username || credentials.password !== md5(req.body.password))
+        if (credentials.username !== req.body.username || credentials.password !== HASH.md5(req.body.password))
             return { success: false, msg: 'Wrong username or password' };
 
-        global.sessions[session_id] = { expire: timestamp + 3600 };
+        SESSION.set(session_id, {});
 
-        return { success: true, msg: 'Authorized successfully', data: session_id /*, cloud: cloud.active*/ };
+        return { success: true, msg: 'Authorized successfully', data: session_id };
     })
 
 
@@ -87,17 +94,16 @@ async function routes(fastify, options) {
      *
      */
     fastify.post('/signout', async function(req, rep) {
-        if (req.headers['backend-authorization'] !== undefined &&
-            global.sessions[req.headers['backend-authorization']] !== undefined) {
+        var session_id = req.headers['backend-authorization'];
+
+        if (!SESSION.get(session_id)) {
 
         } else {
-            delete global.sessions[req.headers['backend-authorization']];
+            SESSION.unset(session_id);
         }
 
         return { success: true, msg: 'Successfully' }
     })
-
-
 }
 
 
