@@ -1,6 +1,6 @@
 <!--
 filesystem.f7.html
-Copyright (C) 2019 Oleksandr Sovenko (info@oleksandrsovenko.com)
+Copyright (C) 2020 Oleksandr Sovenko (info@oleksandrsovenko.com)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -37,17 +37,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <div class="data-table data-table-init card">
                 <div class="card-header">
                     <div class="data-table-links">
-                        <!--a class="link">
-                        	<i class="material-icons">folder</i> {{_t 'Add Directory'}}
+                        <a class="link">
+                        	{{_t 'Add Directory'}}
                         </a>
 
                         <a class="link">
-                            <i class="material-icons">insert_drive_file</i> {{_t 'Add File'}}
-                        </a-->
+                            {{_t 'Add File'}}
+                        </a>
 
-                        <div>
-                            /var/asdasd/asdasdasd
-                        </div>
+                        <a class="link">
+                            {{_t 'Upload File'}}
+                        </a>
+
+                        <!--div>
+                            /<a class="text-color-black" href="#">var</a>/<a class="text-color-black" href="#">lib</a>/<a class="text-color-black" href="#">www</a>
+                        </div-->
                     </div>
                     <!--div class="data-table-actions">
                         <a class="link icon-only">
@@ -73,9 +77,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                         </thead>
                         <tbody>
                             {{#each filesystem.files}}
-                                <tr data-id="{{id}}" class="fm-item">
+                                <tr data-name="{{name}}" data-type="{{type}}" class="fm-item">
                                     <td class="label-cell" nowrap>
-                                        <i class="material-icons">{{js ' this.type == "directory" ? "folder_open" : "insert_drive_file" '}}</i>
+                                        <i class="material-icons">{{js ' this.type == "dir" ? "folder_open" : "insert_drive_file" '}}</i>
                                     </td>
                                     <td class="label-cell" width="100%">{{name}}</td>
                                     <td class="label-cell" nowrap>
@@ -95,7 +99,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                                                     <i class="material-icons">cloud_download</i>
                                                 </a>
                                             {{/js_if}}
-                                            <a class="link icon-only">
+                                            <a class="link icon-only" @click="deleteItem">
                                                 <i class="material-icons">delete</i>
                                             </a>
                                         {{/js_if}}
@@ -103,7 +107,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                                 </tr>
                             {{else}}
                                 <tr>
-                                    <td colspan="6" class="text-align-center" data-ua="Ще немає пристроїв" data-ru="устройств пока нет">{{_t 'No files and directories yet'}}</td>
+                                    <td colspan="6" class="text-align-center">{{_t 'No files and directories yet'}}</td>
                                 </tr>
                             {{/each}}
                         </tbody>
@@ -127,28 +131,34 @@ export default {
         }
     `,
     methods: {
+        deleteItem(el) {
+            var self = this,
+                tr   = self.$$(el.target).closest('tr'),
+                name = tr.data('name'),
+                type = tr.data('type'),
+                path = name;
+
+            self.$app.dialog.confirm('Remove ' + name + '?', 'Delete', function() {
+                self.$app.request({
+                    url: self.$app.data.url + '/filesystem/item/' + path,
+                    contentType: 'application/json',
+                    method: 'DELETE',
+                    dataType: 'json',
+                    success: function(data, status, xhr) {
+                        self.$app.methods.filesystem.files(function(files) {
+                            self.filesystem.files = files;
+                            self.$update();
+                        });
+                    }
+                });
+            });
+        }
     },
 
     data: function() {
         return {
             filesystem: {
-                files: [
-                    { name: '..', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'directory', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'file', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'file', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'file', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'file', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                    { name: 'Test1', type: 'file', date: '12-Jan-2019 11:22', size: '1.5 MB' },
-                ]
+                files: this.$app.data.filesystem.files
             }
         }
     },

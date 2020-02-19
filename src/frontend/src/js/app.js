@@ -41,7 +41,7 @@ import 'ace-builds/webpack-resolver';
 window.ace = ace
 window.base64 = base64
 
-var host = location.host;
+var host = '100.168.210.102'; // location.host;
 
 Template7.global = {
     locale: 'ua',
@@ -66,7 +66,12 @@ Template7.global = {
 
             'Date': 'Дата',
 
+            'Editor': 'Редактор',
+            'Console': 'Консоль',
+
             'Add': 'Добавити',
+            'Run': 'Запустити',
+            'Stop': 'Зупинити',
             'Cancel': 'Скасувати',
             'Close': 'Закрити',
             'Save': 'Зберегти',
@@ -108,8 +113,11 @@ var app = new Framework7({
     // App root data
     data: function () {
         return {
-            url: 'http://100.168.210.102', //'//' + host,
+            url: '//' + host,
             device: {},
+            filesystem: {
+                files: []
+            },
             programming: {
                 algorithms: []
             },
@@ -127,6 +135,19 @@ var app = new Framework7({
     },
 
     methods: {
+        filesystem: {
+            files: function(callback) {
+                app.request.json(app.data.url + '/filesystem/list/', { }, function(files, status, xhr) {
+                    app.data.filesystem.files = files;
+                    if (callback !== undefined)
+                        callback(files);
+                }, function(xhr, status) {
+                    if (callback !== undefined)
+                        callback(undefined);
+                });
+            },
+        },
+
         programming: {
             algorithms: function(callback) {
                 app.request.json(app.data.url + '/algorithms', { }, function(algorithms, status, xhr) {
@@ -208,8 +229,9 @@ var app = new Framework7({
                     // app.methods.gpio.readall();
                     // app.methods.w1.devices();
                     app.methods.programming.algorithms();
+                    app.methods.filesystem.files();
 
-                    // rws_start();
+                    rws_start();
                 } else {
                     if (data === undefined)
                         app.loginScreen.open('.login-screen');
@@ -219,7 +241,7 @@ var app = new Framework7({
                     if (callback !== undefined)
                         callback(res.data);
 
-                    // rws_stop();
+                    rws_stop();
                 }
             },function(xhr, status) {
                 if (callback !== undefined)
@@ -330,8 +352,8 @@ function rws_start() {
         try { msg = JSON.parse(msg.data); } catch(e) { msg = {}; }
 
 
-        if (msg.action === undefined)
-            return;
+        // if (msg.action === undefined)
+        //     return;
 
 
         if (msg.action === 'changes') {
@@ -385,8 +407,8 @@ function rws_start() {
         }
 
 
-        if (msg.action === 'console') {
-            $$('.console').append(msg.data + '<br>');
+        if (msg.type === 'console') {
+            $$('.console').append(msg.message + '<br>');
         }
     });
 }
