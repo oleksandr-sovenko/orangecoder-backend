@@ -178,6 +178,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     <div style="border: 1px solid #e0e0e0;" class="editor"></div>
                 </div>
                 <div id="console" class="tab">
+                    <div class="card-content console" style="border: 1px solid #e0e0e0; padding: 10px; overflow-y: scroll; height: calc(100% - 120px);"></div>
                 </div>
             </div>
 
@@ -185,24 +186,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <p class="row">
                     <button class="col button button-raised button-fill color-green run" data-label-run="{{_t 'Run'}}" data-label-stop="{{_t 'Stop'}}">{{_t 'Run'}}</button>
                     <button class="col button button-raised button-fill submit">{{_t 'Save'}}</button>
-                    <button class="col button button-raised close">{{_t 'Cancel'}}</button>
+                    <button class="col button button-raised button-fill color-gray close">{{_t 'Close'}}</button>
                 </p>
             </div>
         </div>
         <!-- /popup-edit-algorithm -->
 
         <!-- popup-console -->
-        <div class="popup popup-console">
+        <div class="popup popup-console popup-tablet-fullscreen">
             <div class="block-title">{{_t 'Console'}}</div>
 
             <div class="card-content console" style="border: 1px solid #e0e0e0; padding: 10px; overflow-y: scroll; height: calc(100% - 120px);"></div>
 
             <div class="block block-bottom">
-                <button class="col button button-raised popup-close">{{_t 'Close'}}</button>
+                <button class="col button button-raised button-fill color-gray popup-close">{{_t 'Close'}}</button>
             </div>
         </div>
         <!-- /popup-console -->
-
     </div>
 </template>
 
@@ -222,12 +222,10 @@ export default {
                 method: 'POST',
                 dataType: 'json',
                 success: function(data, status, xhr) {
-
                     self.$app.methods.programming.algorithms(function(algorithms) {
                         self.programming.algorithms = algorithms;
                         self.$update();
                     });
-
                 }
             });
         },
@@ -246,12 +244,10 @@ export default {
                 method: 'POST',
                 dataType: 'json',
                 success: function(data, status, xhr) {
-
                     self.$app.methods.programming.algorithms(function(algorithms) {
                         self.programming.algorithms = algorithms;
                         self.$update();
                     });
-
                 }
             });
         },
@@ -270,12 +266,10 @@ export default {
                     method: 'DELETE',
                     dataType: 'json',
                     success: function(data, status, xhr) {
-
                         self.$app.methods.programming.algorithms(function(algorithms) {
                             self.programming.algorithms = algorithms;
                             self.$update();
                         });
-
                     }
                 });
             });
@@ -311,8 +305,8 @@ export default {
         },
 
 
-        /** Edit a device
-         *
+        /**
+         *  Edit a device
          */
         editAlgorithm(data, popup) {
             var self = this;
@@ -335,6 +329,46 @@ export default {
                     } else {
                         self.$app.dialog.alert(data.msg, 'Error');
                     }
+                }
+            });
+        },
+
+
+        /**
+         *
+         */
+        runCode(data, callback) {
+            var self = this;
+
+            self.$app.request({
+                url: self.$app.data.url + '/algorithm/runcode',
+                data: data,
+                contentType: 'application/json',
+                method: 'POST',
+                dataType: 'json',
+                success: function(data, status, xhr) {
+                    if (callback !== undefined)
+                        callback(data);
+                }
+            });
+        },
+
+
+        /**
+         *
+         */
+        stopCode(data, callback) {
+            var self = this;
+
+            self.$app.request({
+                url: self.$app.data.url + '/algorithm/stopcode/' + data.id,
+                data: data,
+                contentType: 'application/json',
+                method: 'POST',
+                dataType: 'json',
+                success: function(data, status, xhr) {
+                    if (callback !== undefined)
+                        callback(data);
                 }
             });
         },
@@ -396,12 +430,24 @@ export default {
                     popup.find('.ace_scroller').css({ opacity: 0.5 });
                     popup.find('.submit,.close').addClass('disabled');
                     popup.find('[href="#console-clone"]').click();
+
+                    self['runCode']({ code: base64.encode(editor.getValue()) }, function(response) {
+                        var id = response.data;
+
+                        console.log(id);
+
+                        el.attr('data-algorithm-id', id);
+                    });
                 } else {
                     el.removeClass('color-red').addClass('color-green').text(el.data('label-run'));
                     editor.setReadOnly(false);
                     popup.find('.ace_scroller').css({ opacity: 1 });
                     popup.find('.submit,.close').removeClass('disabled');
                     popup.find('[href="#editor-clone"]').click();
+
+                    self['stopCode']({ id: el.attr('data-algorithm-id') }, function(response) {
+                        console.log(response);
+                    });
                 }
             });
 
