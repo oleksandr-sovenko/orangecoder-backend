@@ -26,6 +26,7 @@ const config = {
 		'algoritms': ROOT_DIR + '/algoritms',
 		'public'   : ROOT_DIR + '/public',
 		'storage'  : ROOT_DIR + '/storage',
+		'modules'  : ROOT_DIR + '/modules',
 	},
 
 	'socket': {

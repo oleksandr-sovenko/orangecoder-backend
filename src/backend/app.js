@@ -26,7 +26,21 @@ const config  = require('./config'),
 	  fastify = require('fastify')({ logger: false }),
 	  path    = require('path'),
 	  { fork, execSync } = require('child_process'),
-	  { HASH, DATETIME, W1, I2C, GPIO, FILE } = require('./modules/namespace');
+	  { HASH, DATETIME, W1, I2C, GPIO, FILE } = require('./include/namespace');
+
+
+var clients = {};
+
+
+function fastify_ws_sendall(data) {
+	for (var id in clients) {
+	    try {
+	        clients[id].send(data);
+	    } catch(e) {
+	        console.log(e);
+	    }
+	}
+}
 
 
 /** @command install
@@ -113,7 +127,7 @@ if (process.argv[2] === 'vm') {
 		const CONSOLE = {
 			log: function(message) {
 				try {
-					client.write(JSON.stringify({ type: 'console', process: { pid: process.pid}, message: message }));
+					client.write(JSON.stringify({ type: 'console', process: { id: filename.replace(/.*\//g, ''), pid: process.pid}, message: message }));
 				} catch(e) {
 					console.log(e);
 				}
@@ -133,6 +147,9 @@ if (process.argv[2] === 'vm') {
 				FILE          : FILE,
 				HASH          : HASH,
 
+				console       : console,
+				//require       : require,
+
 				setInterval   : setInterval,
 				clearInterval : clearInterval,
 				setTimeout    : setTimeout,
@@ -145,6 +162,7 @@ if (process.argv[2] === 'vm') {
 			result = e.toString();
 		}
 	// }
+
 
 	if (result !== true)
 		client.write(JSON.stringify({ type: 'error', process: { pid: process.pid}, message: result }));
@@ -179,8 +197,10 @@ if (process.argv[2] === 'serve') {
 				}
 
 				if (message.type !== undefined) {
-					if (message.type === 'console' || message.type === 'error')
+					if (message.type === 'console' || message.type === 'error') {
+						fastify_ws_sendall(data.toString());
 						console.log(DATETIME.format('YYYY-MM-DD hh:mm:ss'), message.process.pid, message.message);
+					}
 				}
 			});
 
@@ -225,21 +245,9 @@ if (process.argv[2] === 'serve') {
 			root: config.dir.public,
 		})
 
-		fastify.register(require('./modules/auth'));
-		fastify.register(require('./modules/algorithms'));
-		fastify.register(require('./modules/filesystem'));
-
-		var clients = {};
-
-		// global.appWSSendForAll = function(data) {
-		//     for (var id in clients) {
-		//         try {
-		//             clients[id].send(data);
-		//         } catch(e) {
-		//             console.log(e);
-		//         }
-		//     }
-		// }
+		fastify.register(require('./include/auth'));
+		fastify.register(require('./include/algorithms'));
+		fastify.register(require('./include/filesystem'));
 
 		fastify.ready(async function(err) {
  			fastify.ws.on('connection', function(socket) {
@@ -248,7 +256,7 @@ if (process.argv[2] === 'serve') {
  				clients[id] = socket;
 
 				socket.on('message', function(msg) {
-					socket.send(msg)
+					//socket.send(msg)
 				})
 
 				socket.on('close', function() {
