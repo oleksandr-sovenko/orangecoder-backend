@@ -22,9 +22,6 @@ const fs      = require('fs'),
       { DATETIME, HASH } = require('./namespace')
 
 
-/**
- *
- */
 async function routes(fastify, options) {
     var credentials_json = CONFIG.dir.conf + '/credentials.json';
 
@@ -43,7 +40,7 @@ async function routes(fastify, options) {
             req.body.password_new === undefined ||
             req.body.password_confirm === undefined
         )
-            return { success: false, msg: 'Required password_current, password_new, password_confirm.' };
+            return { success: false, msg: 'Required fields: string(password_current), string(password_new), string(password_confirm)' };
 
         if (credentials.password !== HASH.md5(req.body.password_current))
             return { success: false, msg: 'Wrong current password' };
@@ -79,7 +76,7 @@ async function routes(fastify, options) {
             return { success: true, msg: 'Already authorized', data: session_id };
 
         if (req.body === null || req.body.username === undefined || req.body.password === undefined)
-            return { success: false, msg: 'Required username and password' };
+            return { success: false, msg: 'Required fields: string(username), string(password)' };
 
         if (credentials.username !== req.body.username || credentials.password !== HASH.md5(req.body.password))
             return { success: false, msg: 'Wrong username or password' };

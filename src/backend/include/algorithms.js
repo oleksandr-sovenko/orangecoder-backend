@@ -68,7 +68,9 @@ async function routes(fastify, options) {
     }
 
 
-    /** Get list of algorithms
+    /**
+     *  Get list of algorithms
+     *
      *  @endpoint /algorithms
      *  @method   GET
      */
@@ -86,7 +88,9 @@ async function routes(fastify, options) {
     });
 
 
-    /** Add new a algorithm
+    /**
+     *  Add new a algorithm
+     *
      *  @endpoint /algorithm
      *  @method   PUT
      */
@@ -117,7 +121,9 @@ async function routes(fastify, options) {
     });
 
 
-    /** Get data of a algorithm
+    /**
+     *  Get data of a algorithm
+     *
      *  @endpoint /algorithm/:id
      *  @method   GET
      */
@@ -144,7 +150,9 @@ async function routes(fastify, options) {
     });
 
 
-    /** Update a algorithm
+    /**
+     *  Update a algorithm
+     *
      *  @endpoint /algorithm/:id
      *  @method   POST
      */
@@ -178,7 +186,9 @@ async function routes(fastify, options) {
     });
 
 
-    /** Remove a algorithm
+    /**
+     *  Remove a algorithm
+     *
      *  @endpoint /algorithm/:id
      *  @method   DELETE
      */
@@ -209,7 +219,9 @@ async function routes(fastify, options) {
     });
 
 
-    /** Execute a algorithm
+    /**
+     *  Execute a algorithm
+     *
      *  @endpoint /algorithm/run/:id
      *  @method   POST
      */
@@ -238,7 +250,9 @@ async function routes(fastify, options) {
     });
 
 
-    /** Stop a algorithm
+    /**
+     *  Stop a algorithm
+     *
      *  @endpoint /algorithm/stop/:id
      *  @method   POST
      */

@@ -25,7 +25,7 @@ const config = require('../config'),
 	  moment = require('moment'),
 	  { execSync } = require('child_process');
 
-const BMP280 = require('../modules/BMP280');
+const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 
 
 // namespace HASH {
@@ -76,28 +76,6 @@ const BMP280 = require('../modules/BMP280');
 // }
 
 
-// namespace GPIO {
-	const GPIO = {
-		mode: function(pin, mode) {
-			execSync('gpio mode ' + pin + ' ' + mode);
-		},
-
-		read: function(pin) {
-			var value = parseInt(execSync('gpio read ' + pin).toString().trim());
-
-			if (isNaN(value))
-				value = -1;
-
-			return value;
-		},
-
-		write: function(pin, value) {
-			execSync('gpio write ' + pin + ' ' + value);
-		},
-	}
-// }
-
-
 // namespace DIR {
 	const DIR = {
 		list: function(directory) {
@@ -133,6 +111,29 @@ const BMP280 = require('../modules/BMP280');
 
         	return dirs.concat(files);
 		},
+
+		remove: function(directory) {
+			var list,
+				directory = (config.dir.storage + directory).replace(/\.\.\//g, '');
+
+			list = fs.readdirSync(directory);
+			for (var i = 0; i < list.length; i++) {
+				var filename = path.join(directory, list[i]),
+					stat = fs.statSync(filename);
+		
+				if(filename == '.' || filename == '..') {
+					// pass these files
+				} else if(stat.isDirectory()) {
+					// rmdir recursively
+					this.remove(filename);
+				} else {
+					// rm fiilename
+					fs.unlinkSync(filename);
+				}
+			}
+
+			fs.rmdirSync(dir);
+		}
 	}
 // }
 
@@ -187,4 +188,4 @@ const BMP280 = require('../modules/BMP280');
 // }
 
 
-module.exports = { HASH, DATETIME, W1, I2C, GPIO, DIR, FILE };
+module.exports = { HASH, DATETIME, I2C, GPIO, DIR, FILE };

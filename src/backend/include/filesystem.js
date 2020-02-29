@@ -16,7 +16,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const config = require('../config'),
+const CONFIG  = require('../config'),
+      SESSION = require('./session'),
       { DIR, FILE } = require('./namespace');
 
 
@@ -26,6 +27,9 @@ async function routes(fastify, options) {
      *  @method   GET
      */
     fastify.get('/filesystem/list*', async function(req, rep) {
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
+
         var list = [],
             directory = req.params['*'];
 
@@ -40,18 +44,49 @@ async function routes(fastify, options) {
      *  @endpoint /filesystem/file
      *  @method   PUT
      */
-    // fastify.put('/filesystem/file', async function(req, rep) {
-    //     // FILE.write(filename);
-    // });
+    fastify.put('/filesystem/file/*', async function(req, rep) {
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
+
+        if (req.body.name === undefined || req.body.content === undefined)
+            return { success: false, msg: 'Required fields: string(name), base64(content)' };
+
+        var directory = req.params['*'];
+
+        // var id = HASH.uuid4();
+
+        // if (fs.existsSync(index))
+        //     var algorithms = JSON.parse(fs.readFileSync(index, 'utf8'));
+        // else
+        //     var algorithms = [];
+
+        // algorithms.push({
+        //     id         : id,
+        //     title      : req.body.title,
+        //     description: req.body.description
+        // });
+
+        //fs.writeFileSync(CONFIG.dir.algoritms + '/' + id, HASH.base64_decode(req.body.code));
+        //fs.writeFileSync(index, JSON.stringify(algorithms));
+
+        return { success: true, msg: 'Successfully' };
+
+        // FILE.write(filename);
+    });
 
 
     /**
      *  @endpoint /filesystem/file/:id
      *  @method   GET
      */
-    // fastify.get('/filesystem/file/:id', async function(req, rep) {
-    //     // FILE.read(filename);
-    // });
+    fastify.get('/filesystem/file/*', async function(req, rep) {
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
+
+        var directory = req.params['*'];
+
+        // FILE.read(filename);
+    });
 
 
     /**
@@ -59,6 +94,9 @@ async function routes(fastify, options) {
      *  @method   DELETE
      */
     fastify.delete('/filesystem/item/*', async function(req, rep) {
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: 'Authorization required' };
+
         var directory = req.params['*'];
 
         if (!FILE.exist(directory))
@@ -66,15 +104,6 @@ async function routes(fastify, options) {
 
         return { success: true, data: list };
     });
-
-
-    /**
-     *  @endpoint /filesystem/directory
-     *  @method   PUT
-     */
-    // fastify.put('/filesystem/directory', async function(req, rep) {
-    //     // DIR.create(directory);
-    // });
 }
 
 

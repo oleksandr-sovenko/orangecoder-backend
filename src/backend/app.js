@@ -15,8 +15,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
-// pkg -t node12.2.0-linux-armv7 -o orangecoder-node12.2.0-linux-armv7-1.0 app.js
+// @command pkg -t node12.2.0-linux-armv7 -o orangecoder-node12.2.0-linux-armv7-1.0 app.js
 
 
 const config  = require('./config'),
@@ -43,11 +42,13 @@ function fastify_ws_sendall(data) {
 }
 
 
-/** @command install
+/**
+ *	Install Service
  *
+ *	@command uninstall
  */
 if (process.argv[2] === 'install') {
-	let service = '' +
+	var service = '' +
 		'[Unit]\n' +
 		'Description=OrangeCoder.org\n' +
 		'After=network.target\n' +
@@ -74,8 +75,10 @@ if (process.argv[2] === 'install') {
 }
 
 
-/** @command uninstall
+/**
+ *	Uninstall Service
  *
+ *	@command uninstall
  */
 if (process.argv[2] === 'uninstall') {
 	execSync('systemctl disable orangecoder');
@@ -90,8 +93,10 @@ if (process.argv[2] === 'uninstall') {
 }
 
 
-/** @command wm
+/**
+ *  VM (Executing JavaScript)
  *
+ *	@command vm
  */
 if (process.argv[2] === 'vm') {
 	var filename = process.argv[3],
@@ -147,9 +152,6 @@ if (process.argv[2] === 'vm') {
 				FILE          : FILE,
 				HASH          : HASH,
 
-				console       : console,
-				//require       : require,
-
 				setInterval   : setInterval,
 				clearInterval : clearInterval,
 				setTimeout    : setTimeout,
@@ -169,8 +171,10 @@ if (process.argv[2] === 'vm') {
 }
 
 
-/** @command serve
+/**
+ *	Server Application
  *
+ *	@command serve
  */
 if (process.argv[2] === 'serve') {
 	// Inter Process Communications {
