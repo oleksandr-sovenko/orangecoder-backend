@@ -81,7 +81,7 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 		list: function(directory) {
         	var dirs  = [],
         		files = [],
-            	directory = (config.dir.storage + directory).replace(/\.\.\//g, '');
+            	directory = __path__(directory);
 
         	if (fs.existsSync(config.dir.storage))
             	fs.mkdirSync(config.dir.storage, { recursive: true });
@@ -113,15 +113,14 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 		},
 
 		create: function(directory) {
-			var directory = (config.dir.storage + '/' + directory).replace(/\.\.\//g, '');
+			var directory = __path__(directory);
 
-			if (!fs.existsSync(directory))
-				fs.mkdirSync(directory);
+			fs.mkdirSync(directory, { recursive: true });
 		},
 
 		remove: function(directory) {
 			var list,
-				directory = (config.dir.storage + '/' + directory).replace(/\.\.\//g, '');
+				directory = __path__(directory);
 
 			list = fs.readdirSync(directory);
 			for (var i = 0; i < list.length; i++) {
@@ -139,7 +138,7 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 				}
 			}
 
-			fs.rmdirSync(dir);
+			fs.rmdirSync(directory);
 		}
 	}
 // }
@@ -148,7 +147,7 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 // namespace FILE {
 	const FILE = {
 		is: function(filename) {
-			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, '');
+			var filename = __path__(filename);
 
 			if (!this.exists(filename))
 				return '';
@@ -168,22 +167,24 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 				return 'socket';
 			if (stat.isSymbolicLink())
 				return 'symlink';
+
+			return '';
 		},
 
 		remove: function(filename) {
-			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, '');
+			var filename = __path__(filename);
 
 			fs.unlinkSync(filename);
 		},
 
 		exists: function(filename) {
-			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, '');
+			var filename = __path__(filename);
 
 			return fs.existsSync(path.dirname(filename));
 		},
 
 		read: function(filename) {
-			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, ''),
+			var filename = __path__(filename),
 				content = '';
 
 			try {
@@ -196,7 +197,7 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 		},
 
 		write: function(filename, data) {
-			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, '');
+			var filename = __path__(filename);
 
 			if (fs.existsSync(path.dirname(filename))) {
 				fs.writeFileSync(filename, data);
@@ -207,7 +208,7 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 		},
 
 		append: function(filename, data) {
-			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, '');
+			var filename = __path__(filename);
 
 			fs.appendFileSync(filename, data);
 
@@ -216,6 +217,11 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 		},
 	}
 // }
+
+
+function __path__(path) {
+	return (config.dir.storage + '/' + path.replace(config.dir.storage, '')).replace(/\.\.\//g, '');
+}
 
 
 module.exports = { HASH, DATETIME, I2C, GPIO, DIR, FILE };
