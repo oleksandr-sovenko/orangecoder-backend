@@ -18,7 +18,7 @@
 
 const CONFIG  = require('../config'),
       SESSION = require('./session'),
-      { DIR, FILE } = require('./namespace');
+      { DIR, FILE, HASH } = require('./namespace');
 
 
 async function routes(fastify, options) {
@@ -44,14 +44,29 @@ async function routes(fastify, options) {
      *  @endpoint /filesystem/file
      *  @method   PUT
      */
+    fastify.put('/filesystem/dir/*', async function(req, rep) {
+        var path = req.params['*'];
+
+        DIR.create(path);
+
+        return { success: true, msg: 'Successfully' };
+    });
+
+
+    /**
+     *  @endpoint /filesystem/file
+     *  @method   PUT
+     */
     fastify.put('/filesystem/file/*', async function(req, rep) {
-        if (!SESSION.get(req.headers['backend-authorization']))
-            return { success: false, msg: 'Authorization required' };
+        // if (!SESSION.get(req.headers['backend-authorization']))
+        //     return { success: false, msg: 'Authorization required' };
 
-        if (req.body.name === undefined || req.body.content === undefined)
-            return { success: false, msg: 'Required fields: string(name), base64(content)' };
+        // if (req.body.name === undefined || req.body.content === undefined)
+        //     return { success: false, msg: 'Required fields: string(name), base64(content)' };
 
-        var directory = req.params['*'];
+        var path = req.params['*'];
+
+        //console.log(req.body);
 
         // var id = HASH.uuid4();
 
@@ -65,6 +80,10 @@ async function routes(fastify, options) {
         //     title      : req.body.title,
         //     description: req.body.description
         // });
+
+        //console.log(path);
+
+        FILE.write(path, HASH.base64_decode(req.body));
 
         //fs.writeFileSync(CONFIG.dir.algoritms + '/' + id, HASH.base64_decode(req.body.code));
         //fs.writeFileSync(index, JSON.stringify(algorithms));
@@ -97,12 +116,17 @@ async function routes(fastify, options) {
         if (!SESSION.get(req.headers['backend-authorization']))
             return { success: false, msg: 'Authorization required' };
 
-        var directory = req.params['*'];
+        var path = req.params['*'];
 
-        if (!FILE.exist(directory))
-            return { success: true, msg: 'File or directory not exists' };
+        if (!FILE.exists(path))
+            return { success: false, msg: 'File or directory not exists' };
 
-        return { success: true, data: list };
+        if (FILE.is(path) == 'dir')
+            DIR.remove(path);
+        else
+            FILE.remove(path);
+
+        return { success: true };
     });
 }
 

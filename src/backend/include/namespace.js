@@ -112,9 +112,16 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
         	return dirs.concat(files);
 		},
 
+		create: function(directory) {
+			var directory = (config.dir.storage + '/' + directory).replace(/\.\.\//g, '');
+
+			if (!fs.existsSync(directory))
+				fs.mkdirSync(directory);
+		},
+
 		remove: function(directory) {
 			var list,
-				directory = (config.dir.storage + directory).replace(/\.\.\//g, '');
+				directory = (config.dir.storage + '/' + directory).replace(/\.\.\//g, '');
 
 			list = fs.readdirSync(directory);
 			for (var i = 0; i < list.length; i++) {
@@ -140,20 +147,43 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 
 // namespace FILE {
 	const FILE = {
+		is: function(filename) {
+			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, '');
+
+			if (!this.exists(filename))
+				return '';
+
+			stat = fs.statSync(filename);
+			if (stat.isBlockDevice())
+				return 'block-device';
+			if (stat.isCharacterDevice())
+				return 'char-device';
+			if (stat.isDirectory())
+				return 'dir';
+			if (stat.isFIFO())
+				return 'fifo';
+			if (stat.isFile())
+				return 'file';
+			if (stat.isSocket())
+				return 'socket';
+			if (stat.isSymbolicLink())
+				return 'symlink';
+		},
+
 		remove: function(filename) {
-			var filename = (config.dir.storage + filename).replace(/\.\.\//g, '');
+			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, '');
 
 			fs.unlinkSync(filename);
 		},
 
 		exists: function(filename) {
-			var filename = (config.dir.storage + filename).replace(/\.\.\//g, '');
+			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, '');
 
 			return fs.existsSync(path.dirname(filename));
 		},
 
 		read: function(filename) {
-			var filename = (config.dir.storage + filename).replace(/\.\.\//g, ''),
+			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, ''),
 				content = '';
 
 			try {
@@ -166,23 +196,23 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 		},
 
 		write: function(filename, data) {
-			var filename = (config.dir.storage + filename).replace(/\.\.\//g, '');
+			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, '');
 
 			if (fs.existsSync(path.dirname(filename))) {
 				fs.writeFileSync(filename, data);
 
 				if (fs.existsSync(filename))
-					execSync('sync -f ' + filename);
+					execSync('sync -f "' + filename + '"');
 			}
 		},
 
 		append: function(filename, data) {
-			var filename = (config.dir.storage + filename).replace(/\.\.\//g, '');
+			var filename = (config.dir.storage + '/' + filename).replace(/\.\.\//g, '');
 
 			fs.appendFileSync(filename, data);
 
 			if (fs.existsSync(filename))
-				execSync('sync -f ' + filename);
+				execSync('sync -f "' + filename + '"');
 		},
 	}
 // }
