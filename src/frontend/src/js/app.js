@@ -108,7 +108,7 @@ var app = new Framework7({
     root: '#app', // App root element
     animate: false,
 
-    name: 'Orange Maker', // App name
+    name: 'OrangeCoder.org', // App name
     theme: 'aurora', // Automatic theme detection
     // App root data
     data: function () {
@@ -136,8 +136,8 @@ var app = new Framework7({
 
     methods: {
         filesystem: {
-            files: function(callback) {
-                app.request.json(app.data.url + '/filesystem/list/', { }, function(files, status, xhr) {
+            files: function(path, callback) {
+                app.request.json(app.data.url + '/filesystem/list/' + path, { }, function(files, status, xhr) {
                     app.data.filesystem.files = files;
                     if (callback !== undefined)
                         callback(files);
@@ -229,7 +229,7 @@ var app = new Framework7({
                     // app.methods.gpio.readall();
                     // app.methods.w1.devices();
                     app.methods.programming.algorithms();
-                    app.methods.filesystem.files();
+                    app.methods.filesystem.files('');
 
                     rws_start();
                 } else {
