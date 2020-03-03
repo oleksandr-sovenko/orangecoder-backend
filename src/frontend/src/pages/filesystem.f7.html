@@ -37,32 +37,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <div class="data-table data-table-init card">
                 <div class="card-header">
                     <div class="data-table-links">
-                        <a class="link">
-                        	{{_t 'Add Directory'}}
-                        </a>
-
-                        <a class="link">
-                            {{_t 'Add File'}}
-                        </a>
-
-                        <a class="link">
-                            {{_t 'Upload File'}}
-                        </a>
-
-                        <!--div>
-                            /<a class="text-color-black" href="#">var</a>/<a class="text-color-black" href="#">lib</a>/<a class="text-color-black" href="#">www</a>
-                        </div-->
+                        <div>
+                            {{js ' "/" + this.filesystem.path.join("/") '}}
+                        </div>
                     </div>
-                    <!--div class="data-table-actions">
-                        <a class="link icon-only">
-                            <i class="icon f7-icons if-not-md">sort</i>
-                            <i class="icon material-icons md-only">sort</i>
+                    <div class="data-table-actions">
+                        <a class="link" @click="addDirectory">
+                            <i class="material-icons">create_new_folder</i>
                         </a>
-                        <a class="link icon-only">
-                            <i class="icon f7-icons if-not-md">more_vertical_round</i>
-                            <i class="icon material-icons md-only">more_vert</i>
+
+                        <a class="link" @click="addFile">
+                            <i class="material-icons">cloud_upload</i>
                         </a>
-                    </div-->
+
+                        <a class="link" @click="refreshList">
+                            <i class="material-icons">refresh</i>
+                        </a>
+                    </div>
                 </div>
                 <div class="card-content">
                     <table>
@@ -76,38 +67,35 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                             </tr>
                         </thead>
                         <tbody>
+                            <tr data-name=".." data-type="back" class="fm-item" @click="clickItem">
+                                <td class="label-cell" nowrap>
+                                    <i class="material-icons">folder_open</i>
+                                </td>
+                                <td class="label-cell" width="100%" colspan="4">..</td>
+                            </tr>
                             {{#each filesystem.files}}
                                 <tr data-name="{{name}}" data-type="{{type}}" class="fm-item">
-                                    <td class="label-cell" nowrap>
+                                    <td class="label-cell" nowrap @click="clickItem">
                                         <i class="material-icons">{{js ' this.type == "dir" ? "folder_open" : "insert_drive_file" '}}</i>
                                     </td>
-                                    <td class="label-cell" width="100%">{{name}}</td>
-                                    <td class="label-cell" nowrap>
+                                    <td class="label-cell" width="100%" @click="clickItem">{{name}}</td>
+                                    <td class="label-cell" nowrap @click="clickItem">
                                         {{#js_if ' this.name != ".." '}}
                                             {{date}}
                                         {{/js_if}}
                                     </td>
-                                    <td class="label-cell" nowrap>
+                                    <td class="label-cell text-align-right" nowrap @click="clickItem">
                                         {{#js_if ' this.name != ".." '}}
                                             {{size}}
                                         {{/js_if}}
                                     </td>
                                     <td class="actions-cell" nowrap>
                                         {{#js_if ' this.name != ".." '}}
-                                            {{#js_if ' this.type == "file" '}}
-                                                <a class="link icon-only">
-                                                    <i class="material-icons">cloud_download</i>
-                                                </a>
-                                            {{/js_if}}
                                             <a class="link icon-only" @click="deleteItem">
                                                 <i class="material-icons">delete</i>
                                             </a>
                                         {{/js_if}}
                                     </td>
-                                </tr>
-                            {{else}}
-                                <tr>
-                                    <td colspan="6" class="text-align-center">{{_t 'No files and directories yet'}}</td>
                                 </tr>
                             {{/each}}
                         </tbody>
@@ -131,6 +119,22 @@ export default {
         }
     `,
     methods: {
+        clickItem(el) {
+            var self = this,
+                tr   = self.$$(el.target).closest('tr'),
+                name = tr.data('name'),
+                type = tr.data('type');
+
+            if (type == 'dir' || type == 'back') {
+                if (type == 'dir')
+                    self.filesystem.path.push(name);
+                else
+                    self.filesystem.path.splice(-1,1);
+
+                self.refreshList();
+            }
+         },
+
         deleteItem(el) {
             var self = this,
                 tr   = self.$$(el.target).closest('tr'),
@@ -145,12 +149,38 @@ export default {
                     method: 'DELETE',
                     dataType: 'json',
                     success: function(data, status, xhr) {
-                        self.$app.methods.filesystem.files(function(files) {
-                            self.filesystem.files = files;
-                            self.$update();
-                        });
+                        self.refreshList();
                     }
                 });
+            });
+        },
+
+        addFile() {
+            alert('addFile');
+        },
+
+        addDirectory() {
+            var self = this;
+
+            self.$app.dialog.prompt('Enter directory name', function(path) {
+                self.$app.request({
+                    url: self.$app.data.url + '/filesystem/dir/' + path,
+                    contentType: 'application/json',
+                    method: 'PUT',
+                    dataType: 'json',
+                    success: function(data, status, xhr) {
+                        self.refreshList();
+                    }
+                });
+            });
+        },
+
+        refreshList() {
+            var self = this;
+
+            self.$app.methods.filesystem.files(self.filesystem.path.join('/'), function(files) {
+                self.filesystem.files = files;
+                self.$update();
             });
         }
     },
@@ -158,6 +188,7 @@ export default {
     data: function() {
         return {
             filesystem: {
+                path: [],
                 files: this.$app.data.filesystem.files
             }
         }
