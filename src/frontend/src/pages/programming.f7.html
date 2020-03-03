@@ -43,18 +43,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             <div class="data-table data-table-init card">
                 <div class="card-header">
                     <div class="data-table-links">
-                        <a class="link" @click="openPopup('.popup-add-algorithm', null, 'addAlgorithm')">
-                            <i class="material-icons">add_circle_outline</i> {{_t 'Add'}}
-                        </a>
                     </div>
                     <div class="data-table-actions">
-                        <a class="link icon-only">
-                            <i class="icon f7-icons if-not-md">sort</i>
-                            <i class="icon material-icons md-only">sort</i>
-                        </a>
-                        <a class="link icon-only">
-                            <i class="icon f7-icons if-not-md">more_vertical_round</i>
-                            <i class="icon material-icons md-only">more_vert</i>
+                        <a class="link" @click="openPopup('.popup-add-algorithm', null, 'addAlgorithm')">
+                            <i class="material-icons">code</i>&nbsp;&nbsp;{{_t 'Add'}}
                         </a>
                     </div>
                 </div>
@@ -128,12 +120,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     </ul>
                 </form>
             </div>
-            <div style="border: 1px solid #e0e0e0;" class="editor"></div>
+
+            <div class="toolbar tabbar toolbar-top">
+                <div class="toolbar-inner">
+                    <a href="#editor" class="tab-link tab-link-active">{{_t 'Editor'}}</a>
+                    <a href="#console" class="tab-link">{{_t 'Console'}}</a>
+                </div>
+            </div>
+            <div class="tabs">
+                <div id="editor" class="tab tab-active">
+                    <div style="border: 1px solid #e0e0e0;" class="editor"></div>
+                </div>
+                <div id="console" class="tab">
+                    <div class="card-content console"></div>
+                </div>
+            </div>
+
             <div class="block block-bottom">
                 <p class="row">
-                    <!-- button class="col button button-raised button-fill">{{_t 'Run'}}</button -->
+                    <button class="col button button-raised button-fill color-green run" data-label-run="{{_t 'Run'}}" data-label-stop="{{_t 'Stop'}}">{{_t 'Run'}}</button>
                     <button class="col button button-raised button-fill submit">{{_t 'Add'}}</button>
-                    <button class="col button button-raised popup-close">{{_t 'Cancel'}}</button>
+                    <button class="col button button-raised button-fill color-gray close">{{_t 'Close'}}</button>
                 </p>
             </div>
         </div>
@@ -178,7 +185,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     <div style="border: 1px solid #e0e0e0;" class="editor"></div>
                 </div>
                 <div id="console" class="tab">
-                    <div class="card-content console" style="border: 1px solid #e0e0e0; padding: 10px; overflow-y: scroll; height: calc(100% - 120px);"></div>
+                    <div class="card-content console"></div>
                 </div>
             </div>
 
@@ -393,8 +400,8 @@ export default {
                 popup.remove();
             });
 
-            var height = popup.height() - (popup.find('.block-top').height() + popup.find('.block-bottom').height() + 110);
-            popup.find('.editor').css({ height: height + 'px' })
+            popup.find('.editor').css({ height: (self.$$(window).height() - 250) + 'px' });
+            popup.find('.console').css({ height: (self.$$(window).height() - 270) + 'px' });
 
             var editor = ace.edit(popup.find('.editor')[0]);
             editor.setTheme('ace/theme/chrome');
