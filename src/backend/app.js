@@ -115,7 +115,7 @@ if (process.argv[2] === 'vm') {
 		});
 
 		client.on('data', function(data) {
-			GPIO.emit('change', data);
+			//GPIO.emit('change', data);
 		});
 
 		client.on('end', function() {
@@ -124,6 +124,15 @@ if (process.argv[2] === 'vm') {
 
 		client.on('error', function(err) {
 			// console.log(err);
+		});
+	// }
+
+
+	// uncaughtException {
+		process.on('uncaughtException', function(err) {
+			const message = err.stack.replace(/\n/g, '').replace(/\).*/g, ')').replace(/ +(?= )/g,'');
+
+			client.write(JSON.stringify({ type: 'error', process: { id: filename.replace(/.*\//g, ''), pid: process.pid }, message: message }));
 		});
 	// }
 
@@ -142,32 +151,24 @@ if (process.argv[2] === 'vm') {
 
 
 	// Execution JS code {
-		try {
-			result = vm.runInNewContext(jscode + ';' + true, {
-				W1            : W1,
-				I2C           : I2C,
-				GPIO          : GPIO,
-				CONSOLE       : CONSOLE,
-				DATETIME      : DATETIME,
-				FILE          : FILE,
-				HASH          : HASH,
+		result = vm.runInNewContext(jscode + ';' + true, {
+			W1            : W1,
+			I2C           : I2C,
+			GPIO          : GPIO,
+			CONSOLE       : CONSOLE,
+			DATETIME      : DATETIME,
+			FILE          : FILE,
+			HASH          : HASH,
 
-				setInterval   : setInterval,
-				clearInterval : clearInterval,
-				setTimeout    : setTimeout,
-				clearTimeout  : clearTimeout,
-			}, {
-				breakOnSigint: true,
-				displayErrors: false
-			});
-		} catch(e) {
-			result = e.toString();
-		}
+			setInterval   : setInterval,
+			clearInterval : clearInterval,
+			setTimeout    : setTimeout,
+			clearTimeout  : clearTimeout,
+		}, {
+			breakOnSigint: true,
+			displayErrors: false
+		});
 	// }
-
-
-	if (result !== true)
-		client.write(JSON.stringify({ type: 'error', process: { pid: process.pid}, message: result }));
 }
 
 

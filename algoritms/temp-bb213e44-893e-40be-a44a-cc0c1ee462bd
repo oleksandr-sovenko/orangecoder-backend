@@ -17,8 +17,8 @@
 
 var led = 30;
 
-CONSOLE.log('started');
-GPIO.mode(led, GPIO.OUTPUT);
+//CONSOLE.log('started');
+//GPIO.mode(led, 'out');
 
 FILE.write('test.txt', 'asdasdasdasdasd');
 
@@ -26,8 +26,8 @@ setInterval(function() {
     //asdasdasd
     CONSOLE.log(DATETIME.format('YYYY-MM-DD hh:mm:ss'));
     
-    if (GPIO.read(led) == GPIO.HIGH)
-        GPIO.write(led, GPIO.LOW);
-    else
-        GPIO.write(led, GPIO.HIGH);
+    // if (GPIO.read(led) == 1)
+    //     GPIO.write(led, 0);
+    // else
+    //     GPIO.write(led, 1);
 }, 3000);

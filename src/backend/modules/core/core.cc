@@ -39,45 +39,8 @@ void signalHandler(int signum) {
 
 
 // GPIO {
-	Napi::Value GPIO_IsLow(const Napi::CallbackInfo& info) {
+	Napi::Value GPIO_Read(const Napi::CallbackInfo& info) {
 		Napi::Env env = info.Env();
-
-		int pin = info.This().As<Napi::Object>().Get("_pin").As<Napi::Number>();
-
-		return Napi::Boolean::New(env, digitalRead(pin) ? false : true);
-	}
-
-	Napi::Value GPIO_IsHigh(const Napi::CallbackInfo& info) {
-		Napi::Env env = info.Env();
-
-		int pin = info.This().As<Napi::Object>().Get("_pin").As<Napi::Number>();
-
-		return Napi::Boolean::New(env, digitalRead(pin) ? true : false);
-	}
-
-	Napi::Value GPIO_Low(const Napi::CallbackInfo& info) {
-		Napi::Env env = info.Env();
-
-		int pin = info.This().As<Napi::Object>().Get("_pin").As<Napi::Number>();
-
-		digitalWrite(pin, LOW);
-
-		return env.Null();
-	}
-
-	Napi::Value GPIO_High(const Napi::CallbackInfo& info) {
-		Napi::Env env = info.Env();
-
-		int pin = info.This().As<Napi::Object>().Get("_pin").As<Napi::Number>();
-
-		digitalWrite(pin, HIGH);
-
-		return env.Null();
-	}
-
-	Napi::Value GPIO_Input(const Napi::CallbackInfo& info) {
-		Napi::Env    env    = info.Env();
-		Napi::Object object = Napi::Object::New(env);
 
 		if (!info[0].IsNumber()) {
 			Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
@@ -86,47 +49,39 @@ void signalHandler(int signum) {
 
   		int pin = info[0].As<Napi::Number>();
 
-  		pinMode(pin, INPUT);
-
-		object.Set(Napi::String::New(env, "_pin"),
-			Napi::Number::New(env, pin));
-		object.Set(Napi::String::New(env, "isLow"),
-			Napi::Function::New(env, GPIO_IsLow));
-		object.Set(Napi::String::New(env, "isHigh"),
-			Napi::Function::New(env, GPIO_IsHigh));
-		object.Set(Napi::String::New(env, "low"),
-			Napi::Function::New(env, GPIO_Low));
-		object.Set(Napi::String::New(env, "high"),
-			Napi::Function::New(env, GPIO_High));
-
-		return object;
+		return Napi::Number::New(env, digitalRead(pin));
 	}
 
-	Napi::Value GPIO_Output(const Napi::CallbackInfo& info) {
-		Napi::Env    env    = info.Env();
-		Napi::Object object = Napi::Object::New(env);
+	Napi::Value GPIO_Write(const Napi::CallbackInfo& info) {
+		Napi::Env env = info.Env();
 
-		if (!info[0].IsNumber()) {
+		if (!info[0].IsNumber() || !info[1].IsNumber()) {
 			Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
 			return env.Null();
 		}
 
   		int pin = info[0].As<Napi::Number>();
+  		int val = info[1].As<Napi::Number>();
 
-  		pinMode(pin, OUTPUT);
+		digitalWrite(pin, val);
 
-		object.Set(Napi::String::New(env, "_pin"),
-			Napi::Number::New(env, pin));
-		object.Set(Napi::String::New(env, "isLow"),
-			Napi::Function::New(env, GPIO_IsLow));
-		object.Set(Napi::String::New(env, "isHigh"),
-			Napi::Function::New(env, GPIO_IsHigh));
-		object.Set(Napi::String::New(env, "low"),
-			Napi::Function::New(env, GPIO_Low));
-		object.Set(Napi::String::New(env, "high"),
-			Napi::Function::New(env, GPIO_High));
+		return env.Null();
+	}
 
-		return object;
+	Napi::Value GPIO_Mode(const Napi::CallbackInfo& info) {
+		Napi::Env env = info.Env();
+
+		if (!info[0].IsNumber() || !info[1].IsNumber()) {
+			Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
+			return env.Null();
+		}
+
+  		int pin  = info[0].As<Napi::Number>();
+  		int mode = info[1].As<Napi::Number>();
+
+  		pinMode(pin, mode);
+
+		return env.Null();
 	}
 // }
 
@@ -134,89 +89,94 @@ void signalHandler(int signum) {
 // BMP280 {
 	Napi::Value BMP280_Data(const Napi::CallbackInfo& info) {
 		Napi::Env env = info.Env();
-		Napi::Object object = Napi::Object::New(env);
 	
 		if (bmp280) {
 			BMP280Data *bmp280Data = bmp280->getBMP280Data();
-	
+
+			Napi::Object object = Napi::Object::New(env);	
 			object.Set("pressure", bmp280Data->getPressure());
 			object.Set("temperature", bmp280Data->getTemperature());
 			object.Set("altitude", bmp280Data->getAltitude());
 		}
 		
-		return object;
+		return env.Null();
 	}
 
 	Napi::Value BMP280_Init(const Napi::CallbackInfo& info) {
 		Napi::Env env = info.Env();
 	
-		if (bmp280)
-			return Napi::Boolean::New(env, true);
+		if (!bmp280) {
+		    bmp280 = new BMP280((char *) "/dev/i2c-0", BMP280_I2C_ADDRESS1);
+		    int fd = bmp280->init();
+	    	bmp280->reset();
 	
-	    bmp280 = new BMP280((char *) "/dev/i2c-0", BMP280_I2C_ADDRESS1);
-	    int fd = bmp280->init();
-	    bmp280->reset();
+	    	if (fd < 0) {
+	    		delete bmp280;
 	
-	    if (fd < 0) {
-	    	delete bmp280;
+	        	return env.Null();
+	    	}
 	
-	        return Napi::Boolean::New(env, false);
+	    	bmp280->reset();
+	    	bmp280->setPowerMode(BMP280_NORMAL_MODE);
+	    	bmp280->setTemperatureOversampling(BMP280_ULTRAHIGHRESOLUTION_OVERSAMP_TEMPERATURE);
+	    	bmp280->setPressureOversampling(BMP280_ULTRAHIGHRESOLUTION_OVERSAMP_PRESSURE);
+	    	bmp280->setIrrFilter(BMP280_FILTER_COEFF_16);
+	    	bmp280->setStandbyTime(BMP280_STANDBY_TIME_250_MS);
 	    }
-	
-	    bmp280->reset();
-	    bmp280->setPowerMode(BMP280_NORMAL_MODE);
-	    bmp280->setTemperatureOversampling(BMP280_ULTRAHIGHRESOLUTION_OVERSAMP_TEMPERATURE);
-	    bmp280->setPressureOversampling(BMP280_ULTRAHIGHRESOLUTION_OVERSAMP_PRESSURE);
-	    bmp280->setIrrFilter(BMP280_FILTER_COEFF_16);
-	    bmp280->setStandbyTime(BMP280_STANDBY_TIME_250_MS);
-	
-		return Napi::Boolean::New(env, true);
+
+		Napi::Object object = Napi::Object::New(env);
+		object.Set(Napi::String::New(env, "data"),
+			Napi::Function::New(env, BMP280_Data));
+
+		return object;
 	}
 // }
 
 
 // DS18B20 {
-	Napi::Value DS18B20_Init(const Napi::CallbackInfo& info) {
+	Napi::Value DS18B20_Temperature_C(const Napi::CallbackInfo& info) {
 		Napi::Env env = info.Env();
-		Napi::Object object = Napi::Object::New(env);
 
-		return object;
+		const char *addr = info.This().As<Napi::Object>().Get("_addr").ToString().Utf8Value().c_str();
+
+		FILE  *file;
+		char  buffer[1024];
+
+		strcpy(buffer, "/sys/bus/w1/devices/");
+		strcat(buffer, addr);
+		strcat(buffer, "/w1_slave");
+
+		file = fopen(buffer, "r");
+		if (file) {
+			size_t size = fread(&buffer, sizeof(buffer), 1, file);
+			
+			if (size > 0) {
+
+			}
+
+			fclose(file);
+
+			return Napi::Number::New(env, (float) atoi(strstr(buffer, "t=") + 2) / 1000);
+		} else {
+			return env.Null();
+		}
 	}
 
-	Napi::Value DS18B20_Data(const Napi::CallbackInfo& info) {
-		// FILE  *file;
-		// char  buffer[1024];
-		// char  *addr    = NULL;
-		// char  *id      = argv[2];
-		// float old_temp = 0;
-		// float new_temp = 0;
-
-		// if (strstr(argv[3], "addr:") != NULL)
-		// 	addr = argv[3] + 5;
-
-		// if (addr == NULL) {
-		// 	return EXIT_FAILURE;
-		// }
-
-		// for (;;) {
-		// 	strcpy(buffer, "/sys/bus/w1/devices/");
-		// 	strcat(buffer, addr);
-		// 	strcat(buffer, "/w1_slave");
-
-		// 	if (file = fopen(buffer, "r")) {
-		// 		fread(&buffer, sizeof(buffer), 1, file);
-		// 		fclose(file);
-
-		// 		char *t = strstr(buffer, "t=");
-		// 		new_temp = (float) atoi(t + 2) / 1000;
-		// 	} else {
-		// 		new_temp = 0;
-		// 		delay(500);
-		// 	}
-		// }
-
+	Napi::Value DS18B20_Init(const Napi::CallbackInfo& info) {
 		Napi::Env env = info.Env();
+
+		if (!info[0].IsString()) {
+			Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
+			return env.Null();
+		}
+
+		const char *addr = info[0].ToString().Utf8Value().c_str();
+
 		Napi::Object object = Napi::Object::New(env);
+		object.Set(Napi::String::New(env, "_addr"),
+			Napi::String::New(env, addr));
+		object.Set(Napi::String::New(env, "temp_c"),
+			Napi::Function::New(env, DS18B20_Temperature_C));
 
 		return object;
 	}
@@ -224,7 +184,7 @@ void signalHandler(int signum) {
 
 
 // HC_SC04 {
-	Napi::Value HC_SC04_Data(const Napi::CallbackInfo& info) {
+	Napi::Value HC_SC04_Distance_CM(const Napi::CallbackInfo& info) {
 		Napi::Env env = info.Env();
 
 		int trig = info.This().As<Napi::Object>().Get("_trig").As<Napi::Number>();
@@ -249,8 +209,7 @@ void signalHandler(int signum) {
 	}
 
 	Napi::Value HC_SC04_Init(const Napi::CallbackInfo& info) {
-		Napi::Env    env    = info.Env();
-		Napi::Object object = Napi::Object::New(env);
+		Napi::Env env = info.Env();
 
 		if (!info[0].IsNumber() || !info[1].IsNumber()) {
 			Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
@@ -267,12 +226,13 @@ void signalHandler(int signum) {
 		digitalWrite(trig, LOW);
 		delay(30);
 
+		Napi::Object object = Napi::Object::New(env);
 		object.Set(Napi::String::New(env, "_trig"),
 			Napi::Number::New(env, trig));
 		object.Set(Napi::String::New(env, "_echo"),
 			Napi::Number::New(env, echo));
-		object.Set(Napi::String::New(env, "data"),
-			Napi::Function::New(env, HC_SC04_Data));
+		object.Set(Napi::String::New(env, "distance_cm"),
+			Napi::Function::New(env, HC_SC04_Distance_CM));
 
 		return object;
 	}
@@ -284,22 +244,28 @@ Napi::Object Module(Napi::Env env, Napi::Object exports) {
 	Napi::Object BMP280  = Napi::Object::New(env);
 	Napi::Object DS18B20 = Napi::Object::New(env);
 
-	GPIO.Set(Napi::String::New(env, "input"),
-		Napi::Function::New(env, GPIO_Input));
-	GPIO.Set(Napi::String::New(env, "output"),
-		Napi::Function::New(env, GPIO_Output));
+	GPIO.Set(Napi::String::New(env, "mode"),
+		Napi::Function::New(env, GPIO_Mode));
+	GPIO.Set(Napi::String::New(env, "write"),
+		Napi::Function::New(env, GPIO_Write));
+	GPIO.Set(Napi::String::New(env, "read"),
+		Napi::Function::New(env, GPIO_Read));
+	GPIO.Set(Napi::String::New(env, "OUTPUT"),
+		Napi::Number::New(env, OUTPUT));
+	GPIO.Set(Napi::String::New(env, "INPUT"),
+		Napi::Number::New(env, INPUT));
+	GPIO.Set(Napi::String::New(env, "LOW"),
+		Napi::Number::New(env, LOW));
+	GPIO.Set(Napi::String::New(env, "HIGH"),
+		Napi::Number::New(env, HIGH));
 	exports.Set(Napi::String::New(env, "GPIO"), GPIO);
 
-	BMP280.Set(Napi::String::New(env, "init"),
+	BMP280.Set(Napi::String::New(env, "BMP280_Init"),
 		Napi::Function::New(env, BMP280_Init));
-	BMP280.Set(Napi::String::New(env, "data"),
-		Napi::Function::New(env, BMP280_Data));
 	exports.Set(Napi::String::New(env, "BMP280"), BMP280);
 
-	DS18B20.Set(Napi::String::New(env, "init"),
+	DS18B20.Set(Napi::String::New(env, "DS18B20"),
 		Napi::Function::New(env, DS18B20_Init));
-	DS18B20.Set(Napi::String::New(env, "data"),
-		Napi::Function::New(env, DS18B20_Data));
 	exports.Set(Napi::String::New(env, "DS18B20"), DS18B20);
 
 	exports.Set(Napi::String::New(env, "HC_SC04"),
