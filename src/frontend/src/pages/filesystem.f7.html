@@ -43,15 +43,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     </div>
                     <div class="data-table-actions">
                         <a class="link" @click="addDirectory">
-                            <i class="material-icons">create_new_folder</i>
+                            <i class="material-icons">create_new_folder</i>&nbsp;&nbsp;{{_t 'Folder'}}
                         </a>
 
                         <a class="link" @click="addFile">
-                            <i class="material-icons">cloud_upload</i>
+                            <i class="material-icons">cloud_upload</i>&nbsp;&nbsp;{{_t 'File'}}
                         </a>
 
                         <a class="link" @click="refreshList">
-                            <i class="material-icons">refresh</i>
+                            <i class="material-icons">refresh</i>&nbsp;&nbsp;{{_t 'Refresh'}}
                         </a>
                     </div>
                 </div>
@@ -101,7 +101,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                         </tbody>
                     </table>
                 </div>
-                <div class="card-footer"></div>
+                <div class="card-footer">
+                    <input type="file" @change="onChangeFile">
+                </div>
             </div>
         </div>
     </div>
@@ -117,13 +119,17 @@ export default {
         .fm-item .material-icons {
             color: var(--f7-theme-color);
         }
+
+        input[type="file"] {
+            display: none;
+        }
     `,
     methods: {
         clickItem(el) {
-            var self = this,
-                tr   = self.$$(el.target).closest('tr'),
-                name = tr.data('name'),
-                type = tr.data('type');
+            const self = this,
+                  tr   = self.$$(el.target).closest('tr'),
+                  name = tr.data('name'),
+                  type = tr.data('type');
 
             if (type == 'dir' || type == 'back') {
                 if (type == 'dir')
@@ -136,11 +142,11 @@ export default {
          },
 
         deleteItem(el) {
-            var self = this,
-                tr   = self.$$(el.target).closest('tr'),
-                name = tr.data('name'),
-                type = tr.data('type'),
-                path = name;
+            const self = this,
+                  tr   = self.$$(el.target).closest('tr'),
+                  name = tr.data('name'),
+                  type = tr.data('type'),
+                  path = name;
 
             self.$app.dialog.confirm('Remove ' + name + '?', 'Delete', function() {
                 self.$app.request({
@@ -156,11 +162,46 @@ export default {
         },
 
         addFile() {
-            alert('addFile');
+            const self = this;
+
+            self.$$('.page-current input[type="file"]').click();
+        },
+
+        onChangeFile(el) {
+            const self = this,
+                  reader = new FileReader(),
+                  file   = el.target.files[0],
+                  path   = self.filesystem.path.join('/') + '/' + file.name;
+
+            reader.readAsDataURL(file);
+            reader.onload = function() {
+                const content = reader.result; 
+
+                self.$app.dialog.preloader('Uploading ...')
+                self.$app.request({
+                    url: self.$app.data.url + '/filesystem/file/' + path,
+                    contentType: 'text/plain',
+                    method: 'PUT',
+                    dataType: 'json',
+                    data: content,
+                    success: function(data, status, xhr) {
+                        self.$app.dialog.close();
+                        self.refreshList();
+                    },
+                    error: function(xhr, status) {
+                        self.$app.dialog.close();
+                        self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
+                    }
+                });
+
+            };
+            reader.onerror = function(error) {
+                 console.log('Error: ', error);
+            };
         },
 
         addDirectory() {
-            var self = this;
+            const self = this;
 
             self.$app.dialog.prompt('Enter directory name', function(path) {
                 self.$app.request({
@@ -176,7 +217,7 @@ export default {
         },
 
         refreshList() {
-            var self = this;
+            const self = this;
 
             self.$app.methods.filesystem.files(self.filesystem.path.join('/'), function(files) {
                 self.filesystem.files = files;

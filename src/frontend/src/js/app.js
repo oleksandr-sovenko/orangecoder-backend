@@ -320,6 +320,12 @@ if (localStorage['Backend-Authorization'] !== undefined) {
 app.methods.signin();
 
 
+window.addEventListener('resize', function() {
+    $$('.popup.modal-in .editor').css({ height: ($$(window).height() - 250) + 'px' });
+    $$('.popup.modal-in .console').css({ height: ($$(window).height() - 270) + 'px' });
+}, false);
+
+
 function rws_stop() {
     try {
         window.rws.close();
@@ -408,7 +414,13 @@ function rws_start() {
 
 
         if (msg.type === 'console') {
-            $$('.console').append(msg.message + '<br>');
+            if ($$('.popup.modal-in .console').length)
+                $$('.popup.modal-in .console').append('<p class="text-color-gray">' + msg.message + '</p>');
+        }
+
+        if (msg.type === 'error') {
+            if ($$('.popup.modal-in .console').length)
+                $$('.popup.modal-in .console').append('<p class="text-color-red">' + msg.message + '</p>');
         }
     });
 }
