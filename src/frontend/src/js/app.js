@@ -337,7 +337,7 @@ function rws_stop() {
 
 function rws_start() {
     app.dialog.preloader('Connecting ...')
-    window.rws = new ReconnectingWebSocket('ws://' + host);
+    window.rws = new ReconnectingWebSocket('ws://' + host + '/'+ localStorage['Backend-Authorization']);
 
     window.rws.addEventListener('open', function(e) {
         console.log('open');
