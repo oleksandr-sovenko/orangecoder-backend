@@ -1,4 +1,4 @@
-// algorithms.js
+// algorithm.js
 // Copyright (C) 2019 Oleksandr Sovenko (info@oleksandrsovenko.com)
 //
 // This program is free software; you can redistribute it and/or
@@ -17,37 +17,10 @@
 
 
 const fs       = require('fs'),
-      { spawn } = require('child_process'),
       CONFIG   = require('../config'),
       SESSION  = require('./session'),
+      PROCESS  = require('./process'),
       { HASH } = require('./namespace');
-
-
-/**
- *
- *
- */
-const PROCESS = {
-    childs: [],
-
-    list: function() {
-        return this.childs;
-    },
-
-    run: function(id) {
-        var child = spawn(process.argv[0], [process.argv[1], 'vm', CONFIG.dir.algoritms + '/' + id]);
-        this.childs[id] = child;
-    },
-
-    kill: function(id) {
-        try {
-            this.childs[id].kill();
-            delete this.childs[id];
-        } catch (e) {
-
-        }
-    }
-}
 
 
 async function routes(fastify, options) {
@@ -63,7 +36,7 @@ async function routes(fastify, options) {
 
         for (var i in algorithms) {
             if (algorithms[i].running === true)
-                PROCESS.run(algorithms[i].id);
+                PROCESS.run(algorithms[i].id, null);
         }
     }
 
@@ -80,7 +53,7 @@ async function routes(fastify, options) {
         if (fs.existsSync(index)) {
             var algorithms = JSON.parse(fs.readFileSync(index, 'utf8'));
             for (var i in algorithms)
-                algorithms[i].running = PROCESS.childs[algorithms[i].id] !== undefined ? true : false;
+                algorithms[i].running = PROCESS.get(algorithms[i].id) !== undefined ? true : false;
         } else
             var algorithms = [];
 
@@ -292,11 +265,16 @@ async function routes(fastify, options) {
         if (req.body.code === undefined)
             return { success: false, msg: 'Required fields: base64(code)' };
 
-        var id = 'temp-' + HASH.uuid4();
+        var id = 'temp-' + HASH.uuid4(),
+            session_id = req.headers['backend-authorization'];
 
         fs.writeFileSync(CONFIG.dir.algoritms + '/' + id, HASH.base64_decode(req.body.code));
 
-        PROCESS.run(id);
+        // Kill all previous executed scripts for current session
+        PROCESS.killall_by_session(session_id);
+
+        // Execute new one
+        PROCESS.run(id, req.headers['backend-authorization']);
 
         return { success: true, msg: 'Successfully', data: id };
     });
