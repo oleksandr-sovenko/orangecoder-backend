@@ -1,0 +1,14 @@
+{
+    "name": "Core",
+    "version": "1.0.0",
+    "description": "Core",
+    "main": "test.js",
+    "scripts": {
+        "test": "node test.js"
+    },
+    "dependencies": {
+        "bindings": "~1.2.1",
+        "node-addon-api": "^1.7.1"
+    },
+    "gypfile": true
+}

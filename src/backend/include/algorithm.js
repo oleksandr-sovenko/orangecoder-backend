@@ -71,8 +71,11 @@ async function routes(fastify, options) {
         if (!SESSION.get(req.headers['backend-authorization']))
             return { success: false, msg: 'Authorization required' };
 
-        if (req.body.title === undefined || req.body.description === undefined || req.body.code === undefined)
+        if (req.body.title === null || req.body.description === null || req.body.code === null)
             return { success: false, msg: 'Required fields: string(title), string(description), base64(code)' };
+
+        if (req.body.title === '')
+            return { success: false, msg: 'Title can\'t be empty' };
 
         var id = HASH.uuid4();
 

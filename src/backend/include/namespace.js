@@ -16,7 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const config = require('../config'),
+const CONFIG = require('../config'),
       fs     = require('fs'),
 	  md5    = require('md5'),
 	  base64 = require('js-base64').Base64,
@@ -83,8 +83,8 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
         		files = [],
             	directory = __path__(directory);
 
-        	if (fs.existsSync(config.dir.storage))
-            	fs.mkdirSync(config.dir.storage, { recursive: true });
+        	if (fs.existsSync(CONFIG.dir.storage))
+            	fs.mkdirSync(CONFIG.dir.storage, { recursive: true });
 
         	if (fs.existsSync(directory)) {
             	fs.readdirSync(directory).forEach(function(filename) {
@@ -220,7 +220,7 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 
 
 function __path__(path) {
-	return (config.dir.storage + '/' + path.replace(config.dir.storage, '')).replace(/\.\.\//g, '');
+	return (CONFIG.dir.storage + '/' + path.replace(CONFIG.dir.storage, '')).replace(/\.\.\//g, '');
 }
 
 
