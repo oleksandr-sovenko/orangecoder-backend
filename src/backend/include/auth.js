@@ -23,23 +23,30 @@ const fs      = require('fs'),
 
 
 async function routes(fastify, options) {
-    var credentials_json = CONFIG.dir.conf + '/credentials.json';
+    var credentials_json = CONFIG.dir.conf + '/credentials.json',
+        timezone_json = CONFIG.dir.conf + '/timezone.json';
 
 
     /**
      *
      */
-    fastify.post('/change-password', async function(req, rep) {
+    fastify.post('/settings/timezone', async function(req, rep) {
+        if (req.body === null || req.body.timezone === null)
+            return { success: false, msg: 'Required fields: string(timezone)' };
+
+        fs.writeFileSync(timezone_json, JSON.stringify({ 'timezone': req.body.timezone }));
+
+        return { success: true, msg: 'Successfully' };
+    })
+
+
+    /**
+     *
+     */
+    fastify.post('/settings/password', async function(req, rep) {
         var credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8'));
 
-         if (!SESSION.get(req.headers['backend-authorization']))
-             return { success: false, msg: 'Authorization required' }
-
-        if (req.body === null ||
-            req.body.password_current === undefined ||
-            req.body.password_new === undefined ||
-            req.body.password_confirm === undefined
-        )
+        if (req.body === null || req.body.password_current === null || req.body.password_new === null ||req.body.password_confirm === null)
             return { success: false, msg: 'Required fields: string(password_current), string(password_new), string(password_confirm)' };
 
         if (credentials.password !== HASH.md5(req.body.password_current))
@@ -75,7 +82,7 @@ async function routes(fastify, options) {
         if (SESSION.get(session_id))
             return { success: true, msg: 'Already authorized', data: session_id };
 
-        if (req.body === null || req.body.username === undefined || req.body.password === undefined)
+        if (req.body === null || req.body.username === null || req.body.password === null)
             return { success: false, msg: 'Required fields: string(username), string(password)' };
 
         if (credentials.username !== req.body.username || credentials.password !== HASH.md5(req.body.password))
