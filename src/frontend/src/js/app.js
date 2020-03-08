@@ -337,7 +337,7 @@ function rws_stop() {
 
 function rws_start() {
     app.dialog.preloader('Connecting ...')
-    window.rws = new ReconnectingWebSocket('ws://' + host);
+    window.rws = new ReconnectingWebSocket('ws://' + host + '/'+ localStorage['Backend-Authorization']);
 
     window.rws.addEventListener('open', function(e) {
         console.log('open');
@@ -414,7 +414,9 @@ function rws_start() {
 
 
         if (msg.type === 'console') {
-            if ($$('.popup.modal-in .console').length)
+            console.log(msg.process.id);
+
+            if ($$('.popup.modal-in .console[data-algorithm-id="' + msg.process.id + '"]').length)
                 $$('.popup.modal-in .console').append('<p class="text-color-gray">' + msg.message + '</p>');
         }
 
