@@ -175,7 +175,7 @@ export default {
 
             reader.readAsDataURL(file);
             reader.onload = function() {
-                const content = reader.result; 
+                const content = reader.result;
 
                 self.$app.dialog.preloader('Uploading ...')
                 self.$app.request({

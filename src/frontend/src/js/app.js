@@ -47,6 +47,8 @@ Template7.global = {
     locale: 'ua',
     i18n: {
         'ua': {
+            'Dashboard': 'Панель приладів',
+            'Navigation': 'Навігація',
             'Action': 'Дія',
 
             'Username': 'І\'мя користувача',
@@ -56,7 +58,7 @@ Template7.global = {
 
             'GPIO devices': 'GPIO пристрої',
             'Programming': 'Програмування',
-            'File System': 'Файлова система',
+            'Storage': 'Cховище',
             'Logout': 'Вихід',
 
             'List GPIO Devices': 'Список GPIO пристроїв',
@@ -84,6 +86,23 @@ Template7.global = {
             'List of algorithms': 'Список алгоритмів',
             'New Algorithm': 'Новий алгоритм',
             'Edit Algorithm': 'Редагування алгоритму',
+
+            // Storage
+
+            'List of files and directories': 'Список файлів і каталогів',
+            'Folder': 'Каталог',
+            'File': 'Файл',
+            'Refresh': 'Оновити',
+
+            // Settings
+
+            'Settings': 'Налаштування',
+            'General': 'Загальні',
+            'Language': 'Мова',
+            '': '',
+            'Timezone': 'Часовий пояс',
+            'Your current time zone': 'Ваш поточний часовий пояс',
+            'Change': 'Змінити',
         },
         'ru': {
             'Cancel': 'Скасувати'
@@ -109,6 +128,7 @@ var app = new Framework7({
     animate: false,
 
     name: 'OrangeCoder.org', // App name
+    version: '1.0.0-beta', // App version
     theme: 'aurora', // Automatic theme detection
     // App root data
     data: function () {
@@ -161,42 +181,42 @@ var app = new Framework7({
             },
         },
 
-        gpio: {
-            devices: function(callback) {
-                app.request.json(app.data.url + '/gpio/devices', { }, function(res, status, xhr) {
-                    app.data.gpio.devices = res.data;
-                    if (callback !== undefined)
-                        callback(res.data);
-                }, function(xhr, status) {
-                    if (callback !== undefined)
-                        callback(undefined);
-                });
-            },
-            readall: function(callback) {
-                app.request.json(app.data.url + '/gpio', { }, function(res, status, xhr) {
-                    app.data.gpio.readall = res.data;
-                    Template7.global.gpio.readall = res.data;
-                    if (callback !== undefined)
-                        callback(res.data);
-                }, function(xhr, status) {
-                    if (callback !== undefined)
-                        callback(undefined);
-                });
-            }
-        },
+        // gpio: {
+        //     devices: function(callback) {
+        //         app.request.json(app.data.url + '/gpio/devices', { }, function(res, status, xhr) {
+        //             app.data.gpio.devices = res.data;
+        //             if (callback !== undefined)
+        //                 callback(res.data);
+        //         }, function(xhr, status) {
+        //             if (callback !== undefined)
+        //                 callback(undefined);
+        //         });
+        //     },
+        //     readall: function(callback) {
+        //         app.request.json(app.data.url + '/gpio', { }, function(res, status, xhr) {
+        //             app.data.gpio.readall = res.data;
+        //             Template7.global.gpio.readall = res.data;
+        //             if (callback !== undefined)
+        //                 callback(res.data);
+        //         }, function(xhr, status) {
+        //             if (callback !== undefined)
+        //                 callback(undefined);
+        //         });
+        //     }
+        // },
 
-        w1: {
-            devices: function(callback) {
-                app.request.json(app.data.url + '/w1/devices', { }, function(devices, status, xhr) {
-                    app.data.w1.devices = devices;
-                    if (callback !== undefined)
-                        callback(data.data);
-                }, function(xhr, status) {
-                    if (callback !== undefined)
-                        callback(undefined);
-                });
-            }
-        },
+        // w1: {
+        //     devices: function(callback) {
+        //         app.request.json(app.data.url + '/w1/devices', { }, function(devices, status, xhr) {
+        //             app.data.w1.devices = devices;
+        //             if (callback !== undefined)
+        //                 callback(data.data);
+        //         }, function(xhr, status) {
+        //             if (callback !== undefined)
+        //                 callback(undefined);
+        //         });
+        //     }
+        // },
 
         device: function(callback) {
             app.request.json(app.data.url + '/device', { }, function(device, status, xhr) {
@@ -272,6 +292,9 @@ var app = new Framework7({
 
     routes: routes,
 });
+
+
+$$('.version').text(app.version);
 
 
 /**
