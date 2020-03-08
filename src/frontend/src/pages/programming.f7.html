@@ -447,8 +447,7 @@ export default {
                     self['runCode']({ code: base64.encode(editor.getValue()) }, function(response) {
                         var id = response.data;
 
-                        console.log(id);
-
+                        el.closest('.popup').find('.console').attr('data-algorithm-id', id);
                         el.attr('data-algorithm-id', id);
                     });
                 } else {

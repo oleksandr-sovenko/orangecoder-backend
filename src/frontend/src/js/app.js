@@ -414,7 +414,9 @@ function rws_start() {
 
 
         if (msg.type === 'console') {
-            if ($$('.popup.modal-in .console').length)
+            console.log(msg.process.id);
+
+            if ($$('.popup.modal-in .console[data-algorithm-id="' + msg.process.id + '"]').length)
                 $$('.popup.modal-in .console').append('<p class="text-color-gray">' + msg.message + '</p>');
         }
 
