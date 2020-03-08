@@ -24,6 +24,7 @@ global.backend = {};
 const config  = require('./config'),
 	  net     = require('net'),
 	  vm      = require('vm'),
+	  os      = require('os'),
 	  fs      = require('fs'),
 	  fastify = require('fastify')({ logger: false }),
 	  path    = require('path'),
@@ -177,6 +178,39 @@ if (process.argv[2] === 'vm') {
 }
 
 
+
+getDeviceInfo = function(){
+	var model = 'Unknown',
+		serial = 'Unknown',
+		version = '';
+
+	if (fs.existsSync('/etc/armbian-release')) {
+		model = fs.readFileSync('/etc/armbian-release')
+				.toString()
+				.replace(/.*BOARD_NAME="/s, '')
+				.replace(/".*/s, '').trim();
+
+		version = fs.readFileSync('/etc/armbian-release')
+				.toString()
+				.replace(/.*VERSION=/s, '')
+				.replace(/\n.*/s, '').trim();
+	}
+
+	if (fs.existsSync('/proc/cpuinfo'))
+		serial = fs.readFileSync('/proc/cpuinfo')
+				.toString()
+				.replace(/.*Serial		: /s, '').trim();
+
+	return {
+		platform: 'Linux',
+    	version: os.release() + (version !== '' ? ', Armbian ' + version : ''),
+    	model: model,
+    	manufacturer: 'Xunlong',
+    	serial: serial
+	}
+}
+
+
 /**
  *	Server Application
  *
@@ -209,13 +243,11 @@ if (process.argv[2] === 'serve') {
 				if (message.type !== undefined) {
 					if (message.type === 'console' || message.type === 'error') {
 						fastify_ws_sendall(data.toString());
-						console.log(DATETIME.format('YYYY-MM-DD hh:mm:ss'), message.process.pid, message.message);
 					}
 				}
 			});
 
 			client.on('end', function() {
-		    	// console.log('client disconnected');
 		    	connectedSockets.delete(client);
 			});
 		});
@@ -229,20 +261,19 @@ if (process.argv[2] === 'serve') {
 		            	fs.unlinkSync(config.socket.ipc);
 
 		            	server.listen(config.socket.ipc, function() {
-		                	// console.log('server recovered');
+
 		            	});
 		        	}
 		    	});
 
 		    	clientSocket.connect({ path: config.socket.ipc }, function() {
-		        	// console.log('Server running, giving up...');
 		        	process.exit();
 		    	});
 			}
 		});
 
 		server.listen(config.socket.ipc, function() {
-			// console.log('PID [' + process.pid + '] TCP Server listening');
+
 		});
 	// }
 
@@ -271,6 +302,7 @@ if (process.argv[2] === 'serve') {
 		})
 
 		fastify.register(require('./include/auth'));
+		fastify.register(require('./include/management'));
 		fastify.register(require('./include/algorithm'));
 		fastify.register(require('./include/storage'));
 
@@ -295,5 +327,121 @@ if (process.argv[2] === 'serve') {
 
 		fastify.listen(80, '0.0.0.0');
 	// }
+
+	// info
+
+	const device = getDeviceInfo();
+	fastify.get('/device', async function(req, rep) {
+		return device
+	})
+
+	setInterval(function() {
+		const 	disk_total = execSync('df -h | grep "/$" | awk \'{ print $2 }\''),
+				disk_free  = execSync('df -h | grep "/$" | awk \'{ print $4 }\'');
+
+		get_cpu_usage(function(usage) {
+			var temperature = Math.round(parseFloat(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp')) / 1000);
+
+			fastify_ws_sendall(JSON.stringify({
+				action: 'status',
+				data: {
+					memory: {
+						free: os.freemem(),
+						total: os.totalmem(),
+					},
+					disk: {
+						free: parseInt(disk_free.stdout) * 1073741824,
+						total: parseInt(disk_total.stdout) * 1073741824,
+					},
+					cpu: {
+						temperature: temperature,
+						usage: usage
+					},
+					loadavg: os.loadavg(),
+					uptime: os.uptime(),
+					// network: os.networkInterfaces(),
+				},
+			}));
+		});
+	}, 3000);
 }
+
+// Info
+
+
+/** get_cpu_usage
+ * @param callback
+ */
+get_cpu_usage = function(callback) { 
+	var result = [];
+
+    var stats = global.get_cpu_info();
+    var startIdle = stats.idle;
+    var startTotal = stats.total;
+
+    setTimeout(function() {
+        var stats = global.get_cpu_info();
+        var endIdle = stats.idle;
+        var endTotal = stats.total;
+
+		var cpus = os.cpus();
+ 		for (var cpu in cpus) {
+        	if (!cpus.hasOwnProperty(cpu)) continue;
+
+        	var idle  = endIdle[cpu]  - startIdle[cpu];
+        	var total = endTotal[cpu] - startTotal[cpu];
+
+			result.push({
+				percentage: Math.round(100 - ((idle / total) * 100))
+			});
+
+        }
+
+		callback(result);
+    }, 1000);
+}
+
+
+/** get_cpu_info
+ * @param callback
+ */
+get_cpu_info = function(callback) { 
+    var cpus = os.cpus();
+
+    var user  = {};
+    var nice  = {};
+    var sys   = {};
+    var idle  = {};
+    var irq   = {};
+    var total = {};
+
+    for(var cpu in cpus){
+        if (!cpus.hasOwnProperty(cpu)) continue;
+
+        if (user[cpu] === undefined) user[cpu] = 0;
+        if (nice[cpu] === undefined) nice[cpu] = 0;
+        if (sys[cpu]  === undefined) sys[cpu]  = 0;
+        if (irq[cpu]  === undefined) irq[cpu]  = 0;
+        if (idle[cpu] === undefined) idle[cpu] = 0;
+
+        user[cpu] += cpus[cpu].times.user;
+        nice[cpu] += cpus[cpu].times.nice;
+        sys[cpu]  += cpus[cpu].times.sys;
+        irq[cpu]  += cpus[cpu].times.irq;
+        idle[cpu] += cpus[cpu].times.idle;
+    	total[cpu] = user[cpu] + nice[cpu] + sys[cpu] + idle[cpu] + irq[cpu];
+    }
+
+    return {
+        'idle': idle, 
+        'total': total
+    };
+}
+
+
+
+
+
+
+
 
