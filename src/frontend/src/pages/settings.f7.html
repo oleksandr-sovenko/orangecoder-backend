@@ -1,0 +1,211 @@
+<!--
+settings.f7.html
+Copyright (C) 2019 Oleksandr Sovenko (info@oleksandrsovenko.com)
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+
+<template>
+<div class="page" data-name="about">
+    <div class="navbar">
+        <div class="navbar-bg"></div>
+        <div class="navbar-inner sliding">
+            <div class="left">
+                <a href="#" class="link back">
+                    <i class="icon icon-back"></i>
+                    <span class="if-not-md">{{_t 'Back'}}</span>
+                </a>
+            </div>
+            <div class="title">{{_t 'Settings'}}</div>
+        </div>
+    </div>
+    <div class="page-content">
+        <div class="block-title">{{_t 'General'}}</div>
+
+        <div class="card">
+            <div class="card-header">
+                {{_t 'Language'}}
+            </div>
+            <div class="card-content">
+                <div class="block mt10 pb10">
+                    <form class="list form-language">
+                        <ul>
+                            <li>
+                                <div class="item-input">
+                                    <div class="item-inner">
+                                        <div class="item-title item-label">{{_t 'Your current time zone'}}</div>
+                                        <div class="item-input-wrap">
+                                            <select @change="changeTimezone">
+                                                {{#each languages}}
+                                                    <option value="{{index}}">{{this}}</option>
+                                                {{/each}}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                {{_t 'Timezone'}}
+            </div>
+            <div class="card-content">
+                <div class="block mt10 pb10">
+                    <form class="list form-timezone">
+                        <ul>
+                            <li>
+                                <div class="item-input">
+                                    <div class="item-inner">
+                                        <div class="item-title item-label">{{_t 'Your current time zone'}}</div>
+                                        <div class="item-input-wrap">
+                                            <select @change="changeTimezone">
+                                                {{#each timezones}}
+                                                    <option>{{this}}</option>
+                                                {{/each}}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                {{_t 'Change password'}}
+            </div>
+            <div class="card-content">
+                <div class="block mt10 mb10">
+                    <form class="list form-change-password">
+                        <ul>
+                            <li>
+                                <div class="item-input">
+                                    <div class="item-inner">
+                                        <div class="item-title item-label">{{_t 'Old password'}}</div>
+                                        <div class="item-input-wrap">
+                                            <input type="password" name="password_current" placeholder="{{_t 'Current your password'}}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="item-input">
+                                    <div class="item-inner">
+                                        <div class="item-title item-label">{{_t 'New password'}}</div>
+                                        <div class="item-input-wrap">
+                                            <input type="password" name="password_new" placeholder="{{_t 'Your new password'}}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="item-input">
+                                    <div class="item-inner">
+                                        <div class="item-title item-label">{{_t 'Confirm password'}}</div>
+                                        <div class="item-input-wrap">
+                                            <input type="password" name="password_confirm" placeholder="{{_t 'Enter your new password again'}}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </form>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button class="col button button-fill" @click="changePassword">{{_t 'Change'}}</button>
+            </div>
+        </div>
+    </div>
+</div>
+</template>
+<script>
+const moment = require('moment-timezone');
+
+export default {
+    data: function() {
+        return {
+            timezones: moment.tz.names(),
+            languages: {
+                en: 'English'
+            }
+        }
+    },
+
+    methods: {
+        /**
+         *
+         */
+        changeTimezone(el) {
+            var self = this,
+                timezone = self.$$(el.target).val();
+
+            self.$app.request({
+                url: self.$app.data.url + '/settings/timezone',
+                contentType: 'application/json',
+                method: 'POST',
+                dataType: 'json',
+                data: { timezone: timezone },
+                success: function(data, status, xhr) {
+                    //self.$app.dialog.close();
+                    //self.refreshList();
+                },
+                error: function(xhr, status) {
+                    self.$app.dialog.close();
+                    self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
+                }
+            });
+        },
+
+
+        /**
+         *
+         */
+        changePassword() {
+            var self = this,
+                data = self.$app.form.convertToData('.form-change-password');
+
+            self.$app.request({
+                url: self.$app.data.url + '/settings/password',
+                contentType: 'application/json',
+                method: 'POST',
+                dataType: 'json',
+                data: data,
+                success: function(data, status, xhr) {
+                    if (data.success) {
+                        self.$app.dialog.alert(data.msg, 'Successfully', function() {
+                            self.$app.methods.signout();
+                        });
+                    } else {
+                        self.$app.dialog.alert(data.msg, 'Error');
+                    }
+                },
+                error: function(xhr, status) {
+                    self.$app.dialog.close();
+                    self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
+                }
+            });
+        },
+    }
+};
+</script>

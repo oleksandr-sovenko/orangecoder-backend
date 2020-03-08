@@ -1,5 +1,5 @@
 <!--
-filesystem.f7.html
+storage.f7.html
 Copyright (C) 2020 Oleksandr Sovenko (info@oleksandrsovenko.com)
 
 This program is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -->
 
 <template>
-    <div class="page" data-name="filesystem">
+    <div class="page" data-name="storage">
         <div class="navbar">
             <div class="navbar-bg"></div>
             <div class="navbar-inner sliding">
@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                         <span class="if-not-md">{{_t 'Back'}}</span>
                     </a>
                 </div>
-                <div class="title">{{_t 'File System'}}</div>
+                <div class="title">{{_t 'Storage'}}</div>
             </div>
         </div>
         <div class="page-content">
@@ -38,7 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <div class="card-header">
                     <div class="data-table-links">
                         <div>
-                            {{js ' "/" + this.filesystem.path.join("/") '}}
+                            {{js ' "/" + this.storage.path.join("/") '}}
                         </div>
                     </div>
                     <div class="data-table-actions">
@@ -73,7 +73,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                                 </td>
                                 <td class="label-cell" width="100%" colspan="4">..</td>
                             </tr>
-                            {{#each filesystem.files}}
+                            {{#each storage.files}}
                                 <tr data-name="{{name}}" data-type="{{type}}" class="fm-item">
                                     <td class="label-cell" nowrap @click="clickItem">
                                         <i class="material-icons">{{js ' this.type == "dir" ? "folder_open" : "insert_drive_file" '}}</i>
@@ -133,9 +133,9 @@ export default {
 
             if (type == 'dir' || type == 'back') {
                 if (type == 'dir')
-                    self.filesystem.path.push(name);
+                    self.storage.path.push(name);
                 else
-                    self.filesystem.path.splice(-1,1);
+                    self.storage.path.splice(-1,1);
 
                 self.refreshList();
             }
@@ -150,7 +150,7 @@ export default {
 
             self.$app.dialog.confirm('Remove ' + name + '?', 'Delete', function() {
                 self.$app.request({
-                    url: self.$app.data.url + '/filesystem/item/' + path,
+                    url: self.$app.data.url + '/storage/item/' + path,
                     contentType: 'application/json',
                     method: 'DELETE',
                     dataType: 'json',
@@ -171,15 +171,15 @@ export default {
             const self = this,
                   reader = new FileReader(),
                   file   = el.target.files[0],
-                  path   = self.filesystem.path.join('/') + '/' + file.name;
+                  path   = self.storage.path.join('/') + '/' + file.name;
 
             reader.readAsDataURL(file);
             reader.onload = function() {
-                const content = reader.result; 
+                const content = reader.result;
 
                 self.$app.dialog.preloader('Uploading ...')
                 self.$app.request({
-                    url: self.$app.data.url + '/filesystem/file/' + path,
+                    url: self.$app.data.url + '/storage/file/' + path,
                     contentType: 'text/plain',
                     method: 'PUT',
                     dataType: 'json',
@@ -205,7 +205,7 @@ export default {
 
             self.$app.dialog.prompt('Enter directory name', function(path) {
                 self.$app.request({
-                    url: self.$app.data.url + '/filesystem/dir/' + path,
+                    url: self.$app.data.url + '/storage/dir/' + path,
                     contentType: 'application/json',
                     method: 'PUT',
                     dataType: 'json',
@@ -219,8 +219,8 @@ export default {
         refreshList() {
             const self = this;
 
-            self.$app.methods.filesystem.files(self.filesystem.path.join('/'), function(files) {
-                self.filesystem.files = files;
+            self.$app.methods.storage.files(self.storage.path.join('/'), function(files) {
+                self.storage.files = files;
                 self.$update();
             });
         }
@@ -228,9 +228,9 @@ export default {
 
     data: function() {
         return {
-            filesystem: {
+            storage: {
                 path: [],
-                files: this.$app.data.filesystem.files
+                files: this.$app.data.storage.files
             }
         }
     },
