@@ -115,7 +115,7 @@ var app = new Framework7({
         return {
             url: '//' + host,
             device: {},
-            filesystem: {
+            storage: {
                 files: []
             },
             programming: {
@@ -135,10 +135,10 @@ var app = new Framework7({
     },
 
     methods: {
-        filesystem: {
+        storage: {
             files: function(path, callback) {
-                app.request.json(app.data.url + '/filesystem/list/' + path, { }, function(files, status, xhr) {
-                    app.data.filesystem.files = files;
+                app.request.json(app.data.url + '/storage/list/' + path, { }, function(files, status, xhr) {
+                    app.data.storage.files = files;
                     if (callback !== undefined)
                         callback(files);
                 }, function(xhr, status) {
@@ -229,7 +229,7 @@ var app = new Framework7({
                     // app.methods.gpio.readall();
                     // app.methods.w1.devices();
                     app.methods.programming.algorithms();
-                    app.methods.filesystem.files('');
+                    app.methods.storage.files('');
 
                     rws_start();
                 } else {
