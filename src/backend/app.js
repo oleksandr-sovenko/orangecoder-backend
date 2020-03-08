@@ -18,6 +18,9 @@
 // @command pkg -t node12.2.0-linux-armv7 -o orangecoder-node12.2.0-linux-armv7-1.0 app.js
 
 
+global.backend = {};
+
+
 const config  = require('./config'),
 	  net     = require('net'),
 	  vm      = require('vm'),
@@ -25,6 +28,8 @@ const config  = require('./config'),
 	  fastify = require('fastify')({ logger: false }),
 	  path    = require('path'),
 	  { fork, execSync } = require('child_process'),
+	  PROCESS = require('./include/process'),
+	  SESSION = require('./include/session'),
 	  { HASH, DATETIME, W1, I2C, GPIO, FILE } = require('./include/namespace');
 
 
@@ -243,6 +248,21 @@ if (process.argv[2] === 'serve') {
 
 
 	// fastify {
+		fastify.addHook('preParsing', function(req, rep, done) {
+			var url = req.raw.url;
+
+			if (url === '/device' || url === '/signin') {
+
+			} else {
+        		if (!SESSION.get(req.raw.headers['backend-authorization'])) {
+        			rep.send({ success: false, msg: 'Authorization required' });
+        			return;
+        		}
+			}
+
+  			done();
+		});
+
 		fastify.register(require('fastify-cors'))
 		fastify.register(require('fastify-ws'))
 		fastify.register(require('fastify-formbody'))
@@ -251,20 +271,23 @@ if (process.argv[2] === 'serve') {
 		})
 
 		fastify.register(require('./include/auth'));
-		fastify.register(require('./include/algorithms'));
-		fastify.register(require('./include/filesystem'));
+		fastify.register(require('./include/algorithm'));
+		fastify.register(require('./include/storage'));
 
 		fastify.ready(async function(err) {
- 			fastify.ws.on('connection', function(socket) {
+ 			fastify.ws.on('connection', function(socket, req) {
  				var id = Math.random()
 
  				clients[id] = socket;
+ 				clients[id].session_id = req.url.replace(/\//g, '');
 
 				socket.on('message', function(msg) {
 					//socket.send(msg)
 				})
 
 				socket.on('close', function() {
+					PROCESS.killall_by_session(clients[id].session_id);
+
 					delete clients[id];
 				});
     		});
