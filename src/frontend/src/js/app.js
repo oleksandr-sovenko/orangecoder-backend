@@ -103,6 +103,10 @@ Template7.global = {
             'Timezone': 'Часовий пояс',
             'Your current time zone': 'Ваш поточний часовий пояс',
             'Change': 'Змінити',
+
+            'System Reboot': 'Перезавантаження системи',
+            'You can reboot the system if the board are working abnormally.': 'Ви можете перезавантажити систему, якщо плата працює ненормально.',
+            'Reboot': 'Перезавантажити',
         },
         'ru': {
             'Cancel': 'Скасувати'
@@ -141,16 +145,6 @@ var app = new Framework7({
             programming: {
                 algorithms: []
             },
-            gpio: {
-                devices: [],
-                readall: [],
-            },
-            w1: {
-                devices: [],
-            },
-            mobile: {
-                devices: [],
-            }
         };
     },
 
@@ -181,43 +175,6 @@ var app = new Framework7({
             },
         },
 
-        // gpio: {
-        //     devices: function(callback) {
-        //         app.request.json(app.data.url + '/gpio/devices', { }, function(res, status, xhr) {
-        //             app.data.gpio.devices = res.data;
-        //             if (callback !== undefined)
-        //                 callback(res.data);
-        //         }, function(xhr, status) {
-        //             if (callback !== undefined)
-        //                 callback(undefined);
-        //         });
-        //     },
-        //     readall: function(callback) {
-        //         app.request.json(app.data.url + '/gpio', { }, function(res, status, xhr) {
-        //             app.data.gpio.readall = res.data;
-        //             Template7.global.gpio.readall = res.data;
-        //             if (callback !== undefined)
-        //                 callback(res.data);
-        //         }, function(xhr, status) {
-        //             if (callback !== undefined)
-        //                 callback(undefined);
-        //         });
-        //     }
-        // },
-
-        // w1: {
-        //     devices: function(callback) {
-        //         app.request.json(app.data.url + '/w1/devices', { }, function(devices, status, xhr) {
-        //             app.data.w1.devices = devices;
-        //             if (callback !== undefined)
-        //                 callback(data.data);
-        //         }, function(xhr, status) {
-        //             if (callback !== undefined)
-        //                 callback(undefined);
-        //         });
-        //     }
-        // },
-
         device: function(callback) {
             app.request.json(app.data.url + '/device', { }, function(device, status, xhr) {
                 app.data.device = device;
@@ -245,9 +202,7 @@ var app = new Framework7({
                     if (callback !== undefined)
                         callback(res.data);
 
-                    // app.methods.gpio.devices();
-                    // app.methods.gpio.readall();
-                    // app.methods.w1.devices();
+                    // app.methods.device();
                     app.methods.programming.algorithms();
                     app.methods.storage.files('');
 

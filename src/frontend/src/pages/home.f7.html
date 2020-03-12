@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             </div>
         </div>
         <div class="page-content">
-            <div class="block-title">{{_t 'Dashboard'}}</div>
+            <div class="block-title">{{device.platform}} {{device.version}}</div>
 
             <div class="card">
                 <div class="card-header">
@@ -114,59 +114,54 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     </div>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="card-header">
+                    {{_t 'Network Interfaces'}}
+                </div>
+                <div class="card-content">
+                    <div class="block mt10 pb10">
+                        <div class="row">
+                            <div class="col">wlan</div>
+                            <div class="col">100.168.210.102</div>
+                            <div class="col">255.255.255.0</div>
+                            <div class="col">IPv4</div>
+                            <div class="col">12:42:78:bb:f8:36</div>
+                            <div class="col">100.168.210.102/24</div>
+                        </div>
+                        <div class="row">
+                            <div class="col">wlan</div>
+                            <div class="col">100.168.210.102</div>
+                            <div class="col">255.255.255.0</div>
+                            <div class="col">IPv4</div>
+                            <div class="col">12:42:78:bb:f8:36</div>
+                            <div class="col">100.168.210.102/24</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 
 <script>
-// const QRCode = require('qrcode');
-const moment = require('moment-timezone');
-
-var timezones = moment.tz.names();
-
 export default {
   	on: {
         pageInit: function(e, page) {
-        	var self = this,
-        		canvas = document.getElementById('canvas');
+        	var self = this;
 
         	self.$app.methods.device(function(device) {
-				// QRCode.toCanvas(canvas, JSON.stringify(device), function (error) {
-				//  if (error) console.error(error)
-				//	console.log('success!');
-				// });
+                self.device = device;
+                self.$update();
         	});
         }
     },
 
     data: function() {
         return {
-            timezones: timezones
+            device: { platform: 'Loading', version: '...' }
         }
     },
-
-    methods: {
-        /** changePassword
-         *
-         */
-        changePassword() {
-            var self = this,
-                data = self.$app.form.convertToData('.form-change-password')
-
-            self.$app.request.postJSON(self.$app.data.url + '/change-password', data, function(data, status, xhr) {
-                if (data.success) {
-                    self.$app.dialog.alert(data.msg, 'Successfully', function() {
-                        self.$app.popup.close('.popup-settings');
-                        self.$app.methods.signout();
-                    });
-                } else {
-                    self.$app.dialog.alert(data.msg, 'Error');
-                }
-            },function(xhr, status) {
-
-            });
-        },
-    }
 }
 </script>

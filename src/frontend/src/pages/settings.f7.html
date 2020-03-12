@@ -132,8 +132,38 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     </form>
                 </div>
             </div>
-            <div class="card-footer">
-                <button class="col button button-fill" @click="changePassword">{{_t 'Change'}}</button>
+            <div class="card-footer jcc">
+                <button class="mw400 button button-fill" @click="changePassword">{{_t 'Change'}}</button>
+            </div>
+        </div>
+
+        <div class="block-title">{{_t 'Management'}}</div>
+
+        <div class="card">
+            <div class="card-header">
+                {{_t 'Firmware Upgrade'}}
+            </div>
+            <div class="card-content">
+                <div class="block mt10 mb10">
+                    <p>Upgrade the board's firmware to obtain new functionalities. And some bugs and malfunctions may be fixed in new firmware. Please refer to the release notes for details. It will take minutes to upload and upgrade the firmware, please be patient.</p>
+                </div>
+            </div>
+            <div class="card-footer jcc">
+                <button class="mw400 button button-fill" @click="changePassword">{{_t 'Upgrade'}}</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                {{_t 'System Reboot'}}
+            </div>
+            <div class="card-content">
+                <div class="block mt10 mb10">
+                    <p>{{_t 'You can reboot the system if the board are working abnormally.'}}</p>
+                </div>
+            </div>
+            <div class="card-footer jcc">
+                <button class="mw400 button button-fill" @click="doReboot">{{_t 'Reboot'}}</button>
             </div>
         </div>
     </div>
@@ -181,6 +211,30 @@ export default {
         /**
          *
          */
+        doReboot(el) {
+            var self = this,
+                timezone = self.$$(el.target).val();
+
+            self.$app.request({
+                url: self.$app.data.url + '/management/reboot',
+                contentType: 'application/json',
+                method: 'POST',
+                dataType: 'json',
+                success: function(data, status, xhr) {
+                    //self.$app.dialog.close();
+                    //self.refreshList();
+                },
+                error: function(xhr, status) {
+                    //self.$app.dialog.close();
+                    //self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
+                }
+            });
+        },
+
+
+        /**
+         *
+         */
         changePassword() {
             var self = this,
                 data = self.$app.form.convertToData('.form-change-password');
@@ -197,12 +251,19 @@ export default {
                             self.$app.methods.signout();
                         });
                     } else {
-                        self.$app.dialog.alert(data.msg, 'Error');
+                        self.$app.notification.create({
+                            title: 'Error',
+                            text: data.msg,
+                            closeTimeout: 3000,
+                        }).open();
                     }
                 },
                 error: function(xhr, status) {
-                    self.$app.dialog.close();
-                    self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
+                    self.$app.notification.create({
+                        title: 'Error',
+                        text: xhr.status + ' ' + xhr.statusText,
+                        closeTimeout: 3000,
+                    }).open();
                 }
             });
         },
