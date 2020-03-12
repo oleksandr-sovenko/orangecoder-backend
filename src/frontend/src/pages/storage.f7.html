@@ -173,31 +173,55 @@ export default {
                   file   = el.target.files[0],
                   path   = self.storage.path.join('/') + '/' + file.name;
 
-            reader.readAsDataURL(file);
-            reader.onload = function() {
-                const content = reader.result;
+            var formData = new FormData();
+            formData.append('file', file, file.name);
 
-                self.$app.dialog.preloader('Uploading ...')
-                self.$app.request({
-                    url: self.$app.data.url + '/storage/file/' + path,
-                    contentType: 'text/plain',
-                    method: 'PUT',
-                    dataType: 'json',
-                    data: content,
-                    success: function(data, status, xhr) {
-                        self.$app.dialog.close();
-                        self.refreshList();
-                    },
-                    error: function(xhr, status) {
-                        self.$app.dialog.close();
-                        self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
-                    }
-                });
+            self.$app.dialog.preloader('Uploading ...')
+            self.$app.request({
+                url: self.$app.data.url + '/storage/file/' + path,
+                method: 'PUT',
+                dataType: 'json',
+                data: formData,
+                success: function(data, status, xhr) {
+                    self.$app.dialog.close();
+                    self.refreshList();
+                },
+                error: function(xhr, status) {
+                    self.$app.dialog.close();
+                    self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
+                },
+            });
 
-            };
-            reader.onerror = function(error) {
-                 console.log('Error: ', error);
-            };
+            // const self = this,
+            //       reader = new FileReader(),
+            //       file   = el.target.files[0],
+            //       path   = self.storage.path.join('/') + '/' + file.name;
+
+            // reader.readAsDataURL(file);
+            // reader.onload = function() {
+            //     const content = reader.result;
+
+            //     self.$app.dialog.preloader('Uploading ...')
+            //     self.$app.request({
+            //         url: self.$app.data.url + '/storage/file/' + path,
+            //         //contentType: 'text/plain',
+            //         method: 'PUT',
+            //         dataType: 'json',
+            //         data: content,
+            //         success: function(data, status, xhr) {
+            //             self.$app.dialog.close();
+            //             self.refreshList();
+            //         },
+            //         error: function(xhr, status) {
+            //             self.$app.dialog.close();
+            //             self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
+            //         }
+            //     });
+
+            // };
+            // reader.onerror = function(error) {
+            //      console.log('Error: ', error);
+            // };
         },
 
         addDirectory() {

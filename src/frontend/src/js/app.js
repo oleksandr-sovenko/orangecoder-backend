@@ -102,7 +102,21 @@ Template7.global = {
             '': '',
             'Timezone': 'Часовий пояс',
             'Your current time zone': 'Ваш поточний часовий пояс',
-            'Change': 'Змінити',
+
+			'Change password': 'Змінити пароль',
+			'Old password': 'Старий пароль',
+			'Current your password': 'Поточний пароль',
+			'New password': 'Новий пароль',
+			'Your new password': 'Ваш новий пароль',
+			'Confirm password': 'Підтвердьте пароль',
+			'Enter your new password again': 'Введіть свій новий пароль ще раз',
+			'Change': 'Змінити',
+
+            'Management': 'Управління',
+
+            'Firmware Upgrade': 'Оновлення прошивки',
+            'Upgrade the board\'s firmware to obtain new functionalities. And some bugs and malfunctions may be fixed in new firmware. Please refer to the release notes for details. It will take minutes to upload and upgrade the firmware, please be patient.': 'Оновіть програмне забезпечення плати для отримання нових функціональних можливостей. І деякі помилки та несправності можуть бути виправлені в новій прошивці. Для детальної інформації зверніться до приміток до випуску. Щоб завантажити та оновити прошивку, пройдуть кілька хвилин. Будьте терплячі.',
+            'Upgrade': 'Оновити',
 
             'System Reboot': 'Перезавантаження системи',
             'You can reboot the system if the board are working abnormally.': 'Ви можете перезавантажити систему, якщо плата працює ненормально.',
