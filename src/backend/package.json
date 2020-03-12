@@ -5,6 +5,7 @@
   "main": "app.js",
   "dependencies": {
     "fastify-cors": "^2.1.3",
+    "fastify-file-upload": "^2.0.1",
     "fastify-websocket": "^0.6.0",
     "js-base64": "^2.5.1",
     "pkg": "^4.4.2",

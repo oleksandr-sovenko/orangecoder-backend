@@ -51,9 +51,10 @@ async function routes(fastify, options) {
      *  @method   PUT
      */
     fastify.put('/storage/file/*', async function(req, rep) {
-        var path = req.params['*'];
+        const path  = req.params['*'],
+              files = req.raw.files
 
-        FILE.write(path, HASH.base64_decode(req.body));
+        FILE.write(path, files['file'].data, 'binary');
 
         return { success: true, msg: 'Successfully' };
     });

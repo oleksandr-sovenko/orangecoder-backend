@@ -16,7 +16,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const { execSync } = require('child_process');
+const { execSync } = require('child_process'),
+      { FILE, HASH } = require('./namespace');
 
 
 async function routes(fastify, options) {
@@ -34,6 +35,10 @@ async function routes(fastify, options) {
      *
      */
     fastify.post('/management/upgrade', async function(req, rep) {
+        const files = req.raw.files
+
+        FILE.write(files['firmware'].name, files['firmware'].data, 'binary');
+
         return { success: true, msg: 'Successfully' };
     })
 }

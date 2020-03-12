@@ -196,11 +196,11 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 			return content;
 		},
 
-		write: function(filename, data) {
+		write: function(filename, data, options) {
 			var filename = __path__(filename);
 
 			if (fs.existsSync(path.dirname(filename))) {
-				fs.writeFileSync(filename, data);
+				fs.writeFileSync(filename, data, options);
 
 				if (fs.existsSync(filename))
 					execSync('sync -f "' + filename + '"');

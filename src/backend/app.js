@@ -299,7 +299,10 @@ if (process.argv[2] === 'serve') {
 		fastify.register(require('fastify-formbody'))
 		fastify.register(require('fastify-static'), {
 			root: config.dir.public,
-		})
+		});
+		fastify.register(require('fastify-file-upload'), {
+			limits: { fileSize: 512 * 1024 * 1024 },
+		});
 
 		fastify.register(require('./include/auth'));
 		fastify.register(require('./include/management'));
