@@ -145,11 +145,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
             </div>
             <div class="card-content">
                 <div class="block mt10 mb10">
-                    <p>Upgrade the board's firmware to obtain new functionalities. And some bugs and malfunctions may be fixed in new firmware. Please refer to the release notes for details. It will take minutes to upload and upgrade the firmware, please be patient.</p>
+                    <p>{{_t "Upgrade the board's firmware to obtain new functionalities. And some bugs and malfunctions may be fixed in new firmware. Please refer to the release notes for details. It will take minutes to upload and upgrade the firmware, please be patient."}}</p>
                 </div>
             </div>
             <div class="card-footer jcc">
-                <button class="mw400 button button-fill" @click="changePassword">{{_t 'Upgrade'}}</button>
+                <button class="mw400 button button-fill" @click="upgrade">{{_t 'Upgrade'}}</button>
             </div>
         </div>
 
@@ -163,16 +163,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 </div>
             </div>
             <div class="card-footer jcc">
-                <button class="mw400 button button-fill" @click="doReboot">{{_t 'Reboot'}}</button>
+                <button class="mw400 button button-fill" @click="reboot">{{_t 'Reboot'}}</button>
             </div>
         </div>
     </div>
+    <input type="file" @change="onChangeFile">
 </div>
 </template>
 <script>
 const moment = require('moment-timezone');
 
 export default {
+    style: `
+        input[type="file"] {
+            display: none;
+        }
+    `,
+
     data: function() {
         return {
             timezones: moment.tz.names(),
@@ -211,30 +218,6 @@ export default {
         /**
          *
          */
-        doReboot(el) {
-            var self = this,
-                timezone = self.$$(el.target).val();
-
-            self.$app.request({
-                url: self.$app.data.url + '/management/reboot',
-                contentType: 'application/json',
-                method: 'POST',
-                dataType: 'json',
-                success: function(data, status, xhr) {
-                    //self.$app.dialog.close();
-                    //self.refreshList();
-                },
-                error: function(xhr, status) {
-                    //self.$app.dialog.close();
-                    //self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
-                }
-            });
-        },
-
-
-        /**
-         *
-         */
         changePassword() {
             var self = this,
                 data = self.$app.form.convertToData('.form-change-password');
@@ -264,6 +247,64 @@ export default {
                         text: xhr.status + ' ' + xhr.statusText,
                         closeTimeout: 3000,
                     }).open();
+                }
+            });
+        },
+
+        onChangeFile(el) {
+            const self = this,
+                  reader = new FileReader(),
+                  file   = el.target.files[0];
+
+            var formData = new FormData();
+            formData.append('firmware', file, file.name);
+
+            self.$app.dialog.preloader('Upgrading ...')
+            self.$app.request({
+                url: self.$app.data.url + '/management/upgrade',
+                method: 'POST',
+                dataType: 'json',
+                data: formData,
+                success: function(data, status, xhr) {
+                    self.$app.dialog.close();
+                },
+                error: function(xhr, status) {
+                    self.$app.dialog.close();
+                    self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
+                },
+            });
+        },
+
+
+        /**
+         *
+         */
+        upgrade() {
+            const self = this;
+
+            self.$$('.page-current input[type="file"]').click();
+        },
+
+
+        /**
+         *
+         */
+        reboot(el) {
+            var self = this,
+                timezone = self.$$(el.target).val();
+
+            self.$app.request({
+                url: self.$app.data.url + '/management/reboot',
+                contentType: 'application/json',
+                method: 'POST',
+                dataType: 'json',
+                success: function(data, status, xhr) {
+                    //self.$app.dialog.close();
+                    //self.refreshList();
+                },
+                error: function(xhr, status) {
+                    //self.$app.dialog.close();
+                    //self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
                 }
             });
         },
