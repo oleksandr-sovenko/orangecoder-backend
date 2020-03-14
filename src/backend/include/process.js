@@ -16,7 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const CONFIG = require('../config'),
+const CONFIG    = require('../config'),
       { spawn } = require('child_process');
 
 
@@ -35,7 +35,7 @@ const PROCESS = {
 
     run: function(id, session_id) {
         var script = spawn(process.argv[0], [process.argv[1], 'vm', CONFIG.dir.algoritms + '/' + id]);
-        
+
         global.backend.process[id] = {
             session_id: session_id,
             script: script
