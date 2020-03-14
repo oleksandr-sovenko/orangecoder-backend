@@ -142,13 +142,12 @@ $$('#app').append(appLoginScreen({ className: 'login-screen' }));
  *
  */
 var app = new Framework7({
-    root: '#app', // App root element
+    root: '#app',
     animate: false,
+    name: 'Orange Coder',
+    version: '1.0.0-beta',
+    theme: 'aurora',
 
-    name: 'OrangeCoder.org', // App name
-    version: '1.0.0-beta', // App version
-    theme: 'aurora', // Automatic theme detection
-    // App root data
     data: function () {
         return {
             url: '//' + host,
@@ -263,17 +262,18 @@ var app = new Framework7({
 });
 
 
+$$('title').text(app.name);
 $$('.version').text(app.version);
 
 
 /**
  *
  */
-$$(document).on('page:init', function(e) {
-    $$('[data-' + app.data.lang + ']').each(function(i, e) {
-        e.innerHTML = e.getAttribute('data-' + app.data.lang);
-    });
-})
+// $$(document).on('page:init', function(e) {
+//     $$('[data-' + app.data.lang + ']').each(function(i, e) {
+//         e.innerHTML = e.getAttribute('data-' + app.data.lang);
+//     });
+// })
 
 
 /**
@@ -312,12 +312,18 @@ if (localStorage['Backend-Authorization'] !== undefined) {
 app.methods.signin();
 
 
+/**
+ *
+ */
 window.addEventListener('resize', function() {
     $$('.popup.modal-in .editor').css({ height: ($$(window).height() - 250) + 'px' });
     $$('.popup.modal-in .console').css({ height: ($$(window).height() - 270) + 'px' });
 }, false);
 
 
+/**
+ *
+ */
 function rws_stop() {
     try {
         window.rws.close();
@@ -327,6 +333,9 @@ function rws_stop() {
 }
 
 
+/**
+ *
+ */
 function rws_start() {
     app.dialog.preloader('Connecting ...')
     window.rws = new ReconnectingWebSocket('ws://' + host + '/'+ localStorage['Backend-Authorization']);
@@ -395,26 +404,56 @@ function rws_start() {
                         borderColor: color,
                     });
                 }
-
-                console.log();
             }
 
             app.progressbar.set('.cpu-temperature', msg.data.cpu.temperature);
             app.progressbar.set('.disk-usage', Math.round(100 - ((msg.data.disk.free / msg.data.disk.total) * 100)));
             app.progressbar.set('.ram-usage', Math.round(100 - ((msg.data.memory.free / msg.data.memory.total) * 100)));
+
+            var html_network =
+                '<div class="row">' +
+                '   <div class="col"><strong>Interface</strong></div>' +
+                '   <div class="col"><strong>Address</strong></div>' +
+                '   <div class="col"><strong>Netmask</strong></div>' +
+                '   <div class="col"><strong>CIDR</strong></div>' +
+                '   <div class="col"><strong>Mac Address</strong></div>' +
+                '</div>';
+
+            for (var intr in msg.data.network) {
+                for (var i in msg.data.network[intr]) {
+                    var item = msg.data.network[intr][i];
+
+                    html_network += '<div class="row">';
+                    html_network += '   <div class="col">' + item.family + ' ' + intr + '</div>';
+                    html_network += '   <div class="col">' + item.address + '</div>';
+                    html_network += '   <div class="col">' + item.netmask + '</div>';
+                    html_network += '   <div class="col">' + item.cidr + '</div>';
+                    html_network += '   <div class="col">' + item.mac + '</div>';
+                    html_network += '</div>';
+                }
+            }
+
+            $$('.info-network').html(html_network);
+            $$('.info-uptime').html(msg.data.uptime);
         }
 
 
         if (msg.type === 'console') {
-            console.log(msg.process.id);
-
             if ($$('.popup.modal-in .console[data-algorithm-id="' + msg.process.id + '"]').length)
-                $$('.popup.modal-in .console').append('<p class="text-color-gray">' + msg.message + '</p>');
+                $$('.popup.modal-in .console').append('<p class="text-color-gray">PROC' + msg.process.pid + ', ' + msg.message + '</p>').scrollTop(999999);
+            else {
+                if ($$('.popup.modal-in .console').length)
+                    $$('.popup.modal-in .console').append('<p class="text-color-gray">PROC' + msg.process.pid + ', ' + msg.message + '</p>').scrollTop(999999);
+            }
         }
 
         if (msg.type === 'error') {
-            if ($$('.popup.modal-in .console').length)
-                $$('.popup.modal-in .console').append('<p class="text-color-red">' + msg.message + '</p>');
+            if ($$('.popup.modal-in .console[data-algorithm-id="' + msg.process.id + '"]').length)
+                $$('.popup.modal-in .console').append('<p class="text-color-red">' + msg.message + '</p>').scrollTop(999999);
+            else {
+                if ($$('.popup.modal-in .console').length)
+                    $$('.popup.modal-in .console').append('<p class="text-color-red">' + msg.message + '</p>').scrollTop(999999);
+            }
         }
     });
 }

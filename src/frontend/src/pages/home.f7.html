@@ -29,11 +29,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                         <i class="material-icons">menu</i>
                     </a>
                 </div>
-                <div class="title">OrangeCoder.org</div>
+                <div class="title">{{_t 'Dashboard'}}</div>
             </div>
         </div>
         <div class="page-content">
-            <div class="block-title">{{device.platform}} {{device.version}}</div>
+            <div class="block-title">{{device.platform}} {{device.version}} <span class="float-right">{{_t 'Uptime'}} <span class="info-uptime">-</span></span></div>
 
             <div class="card">
                 <div class="card-header">
@@ -93,19 +93,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
             <div class="card">
                 <div class="card-header">
-                    {{_t 'Determinate Progress Bar'}}
+                    {{_t 'Usage'}}
                 </div>
                 <div class="card-content">
                     <div class="block mt10 pb10">
                         <div class="row">
                             <div class="col">
-                                <p>Disk Usage</p>
+                                <p>{{_t 'Disk'}}</p>
                                 <div>
                                     <p><span data-progress="0" class="progressbar disk-usage"></span></p>
                                 </div>
                             </div>
                             <div class="col">
-                                <p>RAM Usage</p>
+                                <p>{{_t 'RAM'}}</p>
                                 <div>
                                     <p><span data-progress="0" class="progressbar ram-usage"></span></p>
                                 </div>
@@ -120,24 +120,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     {{_t 'Network Interfaces'}}
                 </div>
                 <div class="card-content">
-                    <div class="block mt10 pb10">
-                        <div class="row">
-                            <div class="col">wlan</div>
-                            <div class="col">100.168.210.102</div>
-                            <div class="col">255.255.255.0</div>
-                            <div class="col">IPv4</div>
-                            <div class="col">12:42:78:bb:f8:36</div>
-                            <div class="col">100.168.210.102/24</div>
-                        </div>
-                        <div class="row">
-                            <div class="col">wlan</div>
-                            <div class="col">100.168.210.102</div>
-                            <div class="col">255.255.255.0</div>
-                            <div class="col">IPv4</div>
-                            <div class="col">12:42:78:bb:f8:36</div>
-                            <div class="col">100.168.210.102/24</div>
-                        </div>
-                    </div>
+                    <div class="block mt10 pb10 info-network">{{_t 'Loading'}} ...</div>
                 </div>
             </div>
         </div>

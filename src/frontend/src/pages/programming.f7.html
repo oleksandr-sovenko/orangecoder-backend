@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 </div>
                 <div class="title">{{_t 'Programming'}}</div>
                 <div class="right">
-                    <a href="#" class="link popup-open" data-popup=".popup-console">
+                    <a href="#" class="link" @click="openConsole">
                         <i class="material-icons">airplay</i>
                     </a>
                 </div>
@@ -224,6 +224,30 @@ export default {
         /**
          *
          */
+        openConsole: function(el) {
+            var self = this;
+
+            self.$app.request({
+                url: self.$app.data.url + '/console',
+                contentType: 'application/json',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data, status, xhr) {
+                    var html = '';
+
+                    for (var i in data)
+                        html += '<p class="text-color-gray">PROC' + data[i].process.pid + ', ' + data[i].message + '</p>';
+
+                    self.$$('.popup-console .console').html(html).scrollTop(999999);;
+                    self.$app.popup.open('.popup-console');
+                }
+            });
+        },
+
+
+        /**
+         *
+         */
         runAlgorithm: function(el) {
             var self = this,
                 id = self.$$(el.target).closest('tr').data('id');
@@ -263,6 +287,7 @@ export default {
                 }
             });
         },
+
 
         /**
          *
@@ -386,8 +411,8 @@ export default {
         },
 
 
-        /** Open a popup
-         *
+        /**
+         *  Open a popup
          */
         openPopup(class_name, id, method) {
             var self = this,
