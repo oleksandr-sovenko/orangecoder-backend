@@ -16,16 +16,38 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const CONFIG = require('../config'),
-      fs     = require('fs'),
-	  md5    = require('md5'),
-	  base64 = require('js-base64').Base64,
-	  path   = require('path'),
-	  uuid4  = require('uuid4'),
-	  moment = require('moment'),
+const CONFIG  = require('../config'),
+      fs      = require('fs'),
+	  md5     = require('md5'),
+	  base64  = require('js-base64').Base64,
+	  path    = require('path'),
+	  uuid4   = require('uuid4'),
+	  moment  = require('moment'),
+	  fastify = require('fastify')({ logger: false }),
 	  { execSync } = require('child_process');
 
 const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
+
+
+// namespace HTTP {
+	const HTTP = {
+		server: function(port, options) {
+			if (options !== undefined) {
+
+				if (options.get !== undefined)
+					for (var url in options.get) {
+						fastify.get(url, async function(req, rep) {
+							return options.get[req.raw.url]();
+						});
+					}
+			}
+
+			fastify.register(require('fastify-cors'))
+			fastify.register(require('fastify-formbody'))
+			fastify.listen(port, '0.0.0.0');
+		}
+	}
+// }
 
 
 // namespace HASH {
@@ -126,7 +148,7 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 			for (var i = 0; i < list.length; i++) {
 				var filename = path.join(directory, list[i]),
 					stat = fs.statSync(filename);
-		
+
 				if(filename == '.' || filename == '..') {
 					// pass these files
 				} else if(stat.isDirectory()) {
@@ -224,4 +246,4 @@ function __path__(path) {
 }
 
 
-module.exports = { HASH, DATETIME, I2C, GPIO, DIR, FILE };
+module.exports = { HASH, DATETIME, I2C, GPIO, DIR, FILE, HTTP };
