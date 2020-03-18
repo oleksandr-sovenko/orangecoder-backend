@@ -26,11 +26,11 @@ const config  = require('./config'),
 	  fs      = require('fs'),
 	  fastify = require('fastify')({ logger: false }),
 	  path    = require('path'),
-	  { fork, execSync } = require('child_process'),
 	  INFO    = require('./include/info'),
 	  PROCESS = require('./include/process'),
 	  SESSION = require('./include/session'),
-	  { HASH, DATETIME, W1, I2C, GPIO, FILE, HTTP } = require('./include/namespace');
+	  { fork, execSync } = require('child_process'),
+	  { HASH, DATETIME, W1, I2C, GPIO, FILE, HTTP, CLOUD } = require('./include/namespace');
 
 
 var clients = {},
@@ -159,14 +159,15 @@ if (process.argv[2] === 'vm') {
 
 	// Execution JS code {
 		result = vm.runInNewContext(jscode + ';' + true, {
-			W1            : W1,
-			I2C           : I2C,
-			GPIO          : GPIO,
-			CONSOLE       : CONSOLE,
-			DATETIME      : DATETIME,
-			FILE          : FILE,
-			HASH          : HASH,
-			HTTP          : HTTP,
+			W1       : W1,
+			I2C      : I2C,
+			GPIO     : GPIO,
+			CONSOLE  : CONSOLE,
+			DATETIME : DATETIME,
+			FILE     : FILE,
+			HASH     : HASH,
+			HTTP     : HTTP,
+			CLOUD    : CLOUD,
 
 			setInterval   : setInterval,
 			clearInterval : clearInterval,
@@ -320,8 +321,8 @@ if (process.argv[2] === 'serve') {
 		})
 
 		setInterval(function() {
-			const 	disk_total = execSync('df -h | grep "/$" | awk \'{ print $2 }\''),
-					disk_free  = execSync('df -h | grep "/$" | awk \'{ print $4 }\'');
+			// const 	disk_total = execSync('df -h | grep "/$" | awk \'{ print $2 }\''),
+			// 		disk_free  = execSync('df -h | grep "/$" | awk \'{ print $4 }\'');
 
 			INFO.get_cpu_usage(function(usage) {
 				var temperature = Math.round(parseFloat(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp')) / 1000);
@@ -334,8 +335,8 @@ if (process.argv[2] === 'serve') {
 							total: os.totalmem(),
 						},
 						disk: {
-							free: parseInt(disk_free.stdout) * 1073741824,
-							total: parseInt(disk_total.stdout) * 1073741824,
+							free: 0, // parseInt(disk_free.stdout) * 1073741824,
+							total: 0, // parseInt(disk_total.stdout) * 1073741824,
 						},
 						cpu: {
 							temperature: temperature,
@@ -343,7 +344,7 @@ if (process.argv[2] === 'serve') {
 						},
 						loadavg: os.loadavg(),
 						uptime: os.uptime(),
-						network: os.networkInterfaces(),
+						network: [] // os.networkInterfaces(),
 					},
 				}));
 			});

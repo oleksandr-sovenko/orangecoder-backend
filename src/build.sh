@@ -20,7 +20,6 @@ CWD=$(pwd)
 
 
 # modules
-
 cd ${CWD}/backend-modules/core/
 npm i
 npm i node-addon-api
@@ -30,8 +29,12 @@ cp ${CWD}/backend-modules/core/build/Release/core.node \
 	${CWD}/../modules/core.node
 
 
-# build (backend)
+# build (frontend)
+#rm -rf ${CWD}/../public/*
+#cp -vR ${CWD}/frontend/www/* ${CWD}/../public
 
+
+# build (backend)
 cd ${CWD}/backend/
 pkg -t node12.2.0-linux-armv7 -o ${CWD}/../bin/orangecoder-node12.2.0-linux-armv7-1.0 app.js
 ln -svf ${CWD}/../bin/orangecoder-node12.2.0-linux-armv7-1.0 \
@@ -39,6 +42,5 @@ ln -svf ${CWD}/../bin/orangecoder-node12.2.0-linux-armv7-1.0 \
 
 
 # pack
-
 cd ${CWD}/../
 tar Jcf orangecoder-latest.upd bin/ conf/ modules/ public/

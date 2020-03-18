@@ -16,17 +16,73 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const CONFIG  = require('../config'),
-      fs      = require('fs'),
-	  md5     = require('md5'),
-	  base64  = require('js-base64').Base64,
-	  path    = require('path'),
-	  uuid4   = require('uuid4'),
-	  moment  = require('moment'),
-	  fastify = require('fastify')({ logger: false }),
-	  { execSync } = require('child_process');
+const CONFIG       = require('../config'),
+      fs           = require('fs'),
+	  md5          = require('md5'),
+	  base64       = require('js-base64').Base64,
+	  path         = require('path'),
+	  uuid4        = require('uuid4'),
+	  moment       = require('moment'),
+	  fastify      = require('fastify')({ logger: false }),
+	  { execSync } = require('child_process'),
+	  EventEmitter = require('events'),
+	  WebSocket    = require('ws'),
+	  { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 
-const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
+
+var private = {
+	CLOUD: {}
+};
+
+
+// namespace CLOUD {
+	const CLOUD = new EventEmitter();
+	CLOUD.connect = function(token, id) {
+		if (!/^[a-z0-9]+$/.test(token)) {
+			CLOUD.emit('error', '"token" must have symbols only a-z and 0-9.');
+			return false;
+		}
+
+		if (!/^\w+$/.test(id)) {
+			CLOUD.emit('error', '"id" must have symbols only a-z, 0-9 and _.');
+			return false;
+		}
+
+		if (private.CLOUD.wsc !== undefined) {
+			try { private.CLOUD.wsc.close(); } catch(e) { }
+
+			delete private.CLOUD.wsc;
+		}
+
+		private.CLOUD.wsc = new WebSocketClient();
+		private.CLOUD.wsc.open('ws://mail.orangecoder.org:3000/' + token + '/' + id);
+
+		private.CLOUD.wsc.onopen = function(e) {
+			// console.log(e);
+		};
+
+		private.CLOUD.wsc.onclose = function(e) {
+			// console.log(e);
+		};
+
+		private.CLOUD.wsc.onmessage = function(data, flags, number) {
+			var value = data.replace(/\: .*/, ''),
+				data  = data.replace(value + ': ', '');
+
+			CLOUD.emit('data', value, data);
+		};
+
+		return true;
+	};
+
+	CLOUD.set = function(name, data) {
+
+	};
+
+	CLOUD.get = function(name) {
+
+	};
+// }
 
 
 // namespace HTTP {
@@ -103,7 +159,7 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 		list: function(directory) {
         	var dirs  = [],
         		files = [],
-            	directory = __path__(directory);
+            	directory = get_storage_real_path(directory);
 
         	if (fs.existsSync(CONFIG.dir.storage))
             	fs.mkdirSync(CONFIG.dir.storage, { recursive: true });
@@ -135,14 +191,14 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 		},
 
 		create: function(directory) {
-			var directory = __path__(directory);
+			var directory = get_storage_real_path(directory);
 
 			fs.mkdirSync(directory, { recursive: true });
 		},
 
 		remove: function(directory) {
 			var list,
-				directory = __path__(directory);
+				directory = get_storage_real_path(directory);
 
 			list = fs.readdirSync(directory);
 			for (var i = 0; i < list.length; i++) {
@@ -169,7 +225,7 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 // namespace FILE {
 	const FILE = {
 		is: function(filename) {
-			var filename = __path__(filename);
+			var filename = get_storage_real_path(filename);
 
 			if (!this.exists(filename))
 				return '';
@@ -194,19 +250,19 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 		},
 
 		remove: function(filename) {
-			var filename = __path__(filename);
+			var filename = get_storage_real_path(filename);
 
 			fs.unlinkSync(filename);
 		},
 
 		exists: function(filename) {
-			var filename = __path__(filename);
+			var filename = get_storage_real_path(filename);
 
 			return fs.existsSync(path.dirname(filename));
 		},
 
 		read: function(filename) {
-			var filename = __path__(filename),
+			var filename = get_storage_real_path(filename),
 				content = '';
 
 			try {
@@ -219,7 +275,7 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 		},
 
 		write: function(filename, data, options) {
-			var filename = __path__(filename);
+			var filename = get_storage_real_path(filename);
 
 			if (fs.existsSync(path.dirname(filename))) {
 				fs.writeFileSync(filename, data, options);
@@ -230,7 +286,7 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 		},
 
 		append: function(filename, data) {
-			var filename = __path__(filename);
+			var filename = get_storage_real_path(filename);
 
 			fs.appendFileSync(filename, data);
 
@@ -241,9 +297,100 @@ const { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 // }
 
 
-function __path__(path) {
-	return (CONFIG.dir.storage + '/' + path.replace(CONFIG.dir.storage, '')).replace(/\.\.\//g, '');
-}
+// Functions {
+	function get_storage_real_path(path) {
+		return (CONFIG.dir.storage + '/' + path.replace(CONFIG.dir.storage, '')).replace(/\.\.\//g, '');
+	}
+// }
 
 
-module.exports = { HASH, DATETIME, I2C, GPIO, DIR, FILE, HTTP };
+// Class WebSocketClient {
+	function WebSocketClient() {
+		var self = this;
+
+    	self.number = 0;
+    	self.autoReconnectInterval = 5*1000;
+    	self.autoPingInterval = 30*1000;
+	}
+
+	WebSocketClient.prototype.open = function(url) {
+		var self = this;
+
+    	self.url = url;
+    	self.instance = new WebSocket(self.url);
+
+    	self.instance.on('open', function() {
+        	self.onopen();
+        	self.interval = setInterval(function() {
+				self.instance.ping('conn');
+			}, self.autoPingInterval);
+    	});
+
+    	self.instance.on('message', function(data, flags) {
+        	self.number ++;
+        	self.onmessage(data, flags, self.number);
+    	});
+
+    	self.instance.on('close', function(e) {
+        	clearInterval(self.interval);
+
+        	switch (e.code) {
+        		case 1000:
+            		break;
+        		default:
+            		self.reconnect(e);
+            		break;
+        	}
+        	self.onclose(e);
+    	});
+
+    	self.instance.on('error', function(e) {
+        	switch (e.code) {
+        		case 'ECONNREFUSED':
+            		self.reconnect(e);
+            		break;
+        		default:
+            		self.onerror(e);
+            		break;
+        	}
+    	});
+	};
+
+//	WebSocketClient.prototype.send = function(data,option) {
+//		var self = this;
+//
+//    	try {
+//        	self.instance.send(data, option);
+//    	} catch (e) {
+//        	self.instance.emit('error', e);
+//    	}
+//	};
+
+	WebSocketClient.prototype.reconnect = function(e) {
+    	var self = this;
+
+        self.instance.removeAllListeners();
+    	setTimeout(function(){
+        	self.open(self.url);
+    	}, self.autoReconnectInterval);
+	};
+
+	WebSocketClient.prototype.onopen = function(e) {
+		// console.log("WebSocketClient: open", arguments);
+	};
+
+	WebSocketClient.prototype.onmessage = function(data, flags, number) {
+		// console.log("WebSocketClient: message", arguments);
+	};
+
+	WebSocketClient.prototype.onerror = function(e) {
+		// console.log("WebSocketClient: error", arguments);
+	};
+
+	WebSocketClient.prototype.onclose = function(e) {
+		// console.log("WebSocketClient: closed", arguments);
+	};
+// }
+
+
+module.exports = { HASH, DATETIME, I2C, GPIO, DIR, FILE, HTTP, CLOUD };
