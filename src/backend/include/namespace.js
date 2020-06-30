@@ -16,6 +16,11 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+function getRndInteger(min, max) {
+	return Math.floor(Math.random() * (max - min + 1) ) + min;
+}
+
+
 const CONFIG       = require('../config'),
       fs           = require('fs'),
 	  md5          = require('md5'),
@@ -27,6 +32,7 @@ const CONFIG       = require('../config'),
 	  { execSync } = require('child_process'),
 	  EventEmitter = require('events'),
 	  WebSocket    = require('ws'),
+	  request      = require('request'),
 	  { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 
 
@@ -37,46 +43,72 @@ var private = {
 
 // namespace CLOUD {
 	const CLOUD = new EventEmitter();
-	CLOUD.connect = function(token, id) {
+	CLOUD.connect = function(token) {
 		if (!/^[a-z0-9]+$/.test(token)) {
 			CLOUD.emit('error', '"token" must have symbols only a-z and 0-9.');
 			return false;
 		}
 
-		if (!/^\w+$/.test(id)) {
-			CLOUD.emit('error', '"id" must have symbols only a-z, 0-9 and _.');
-			return false;
-		}
+		// if (!/^\w+$/.test(id)) {
+		// 	CLOUD.emit('error', '"id" must have symbols only a-z, 0-9 and _.');
+		// 	return false;
+		// }
 
-		if (private.CLOUD.wsc !== undefined) {
-			try { private.CLOUD.wsc.close(); } catch(e) { }
+		CLOUD.loop = true;
+		CLOUD.process();
 
-			delete private.CLOUD.wsc;
-		}
+		// cloud_request(function() {
+		// 	if (CLOUD.loop) {
+		// 		setTimeout(function() {
 
-		private.CLOUD.wsc = new WebSocketClient();
-		private.CLOUD.wsc.open('ws://mail.orangecoder.org:3000/' + token + '/' + id);
+		// 		}, 3000);
+		// 	}
+		// })
 
-		private.CLOUD.wsc.onopen = function(e) {
-			// console.log(e);
-		};
-
-		private.CLOUD.wsc.onclose = function(e) {
-			// console.log(e);
-		};
-
-		private.CLOUD.wsc.onmessage = function(data, flags, number) {
-			var value = data.replace(/\: .*/, ''),
-				data  = data.replace(value + ': ', '');
-
-			CLOUD.emit('data', value, data);
-		};
+		// 	CLOUD.emit('data', value, data);
+		// };
 
 		return true;
 	};
 
-	CLOUD.set = function(name, data) {
+	CLOUD.process = function() {
+		CLOUD.request({ }, function(data) {
+			if (CLOUD.data !== undefined) {
+				for (key in data) {
+					try {
+						if (CLOUD.data[key] != data[key])
+							CLOUD.emit('data', key, data[key]);
+					} catch(e) {
+						console.log(e);
+					}
+				}
+			}
 
+			CLOUD.data = data;
+
+			if (CLOUD.loop) {
+				setTimeout(function() {
+					CLOUD.process();
+				}, getRndInteger(2, 4) * 1000);
+			}
+		});
+	},
+
+	CLOUD.request = function(data, callback) {
+		request({ method: 'GET', json: data, uri: 'http://mail.orangecoder.org:3000/123456789' }, function(error, response, body) {
+			if (callback !== undefined)
+				callback(body);
+		});
+	},
+
+	CLOUD.disconnect = function() {
+		CLOUD.loop = false;
+	}
+
+	CLOUD.set = function(name, data) {
+		request({ method: 'POST', json: data, uri: 'http://mail.orangecoder.org:3000/123456789/' + name }, function(error, response, body) {
+
+		});
 	};
 
 	CLOUD.get = function(name) {
