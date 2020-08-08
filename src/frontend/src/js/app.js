@@ -41,7 +41,7 @@ import 'ace-builds/webpack-resolver';
 window.ace = ace
 window.base64 = base64
 
-var host = '100.168.210.102'; // location.host;
+var host = location.host;
 
 Template7.global = {
     locale: 'ua',
