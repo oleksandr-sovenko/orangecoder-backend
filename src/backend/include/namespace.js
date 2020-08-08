@@ -42,77 +42,62 @@ var private = {
 
 
 // namespace CLOUD {
+	var profileData = {};
+
+	function cloudGetProfile(token, id, callback) {
+		request({
+			method: 'GET',
+			headers: {
+		  		'Authorization': token,
+		  		'Status': 'none',
+		 	},
+		 	json: {},
+		 	uri: 'http://mail.orangecoder.org:3000/api/profile/' + id,
+		}, function(error, response, body) {
+			if (callback !== undefined)
+				callback(error, response, body);
+		});
+	}
+
+	function cloudGetProfileLoop(token, id) {
+		cloudGetProfile(token, id, function(error, response, body) {
+			var profile = body.data.id,
+				json    = body.data.data;
+
+			if (profileData[profile] === undefined)
+				profileData[profile] = {};
+
+			for (var key in json) {
+				if (profileData[profile][key] === undefined)
+					profileData[profile][key] = json[key].value;
+				else {
+					if (profileData[profile][key] !== json[key].value)
+						CLOUD.emit('data', key, json[key].value);
+
+					profileData[profile][key] = json[key].value;
+				}
+			}
+
+			setTimeout(function() {
+				cloudGetProfileLoop(token, id);
+			}, 3000);
+		});
+	}
+
 	const CLOUD = new EventEmitter();
-	CLOUD.connect = function(token) {
+	CLOUD.auth = function(token) {
 		if (!/^[a-z0-9]+$/.test(token)) {
 			CLOUD.emit('error', '"token" must have symbols only a-z and 0-9.');
 			return false;
 		}
 
-		// if (!/^\w+$/.test(id)) {
-		// 	CLOUD.emit('error', '"id" must have symbols only a-z, 0-9 and _.');
-		// 	return false;
-		// }
-
-		CLOUD.loop = true;
-		CLOUD.process();
-
-		// cloud_request(function() {
-		// 	if (CLOUD.loop) {
-		// 		setTimeout(function() {
-
-		// 		}, 3000);
-		// 	}
-		// })
-
-		// 	CLOUD.emit('data', value, data);
-		// };
+		CLOUD.token = token;
 
 		return true;
 	};
 
-	CLOUD.process = function() {
-		CLOUD.request({ }, function(data) {
-			if (CLOUD.data !== undefined) {
-				for (key in data) {
-					try {
-						if (CLOUD.data[key] != data[key])
-							CLOUD.emit('data', key, data[key]);
-					} catch(e) {
-						console.log(e);
-					}
-				}
-			}
-
-			CLOUD.data = data;
-
-			if (CLOUD.loop) {
-				setTimeout(function() {
-					CLOUD.process();
-				}, getRndInteger(2, 4) * 1000);
-			}
-		});
-	},
-
-	CLOUD.request = function(data, callback) {
-		request({ method: 'GET', json: data, uri: 'http://mail.orangecoder.org:3000/123456789' }, function(error, response, body) {
-			if (callback !== undefined)
-				callback(body);
-		});
-	},
-
-	CLOUD.disconnect = function() {
-		CLOUD.loop = false;
-	}
-
-	CLOUD.set = function(name, data) {
-		request({ method: 'POST', json: data, uri: 'http://mail.orangecoder.org:3000/123456789/' + name }, function(error, response, body) {
-
-		});
-	};
-
-	CLOUD.get = function(name) {
-
+	CLOUD.listenProfile = function(id) {
+		cloudGetProfileLoop(CLOUD.token, id);
 	};
 // }
 
@@ -144,11 +129,11 @@ var private = {
 			return md5(data);
 		},
 
-		base64_decode: function(data) {
+		base64Decode: function(data) {
 			return base64.decode(data);
 		},
 
-		base64_encode: function(data) {
+		base64Encode: function(data) {
 			return base64.encode(data);	
 		},
 

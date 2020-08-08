@@ -344,7 +344,7 @@ if (process.argv[2] === 'serve') {
 						},
 						loadavg: os.loadavg(),
 						uptime: os.uptime(),
-						network: [] // os.networkInterfaces(),
+						network: os.networkInterfaces(),
 					},
 				}));
 			});
