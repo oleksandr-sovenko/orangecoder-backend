@@ -6,18 +6,17 @@ var led = 30;
 GPIO.mode(led,  GPIO.OUTPUT);
 GPIO.write(led, GPIO.LOW);
 
-CLOUD.auth('f6cdc55f775f4202b236aa6b729e0011');
+CLOUD.auth('22a5c459560f01eab9fcc899b7c3cc6f');
 
 // Title 1
-CLOUD.listenProfile('327c9dcc-bfb8-40b8-87e5-7cb67e17a9ac');
-
+CLOUD.listenProfile('535e277c-3d4a-4d3e-b256-9e3783382440');
 CLOUD.on('data', function(value, data) {
     if (value == 'lamp23' && data == 'on')
         GPIO.write(led, GPIO.HIGH);
 
     if (value == 'lamp23' && data == 'off')
         GPIO.write(led, GPIO.LOW);
-    
+
     // Debug 
     CONSOLE.log(value + ': ' + data);
 });

@@ -16,11 +16,6 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-function getRndInteger(min, max) {
-	return Math.floor(Math.random() * (max - min + 1) ) + min;
-}
-
-
 const CONFIG       = require('../config'),
       fs           = require('fs'),
 	  md5          = require('md5'),
@@ -34,11 +29,6 @@ const CONFIG       = require('../config'),
 	  WebSocket    = require('ws'),
 	  request      = require('request'),
 	  { GPIO, BMP280, HC_SC04 } = require('../modules/core');
-
-
-var private = {
-	CLOUD: {}
-};
 
 
 // namespace CLOUD {
@@ -61,26 +51,30 @@ var private = {
 
 	function cloudGetProfileLoop(token, id) {
 		cloudGetProfile(token, id, function(error, response, body) {
-			var profile = body.data.id,
-				json    = body.data.data;
+			try {
+				var profile = body.data.id,
+					json    = body.data.data;
 
-			if (profileData[profile] === undefined)
-				profileData[profile] = {};
+				if (profileData[profile] === undefined)
+					profileData[profile] = {};
 
-			for (var key in json) {
-				if (profileData[profile][key] === undefined)
-					profileData[profile][key] = json[key].value;
-				else {
-					if (profileData[profile][key] !== json[key].value)
-						CLOUD.emit('data', key, json[key].value);
+				for (var key in json) {
+					if (profileData[profile][key] === undefined)
+						profileData[profile][key] = json[key].value;
+					else {
+						if (profileData[profile][key] !== json[key].value)
+							CLOUD.emit('data', key, json[key].value);
 
-					profileData[profile][key] = json[key].value;
+						profileData[profile][key] = json[key].value;
+					}
 				}
+			} catch(e) {
+
 			}
 
 			setTimeout(function() {
 				cloudGetProfileLoop(token, id);
-			}, 3000);
+			}, MATH.randInt(2, 4) * 1000);
 		});
 	}
 
@@ -99,6 +93,15 @@ var private = {
 	CLOUD.listenProfile = function(id) {
 		cloudGetProfileLoop(CLOUD.token, id);
 	};
+// }
+
+
+// namespace MATH {
+	const MATH = {
+		randInt: function(min, max) {
+			return Math.floor(Math.random() * (max - min + 1) ) + min;
+		}
+	}
 // }
 
 
@@ -410,4 +413,4 @@ var private = {
 // }
 
 
-module.exports = { HASH, DATETIME, I2C, GPIO, DIR, FILE, HTTP, CLOUD };
+module.exports = { HASH, MATH, DATETIME, I2C, GPIO, DIR, FILE, HTTP, CLOUD };
