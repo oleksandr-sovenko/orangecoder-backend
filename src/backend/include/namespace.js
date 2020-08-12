@@ -28,6 +28,8 @@ const CONFIG       = require('../config'),
 	  EventEmitter = require('events'),
 	  WebSocket    = require('ws'),
 	  request      = require('request'),
+      // SerialPort   = require('serialport'),
+      // Readline     = require('@serialport/parser-readline'),
 	  { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 
 
@@ -42,7 +44,7 @@ const CONFIG       = require('../config'),
 		  		'Status': 'none',
 		 	},
 		 	json: {},
-		 	uri: 'http://mail.orangecoder.org:3000/api/profile/' + id,
+		 	uri: CONFIG.url.cloud + '/api/profile/' + id,
 		}, function(error, response, body) {
 			if (callback !== undefined)
 				callback(error, response, body);
@@ -51,25 +53,23 @@ const CONFIG       = require('../config'),
 
 	function cloudGetProfileLoop(token, id) {
 		cloudGetProfile(token, id, function(error, response, body) {
-			try {
+			if (body !== undefined && body.data !== undefined && body.data.id !== undefined && body.data.data !== undefined) {
 				var profile = body.data.id,
 					json    = body.data.data;
 
 				if (profileData[profile] === undefined)
 					profileData[profile] = {};
 
-				for (var key in json) {
-					if (profileData[profile][key] === undefined)
-						profileData[profile][key] = json[key].value;
+				for (var variable in json) {
+					if (profileData[profile][variable] === undefined)
+						profileData[profile][variable] = json[variable].value;
 					else {
-						if (profileData[profile][key] !== json[key].value)
-							CLOUD.emit('data', key, json[key].value);
+						if (profileData[profile][variable] !== json[variable].value)
+							CLOUD.emit('data', variable, json[variable].value);
 
-						profileData[profile][key] = json[key].value;
+						profileData[profile][variable] = json[variable].value;
 					}
 				}
-			} catch(e) {
-
 			}
 
 			setTimeout(function() {
@@ -93,6 +93,63 @@ const CONFIG       = require('../config'),
 	CLOUD.listenProfile = function(id) {
 		cloudGetProfileLoop(CLOUD.token, id);
 	};
+// }
+
+
+// namespace SERIAL {
+	const SERIAL = new EventEmitter();
+	SERIAL.SIM800 = {
+		// port: null,
+		// parser: null,
+
+		connect: function() {
+			// this.port = new SerialPort('/dev/ttyS1', { autoOpen: false });
+			// this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }));
+
+			// parser.on('data', function (data) {
+   //  			var data = data.toString();
+
+   //  			if (/RING/.test(data))
+   //      			// TO RECEIVE INCOMING CALL:
+   //      			// port.write('ATA\r');
+
+   //  			console.log('SERIAL.SIM800: ', data)
+			// });
+		},
+
+		disconnect: function() {
+			// if (this.port !== null)
+			// 	this.port.close();
+		},
+
+		sendUSSD: function(query) {
+    		// this.port.write('AT+CUSD=1,"' + query + '"\r\n');
+		},
+
+		listSMS: function() {
+    		// setTimeout(function(){
+      //   		this.port.write('AT+CMGF=1\r');
+      //   		setTimeout(function(){
+      //       		this.port.write('AT+CMGL="ALL"\r');
+      //   		}, 100);
+    		// }, 100);
+		},
+
+		sendSMS: function(phone, message) {
+			// setTimeout(function() {
+			//     this.port.write('AT+CMGF=1\r');
+			//     setTimeout(function() {
+			//         this.port.write('AT+CMGS=\"' + phone + '\"\r');
+			//         setTimeout(function() {
+			//             this.port.write(message + '\r');
+			//             setTimeout(function() {
+			//                 this.port.write('\x1A');
+			//             }, 100);
+			//         }, 100);
+			//     }, 100);
+			// }, 100);
+		}
+	}
 // }
 
 
@@ -121,6 +178,42 @@ const CONFIG       = require('../config'),
 			fastify.register(require('fastify-cors'))
 			fastify.register(require('fastify-formbody'))
 			fastify.listen(port, '0.0.0.0');
+		},
+
+		put: function() {
+		},
+
+		delete: function() {
+		},
+
+		get: function() {
+			// request({
+			// 	method: 'GET',
+			// 	headers: {
+			//   		'Authorization': token,
+			//   		'Status': 'none',
+			//  	},
+			//  	json: {},
+			//  	uri: CONFIG.url.cloud + '/api/profile/' + id,
+			// }, function(error, response, body) {
+			// 	if (callback !== undefined)
+			// 		callback(error, response, body);
+			// });
+		},
+
+		post: function() {
+			// request({
+			// 	method: 'POST',
+			// 	headers: {
+			//   		'Authorization': token,
+			//   		'Status': 'none',
+			//  	},
+			//  	json: {},
+			//  	uri: CONFIG.url.cloud + '/api/profile/' + id,
+			// }, function(error, response, body) {
+			// 	if (callback !== undefined)
+			// 		callback(error, response, body);
+			// });
 		}
 	}
 // }
