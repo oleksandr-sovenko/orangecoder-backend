@@ -269,6 +269,12 @@ const CONFIG       = require('../config'),
 
 // namespace DIR {
 	const DIR = {
+		exists: function(filename) {
+			var filename = get_storage_real_path(filename);
+
+			return fs.existsSync(path.dirname(filename));
+		},
+
 		list: function(directory) {
         	var dirs  = [],
         		files = [],

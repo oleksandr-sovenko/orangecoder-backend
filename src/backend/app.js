@@ -19,7 +19,7 @@
 global.backend = {};
 
 
-const config  = require('./config'),
+const CONFIG  = require('./config'),
 	  net     = require('net'),
 	  vm      = require('vm'),
 	  os      = require('os'),
@@ -30,7 +30,7 @@ const config  = require('./config'),
 	  PROCESS = require('./include/process'),
 	  SESSION = require('./include/session'),
 	  { fork, execSync } = require('child_process'),
-	  { HASH, DATETIME, W1, I2C, GPIO, FILE, HTTP, CLOUD } = require('./include/namespace');
+	  { HASH, DATETIME, W1, I2C, GPIO, DIR, FILE, HTTP, CLOUD } = require('./include/namespace');
 
 
 var clients = {},
@@ -116,7 +116,7 @@ if (process.argv[2] === 'vm') {
 
 
 	// Inter Process Communications {
-		var ipc = net.connect({ path: config.socket.ipc }, function() {
+		var ipc = net.connect({ path: CONFIG.socket.ipc }, function() {
 
 		});
 
@@ -164,6 +164,7 @@ if (process.argv[2] === 'vm') {
 			GPIO     : GPIO,
 			CONSOLE  : CONSOLE,
 			DATETIME : DATETIME,
+			DIR      : DIR,
 			FILE     : FILE,
 			HASH     : HASH,
 			HTTP     : HTTP,
@@ -187,6 +188,16 @@ if (process.argv[2] === 'vm') {
  *	@command serve
  */
 if (process.argv[2] === 'serve') {
+	// Create Default Directories {
+		if (!DIR.exists(CONFIG.dir.conf)) {
+			DIR.create(CONFIG.dir.conf);
+
+			FILE.write(CONFIG.dir.conf + '/credentials.json', JSON.stringify({ 'username': 'admin', 'password': '21232f297a57a5a743894a0e4a801fc3' }));
+			FILE.write(CONFIG.dir.conf + '/timezone.json', JSON.stringify({ 'timezone': 'UTC' }));
+		}
+	// }
+
+
 	// Inter Process Communications {
 		const connectedSockets = new Set();
 
@@ -233,21 +244,21 @@ if (process.argv[2] === 'serve') {
 
 		    	clientSocket.on('error', function(e) {
 		        	if (e.code == 'ECONNREFUSED') {
-		            	fs.unlinkSync(config.socket.ipc);
+		            	fs.unlinkSync(CONFIG.socket.ipc);
 
-		            	server.listen(config.socket.ipc, function() {
+		            	server.listen(CONFIG.socket.ipc, function() {
 
 		            	});
 		        	}
 		    	});
 
-		    	clientSocket.connect({ path: config.socket.ipc }, function() {
+		    	clientSocket.connect({ path: CONFIG.socket.ipc }, function() {
 		        	process.exit();
 		    	});
 			}
 		});
 
-		server.listen(config.socket.ipc, function() {
+		server.listen(CONFIG.socket.ipc, function() {
 
 		});
 	// }
@@ -276,7 +287,7 @@ if (process.argv[2] === 'serve') {
 		fastify.register(require('fastify-ws'))
 		fastify.register(require('fastify-formbody'))
 		fastify.register(require('fastify-static'), {
-			root: config.dir.public,
+			root: CONFIG.dir.public,
 		});
 		fastify.register(require('fastify-file-upload'), {
 			limits: { fileSize: 512 * 1024 * 1024 },
@@ -321,8 +332,8 @@ if (process.argv[2] === 'serve') {
 		})
 
 		setInterval(function() {
-			// const 	disk_total = execSync('df -h | grep "/$" | awk \'{ print $2 }\''),
-			// 		disk_free  = execSync('df -h | grep "/$" | awk \'{ print $4 }\'');
+			const 	disk_total = execSync('df -h | grep "/$" | awk \'{ print $2 }\''),
+					disk_free  = execSync('df -h | grep "/$" | awk \'{ print $4 }\'');
 
 			INFO.get_cpu_usage(function(usage) {
 				var temperature = Math.round(parseFloat(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp')) / 1000);
@@ -335,8 +346,8 @@ if (process.argv[2] === 'serve') {
 							total: os.totalmem(),
 						},
 						disk: {
-							free: 0, // parseInt(disk_free.stdout) * 1073741824,
-							total: 0, // parseInt(disk_total.stdout) * 1073741824,
+							free: parseInt(disk_free.stdout) * 1073741824,
+							total: parseInt(disk_total.stdout) * 1073741824,
 						},
 						cpu: {
 							temperature: temperature,

@@ -42,5 +42,5 @@ ln -svf ${CWD}/../bin/orangecoder-node12.2.0-linux-armv7-1.0 \
 
 
 # pack
-#cd ${CWD}/../
-#tar Jcf orangecoder-latest.upd bin/ conf/ modules/ public/
+cd ${CWD}/../
+tar Jcf orangecoder-latest.upd bin/ modules/ public/
