@@ -1,0 +1,45 @@
+// $1
+// Copyright (C) 2020 Oleksandr Sovenko (info@oleksandrsovenko.com)
+
+//var led  = 30;
+//var led8 = 8;
+//var led9 = 9;
+
+// HTTP.server(1000, {
+// 	'get': {
+// 		'/test1': function() {
+// 			return DATETIME.format('YYYY-MM-DD hh:mm:ss') + ' = ' + GPIO.read(led);
+// 		},
+// 	},
+
+// 	'post': {
+// 		'/test1': function() {
+// 			return GPIO.read(led);
+// 		},
+// 	}
+// });
+
+//GPIO.mode(led,  GPIO.OUTPUT);
+//GPIO.mode(led8, GPIO.OUTPUT);
+//GPIO.mode(led9, GPIO.OUTPUT);
+
+// GPIO.write(led8, GPIO.LOW);
+// GPIO.write(led9, GPIO.LOW);
+
+CLOUD.auth('528ee8605a64c4402f5e80ca29feb61a');
+CLOUD.listenProfile('280fb934-164a-4757-ae06-531c769a1089');
+CLOUD.on('data', function(value, data) {
+    CONSOLE.log(value + ': ' + data);
+});
+
+// CONSOLE.log('started');
+// FILE.write('test.txt', 'asdasdasdasdasd');
+//setInterval(function() {
+    //CONSOLE.log(DATETIME.format('YYYY-MM-DD hh:mm:ss'));
+
+    //if (GPIO.read(led) == GPIO.HIGH)
+    //    GPIO.write(led, GPIO.LOW);
+    //else
+    //    GPIO.write(led, GPIO.HIGH);
+//}, 3000);
+

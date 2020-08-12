@@ -29,6 +29,10 @@ const config = {
 		'modules'  : ROOT_DIR + '/modules',
 	},
 
+	'url': {
+		'cloud': 'http://mail.orangecoder.org:3000',
+	},
+
 	'socket': {
 		'ipc': ROOT_DIR + '/ipc.sock'
 	}

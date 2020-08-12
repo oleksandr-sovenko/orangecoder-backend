@@ -90,7 +90,7 @@ async function routes(fastify, options) {
             description: req.body.description
         });
 
-        fs.writeFileSync(CONFIG.dir.algoritms + '/' + id, HASH.base64_decode(req.body.code));
+        fs.writeFileSync(CONFIG.dir.algoritms + '/' + id, HASH.base64Decode(req.body.code));
         fs.writeFileSync(index, JSON.stringify(algorithms));
 
         return { success: true, msg: 'Successfully' };
@@ -113,7 +113,7 @@ async function routes(fastify, options) {
             for (var i in algorithms) {
                 if (algorithms[i].id === req.params.id) {
                     if (fs.existsSync(index))
-                        algorithms[i].code = HASH.base64_encode(fs.readFileSync(CONFIG.dir.algoritms + '/' + algorithms[i].id, 'utf8'));
+                        algorithms[i].code = HASH.base64Encode(fs.readFileSync(CONFIG.dir.algoritms + '/' + algorithms[i].id, 'utf8'));
                     else
                         algorithms[i].code = '';
 
@@ -150,7 +150,7 @@ async function routes(fastify, options) {
                         description: req.body.description
                     };
 
-                    fs.writeFileSync(CONFIG.dir.algoritms + '/' + algorithms[i].id, HASH.base64_decode(req.body.code));
+                    fs.writeFileSync(CONFIG.dir.algoritms + '/' + algorithms[i].id, HASH.base64Decode(req.body.code));
                     fs.writeFileSync(index, JSON.stringify(algorithms));
 
                     return { success: true, msg: 'Successfully' }
@@ -271,7 +271,7 @@ async function routes(fastify, options) {
         var id = 'temp-' + HASH.uuid4(),
             session_id = req.headers['backend-authorization'];
 
-        fs.writeFileSync(CONFIG.dir.algoritms + '/' + id, HASH.base64_decode(req.body.code));
+        fs.writeFileSync(CONFIG.dir.algoritms + '/' + id, HASH.base64Decode(req.body.code));
 
         // Kill all previous executed scripts for current session
         PROCESS.killall_by_session(session_id);

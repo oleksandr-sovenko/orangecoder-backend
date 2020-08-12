@@ -1,9 +1,49 @@
 // $1
 // Copyright (C) 2020 Oleksandr Sovenko (info@oleksandrsovenko.com)
 
+<<<<<<< HEAD
 var led  = 30;
 var led8 = 8;
 var led9 = 9;
+=======
+var led = 30;
+
+GPIO.mode(led,  GPIO.OUTPUT);
+GPIO.write(led, GPIO.LOW);
+
+CLOUD.auth('0fe6a37a3a9f8b4b923a1d09c3557042');
+
+// Title 1
+CLOUD.listenProfile('535e277c-3d4a-4d3e-b256-9e3783382440');
+CLOUD.on('data', function(variable, value) {
+    if (variable == 'lamp23' && value == 'on')
+        GPIO.write(led, GPIO.HIGH);
+
+    if (variable == 'lamp23' && value == 'off')
+        GPIO.write(led, GPIO.LOW);
+
+    // Debug 
+    CONSOLE.log(variable + ': ' + value);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//var led8 = 8;
+//var led9 = 9;
+>>>>>>> 11f8261288cdce11cc7d8dc57448fd24a66e7c78
 
 // HTTP.server(1000, {
 // 	'get': {
@@ -19,13 +59,20 @@ var led9 = 9;
 // 	}
 // });
 
+<<<<<<< HEAD
 //GPIO.mode(led,  GPIO.OUTPUT);
 GPIO.mode(led8, GPIO.OUTPUT);
 GPIO.mode(led9, GPIO.OUTPUT);
+=======
+
+//GPIO.mode(led8, GPIO.OUTPUT);
+//GPIO.mode(led9, GPIO.OUTPUT);
+>>>>>>> 11f8261288cdce11cc7d8dc57448fd24a66e7c78
 
 // GPIO.write(led8, GPIO.LOW);
 // GPIO.write(led9, GPIO.LOW);
 
+<<<<<<< HEAD
 CLOUD.connect('1da94d9d0f0fe8513acee415646fe83a');
 
 // setInterval(function() {
@@ -48,6 +95,9 @@ CLOUD.on('data', function(value, data) {
 //     if (value == 'led9' && data == 'off')
 //         GPIO.write(led9, GPIO.LOW);
 });
+=======
+
+>>>>>>> 11f8261288cdce11cc7d8dc57448fd24a66e7c78
 
 // CONSOLE.log('started');
 // FILE.write('test.txt', 'asdasdasdasdasd');

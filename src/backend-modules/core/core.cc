@@ -89,33 +89,33 @@ void signalHandler(int signum) {
 // BMP280 {
 	Napi::Value BMP280_Data(const Napi::CallbackInfo& info) {
 		Napi::Env env = info.Env();
-	
+
 		if (bmp280) {
 			BMP280Data *bmp280Data = bmp280->getBMP280Data();
 
-			Napi::Object object = Napi::Object::New(env);	
+			Napi::Object object = Napi::Object::New(env);
 			object.Set("pressure", bmp280Data->getPressure());
 			object.Set("temperature", bmp280Data->getTemperature());
 			object.Set("altitude", bmp280Data->getAltitude());
 		}
-		
+
 		return env.Null();
 	}
 
 	Napi::Value BMP280_Init(const Napi::CallbackInfo& info) {
 		Napi::Env env = info.Env();
-	
+
 		if (!bmp280) {
 		    bmp280 = new BMP280((char *) "/dev/i2c-0", BMP280_I2C_ADDRESS1);
 		    int fd = bmp280->init();
 	    	bmp280->reset();
-	
+
 	    	if (fd < 0) {
 	    		delete bmp280;
-	
+
 	        	return env.Null();
 	    	}
-	
+
 	    	bmp280->reset();
 	    	bmp280->setPowerMode(BMP280_NORMAL_MODE);
 	    	bmp280->setTemperatureOversampling(BMP280_ULTRAHIGHRESOLUTION_OVERSAMP_TEMPERATURE);
@@ -149,7 +149,7 @@ void signalHandler(int signum) {
 		file = fopen(buffer, "r");
 		if (file) {
 			size_t size = fread(&buffer, sizeof(buffer), 1, file);
-			
+
 			if (size > 0) {
 
 			}
@@ -272,8 +272,8 @@ Napi::Object Module(Napi::Env env, Napi::Object exports) {
 		Napi::Function::New(env, HC_SC04_Init));
 
 	wiringPiSetup();
-	
-	signal(SIGABRT, signalHandler); 
+
+	signal(SIGABRT, signalHandler);
 	signal(SIGFPE , signalHandler);
 	signal(SIGILL , signalHandler);
 	signal(SIGINT , signalHandler);

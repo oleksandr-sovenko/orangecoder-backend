@@ -24,6 +24,7 @@
     "os-utils": "0.0.14",
     "pitboss-ng": "^2.0.0",
     "request": "^2.88.0",
+    "serialport": "^9.0.1",
     "system-health-monitor": "^1.2.0",
     "uuid4": "^1.1.4",
     "vm2": "^3.8.4"

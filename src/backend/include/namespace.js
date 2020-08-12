@@ -16,11 +16,6 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-function getRndInteger(min, max) {
-	return Math.floor(Math.random() * (max - min + 1) ) + min;
-}
-
-
 const CONFIG       = require('../config'),
       fs           = require('fs'),
 	  md5          = require('md5'),
@@ -33,87 +28,137 @@ const CONFIG       = require('../config'),
 	  EventEmitter = require('events'),
 	  WebSocket    = require('ws'),
 	  request      = require('request'),
+      // SerialPort   = require('serialport'),
+      // Readline     = require('@serialport/parser-readline'),
 	  { GPIO, BMP280, HC_SC04 } = require('../modules/core');
 
 
-var private = {
-	CLOUD: {}
-};
-
-
 // namespace CLOUD {
+	var profileData = {};
+
+	function cloudGetProfile(token, id, callback) {
+		request({
+			method: 'GET',
+			headers: {
+		  		'Authorization': token,
+		  		'Status': 'none',
+		 	},
+		 	json: {},
+		 	uri: CONFIG.url.cloud + '/api/profile/' + id,
+		}, function(error, response, body) {
+			if (callback !== undefined)
+				callback(error, response, body);
+		});
+	}
+
+	function cloudGetProfileLoop(token, id) {
+		cloudGetProfile(token, id, function(error, response, body) {
+			if (body !== undefined && body.data !== undefined && body.data.id !== undefined && body.data.data !== undefined) {
+				var profile = body.data.id,
+					json    = body.data.data;
+
+				if (profileData[profile] === undefined)
+					profileData[profile] = {};
+
+				for (var variable in json) {
+					if (profileData[profile][variable] === undefined)
+						profileData[profile][variable] = json[variable].value;
+					else {
+						if (profileData[profile][variable] !== json[variable].value)
+							CLOUD.emit('data', variable, json[variable].value);
+
+						profileData[profile][variable] = json[variable].value;
+					}
+				}
+			}
+
+			setTimeout(function() {
+				cloudGetProfileLoop(token, id);
+			}, MATH.randInt(2, 4) * 1000);
+		});
+	}
+
 	const CLOUD = new EventEmitter();
-	CLOUD.connect = function(token) {
+	CLOUD.auth = function(token) {
 		if (!/^[a-z0-9]+$/.test(token)) {
 			CLOUD.emit('error', '"token" must have symbols only a-z and 0-9.');
 			return false;
 		}
 
-		// if (!/^\w+$/.test(id)) {
-		// 	CLOUD.emit('error', '"id" must have symbols only a-z, 0-9 and _.');
-		// 	return false;
-		// }
-
-		CLOUD.loop = true;
-		CLOUD.process();
-
-		// cloud_request(function() {
-		// 	if (CLOUD.loop) {
-		// 		setTimeout(function() {
-
-		// 		}, 3000);
-		// 	}
-		// })
-
-		// 	CLOUD.emit('data', value, data);
-		// };
+		CLOUD.token = token;
 
 		return true;
 	};
 
-	CLOUD.process = function() {
-		CLOUD.request({ }, function(data) {
-			if (CLOUD.data !== undefined) {
-				for (key in data) {
-					try {
-						if (CLOUD.data[key] != data[key])
-							CLOUD.emit('data', key, data[key]);
-					} catch(e) {
-						console.log(e);
-					}
-				}
-			}
+	CLOUD.listenProfile = function(id) {
+		cloudGetProfileLoop(CLOUD.token, id);
+	};
+// }
 
-			CLOUD.data = data;
 
-			if (CLOUD.loop) {
-				setTimeout(function() {
-					CLOUD.process();
-				}, getRndInteger(2, 4) * 1000);
-			}
-		});
-	},
+// namespace SERIAL {
+	const SERIAL = new EventEmitter();
+	SERIAL.SIM800 = {
+		// port: null,
+		// parser: null,
 
-	CLOUD.request = function(data, callback) {
-		request({ method: 'GET', json: data, uri: 'http://mail.orangecoder.org:3000/123456789' }, function(error, response, body) {
-			if (callback !== undefined)
-				callback(body);
-		});
-	},
+		connect: function() {
+			// this.port = new SerialPort('/dev/ttyS1', { autoOpen: false });
+			// this.parser = this.port.pipe(new Readline({ delimiter: '\r\n' }));
 
-	CLOUD.disconnect = function() {
-		CLOUD.loop = false;
+			// parser.on('data', function (data) {
+   //  			var data = data.toString();
+
+   //  			if (/RING/.test(data))
+   //      			// TO RECEIVE INCOMING CALL:
+   //      			// port.write('ATA\r');
+
+   //  			console.log('SERIAL.SIM800: ', data)
+			// });
+		},
+
+		disconnect: function() {
+			// if (this.port !== null)
+			// 	this.port.close();
+		},
+
+		sendUSSD: function(query) {
+    		// this.port.write('AT+CUSD=1,"' + query + '"\r\n');
+		},
+
+		listSMS: function() {
+    		// setTimeout(function(){
+      //   		this.port.write('AT+CMGF=1\r');
+      //   		setTimeout(function(){
+      //       		this.port.write('AT+CMGL="ALL"\r');
+      //   		}, 100);
+    		// }, 100);
+		},
+
+		sendSMS: function(phone, message) {
+			// setTimeout(function() {
+			//     this.port.write('AT+CMGF=1\r');
+			//     setTimeout(function() {
+			//         this.port.write('AT+CMGS=\"' + phone + '\"\r');
+			//         setTimeout(function() {
+			//             this.port.write(message + '\r');
+			//             setTimeout(function() {
+			//                 this.port.write('\x1A');
+			//             }, 100);
+			//         }, 100);
+			//     }, 100);
+			// }, 100);
+		}
 	}
+// }
 
-	CLOUD.set = function(name, data) {
-		request({ method: 'POST', json: data, uri: 'http://mail.orangecoder.org:3000/123456789/' + name }, function(error, response, body) {
 
-		});
-	};
-
-	CLOUD.get = function(name) {
-
-	};
+// namespace MATH {
+	const MATH = {
+		randInt: function(min, max) {
+			return Math.floor(Math.random() * (max - min + 1) ) + min;
+		}
+	}
 // }
 
 
@@ -133,6 +178,42 @@ var private = {
 			fastify.register(require('fastify-cors'))
 			fastify.register(require('fastify-formbody'))
 			fastify.listen(port, '0.0.0.0');
+		},
+
+		put: function() {
+		},
+
+		delete: function() {
+		},
+
+		get: function() {
+			// request({
+			// 	method: 'GET',
+			// 	headers: {
+			//   		'Authorization': token,
+			//   		'Status': 'none',
+			//  	},
+			//  	json: {},
+			//  	uri: CONFIG.url.cloud + '/api/profile/' + id,
+			// }, function(error, response, body) {
+			// 	if (callback !== undefined)
+			// 		callback(error, response, body);
+			// });
+		},
+
+		post: function() {
+			// request({
+			// 	method: 'POST',
+			// 	headers: {
+			//   		'Authorization': token,
+			//   		'Status': 'none',
+			//  	},
+			//  	json: {},
+			//  	uri: CONFIG.url.cloud + '/api/profile/' + id,
+			// }, function(error, response, body) {
+			// 	if (callback !== undefined)
+			// 		callback(error, response, body);
+			// });
 		}
 	}
 // }
@@ -144,11 +225,11 @@ var private = {
 			return md5(data);
 		},
 
-		base64_decode: function(data) {
+		base64Decode: function(data) {
 			return base64.decode(data);
 		},
 
-		base64_encode: function(data) {
+		base64Encode: function(data) {
 			return base64.encode(data);	
 		},
 
@@ -425,4 +506,4 @@ var private = {
 // }
 
 
-module.exports = { HASH, DATETIME, I2C, GPIO, DIR, FILE, HTTP, CLOUD };
+module.exports = { HASH, MATH, DATETIME, I2C, GPIO, DIR, FILE, HTTP, CLOUD };
