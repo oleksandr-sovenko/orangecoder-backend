@@ -24,7 +24,7 @@ module.exports = {
     './src/js/app.js',
   ],
   output: {
-    path: resolvePath('www'),
+    path: resolvePath('../../public'),
     filename: 'js/app.js',
     publicPath: '',
     hotUpdateChunkFilename: 'hot/hot-update.js',
@@ -42,7 +42,7 @@ module.exports = {
     hot: true,
     open: true,
     compress: true,
-    contentBase: '/www/',
+    contentBase: '/../../public/',
     disableHostCheck: true,
     watchOptions: {
       poll: 1000,
@@ -203,7 +203,7 @@ module.exports = {
     new CopyWebpackPlugin([
       {
         from: resolvePath('src/static'),
-        to: resolvePath('www/static'),
+        to: resolvePath('../../public/static'),
       },
 
     ]),

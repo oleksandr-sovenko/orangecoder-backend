@@ -11,7 +11,7 @@ const isCordova = target === 'cordova'
 const spinner = ora(env === 'production' ? 'building for production...' : 'building development version...');
 spinner.start();
 
-rm(isCordova ? './cordova/www' : './www/', (removeErr) => {
+rm(isCordova ? './cordova/www' : './../../public/', (removeErr) => {
   if (removeErr) throw removeErr;
 
   webpack(config, (err, stats) => {
