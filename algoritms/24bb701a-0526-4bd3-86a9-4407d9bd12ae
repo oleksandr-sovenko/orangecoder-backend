@@ -1,6 +1,7 @@
 // $1
 // Copyright (C) 2020 Oleksandr Sovenko (info@oleksandrsovenko.com)
 
+var led  = 30;
 var led8 = 8;
 var led9 = 9;
 
@@ -18,37 +19,44 @@ var led9 = 9;
 // 	}
 // });
 
+//GPIO.mode(led,  GPIO.OUTPUT);
 GPIO.mode(led8, GPIO.OUTPUT);
 GPIO.mode(led9, GPIO.OUTPUT);
 
 // GPIO.write(led8, GPIO.LOW);
 // GPIO.write(led9, GPIO.LOW);
 
-CLOUD.connect('1da94d9d0f0fe8513acee415646fe83a', 'opizero01');
+CLOUD.connect('1da94d9d0f0fe8513acee415646fe83a');
+
+// setInterval(function() {
+//     CLOUD.set('test122', Math.random());    
+// }, 3000);
+
+
 CLOUD.on('data', function(value, data) {
-    CONSOLE.log(value + ', ' + data);
+     CONSOLE.log(value + ', ' + data);
 
-    if (value == 'led8' && data == 'on')
-        GPIO.write(led8, GPIO.HIGH);
+//     if (value == 'led8' && data == 'on')
+//         GPIO.write(led8, GPIO.HIGH);
 
-    if (value == 'led8' && data == 'off')
-        GPIO.write(led8, GPIO.LOW);
+//     if (value == 'led8' && data == 'off')
+//         GPIO.write(led8, GPIO.LOW);
 
-    if (value == 'led9' && data == 'on')
-        GPIO.write(led9, GPIO.HIGH);
+//     if (value == 'led9' && data == 'on')
+//         GPIO.write(led9, GPIO.HIGH);
 
-    if (value == 'led9' && data == 'off')
-        GPIO.write(led9, GPIO.LOW);
+//     if (value == 'led9' && data == 'off')
+//         GPIO.write(led9, GPIO.LOW);
 });
 
 // CONSOLE.log('started');
 // FILE.write('test.txt', 'asdasdasdasdasd');
-// setInterval(function() {
-//     CONSOLE.log(DATETIME.format('YYYY-MM-DD hh:mm:ss'));
+//setInterval(function() {
+    //CONSOLE.log(DATETIME.format('YYYY-MM-DD hh:mm:ss'));
 
-//     if (GPIO.read(led) == GPIO.HIGH)
-//         GPIO.write(led, GPIO.LOW);
-//     else
-//         GPIO.write(led, GPIO.HIGH);
-// }, 10000);
+    //if (GPIO.read(led) == GPIO.HIGH)
+    //    GPIO.write(led, GPIO.LOW);
+    //else
+    //    GPIO.write(led, GPIO.HIGH);
+//}, 3000);
 
