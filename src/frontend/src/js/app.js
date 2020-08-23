@@ -37,19 +37,30 @@ import routes  from './routes.js';
 import './helpers.js';
 import ace from 'ace-builds'
 import 'ace-builds/webpack-resolver';
+import moment from 'moment-timezone';
+
 
 window.ace = ace
 window.base64 = base64
 
 var host = location.host;
 
+
+if (localStorage['timezone'] === undefined)
+    localStorage['timezone'] = 'UTC';
+if (localStorage['language'] === undefined)
+    localStorage['language'] = 'en';
+
+
 Template7.global = {
-    locale: 'ua',
+    locale: localStorage['language'],
     i18n: {
         'ua': {
             'Dashboard': 'Панель приладів',
             'Navigation': 'Навігація',
             'Action': 'Дія',
+            'Uptime': 'Час роботи',
+            'Temperature': 'Температура',
 
             'Username': 'І\'мя користувача',
             'Password': 'Пароль',
@@ -99,7 +110,6 @@ Template7.global = {
             'Settings': 'Налаштування',
             'General': 'Загальні',
             'Language': 'Мова',
-            '': '',
             'Timezone': 'Часовий пояс',
             'Your current time zone': 'Ваш поточний часовий пояс',
 
@@ -123,8 +133,82 @@ Template7.global = {
             'Reboot': 'Перезавантажити',
         },
         'ru': {
-            'Cancel': 'Скасувати'
-        }
+            'Dashboard': 'Панель приборов',
+            'Navigation': 'Навигация',
+            'Action': 'Действие',
+            'Uptime': 'Время работы',
+            'Temperature': 'Температура',
+
+            'Username': 'Имя пользователя',
+            'Password': 'Пароль',
+            'version': 'версия',
+            'Login': 'Авторизироваться',
+
+            'GPIO devices': 'GPIO устройства',
+            'Programming': 'Программирование',
+            'Storage': 'Хранилище',
+            'Logout': 'Выход',
+
+            'List GPIO Devices': 'Список GPIO устройств',
+            'Name': 'Название',
+            'Device': 'Устройство',
+            'Activity': 'Активность',
+
+            'Date': 'Дата',
+
+            'Editor': 'Редактор',
+            'Console': 'Консоль',
+
+            'Add': 'Добавить',
+            'Run': 'Запустить',
+            'Stop': 'Остановить',
+            'Cancel': 'Отмена',
+            'Close': 'Закрыть',
+            'Save': 'Зберегти',
+            'Title': 'Название',
+            'Description': 'Описание',
+            'Back': 'Назад',
+
+
+            'No algorithms yet': 'Еще нет алгоритмов',
+            'List of algorithms': 'Список алгоритмов',
+            'New Algorithm': 'Новый алгоритм',
+            'Edit Algorithm': 'Редактирование алгоритма',
+
+            // Storage
+
+            'List of files and directories': 'Список файлов и каталогов',
+            'Folder': 'Каталог',
+            'File': 'Файл',
+            'Refresh': 'Обновить',
+
+            // Settings
+
+            'Settings': 'Настройки',
+            'General': 'Общее',
+            'Language': 'Язык',
+            'Timezone': 'Часовой пояс',
+            'Your current time zone': 'Ваш текущий часовой пояс',
+
+            'Change password': 'Изменить пароль',
+            'Old password': 'Старый пароль',
+            'Current your password': 'Текущий пароль',
+            'New password': 'Новый пароль',
+            'Your new password': 'Ваш новый пароль',
+            'Confirm password': 'Подтвердите пароль',
+            'Enter your new password again': 'Введите пароль еще раз',
+            'Change': 'Изменить',
+
+            'Management': 'Управление',
+
+            'Firmware Upgrade': 'Обновление прошивки',
+            'Upgrade the board\'s firmware to obtain new functionalities. And some bugs and malfunctions may be fixed in new firmware. Please refer to the release notes for details. It will take minutes to upload and upgrade the firmware, please be patient.': 'Обновите программное обеспечение платы для получения новых функциональных возможностей. И некоторые ошибки и неисправности могут быть исправлены в новой прошивке. Для детальной информации обратитесь к примечаниям к выпуску. Чтобы загрузить и обновить прошивку, пройдут несколько минут. Будьте терпеливы.',
+            'Upgrade': 'Обновить',
+
+            'System Reboot': 'Перезагрузка системы',
+            'You can reboot the system if the board are working abnormally.': 'Вы можете перезагрузить систему, если плата работает ненормально.',
+            'Reboot': 'Перезагрузить',
+        },
     },
     gpio: {
         readall:[]
@@ -144,8 +228,8 @@ $$('#app').append(appLoginScreen({ className: 'login-screen' }));
 var app = new Framework7({
     root: '#app',
     animate: false,
-    name: 'Orange Coder',
-    version: '1.0.0-beta',
+    name: 'OrangeCoder',
+    version: '1.0.0',
     theme: 'aurora',
 
     data: function () {
@@ -358,33 +442,9 @@ function rws_start() {
     window.rws.addEventListener('message', function(msg) {
         try { msg = JSON.parse(msg.data); } catch(e) { msg = {}; }
 
-
-        // if (msg.action === undefined)
-        //     return;
-
-
-        if (msg.action === 'changes') {
-            var device_activity = $$('.device-' + msg.id);
-
-            if (msg.device === 'ds18b20') {
-                if (parseFloat(msg.pins.out.value) > 0)
-                    device_activity.html(msg.pins.out.value + '℃');
-                else
-                    device_activity.html('-');
-            }
-
-            if (msg.device === 'hc-sr501') {
-                if (device_activity.length) {
-                    if (parseInt(msg.pins.out.value) === 1)
-                        device_activity.addClass('text-color-red');
-                    else
-                        device_activity.removeClass('text-color-red');
-                }
-            }
-        }
-
-
         if (msg.action === 'status') {
+            localStorage['timezone'] = msg.data.timezone;
+
             $$('.cpu-usage').addClass('hidden');
             for (var cpu in msg.data.cpu.usage) {
                 var color = 'green';
@@ -434,7 +494,7 @@ function rws_start() {
             }
 
             $$('.info-network').html(html_network);
-            $$('.info-uptime').html(msg.data.uptime);
+            $$('.info-uptime').html(moment.utc(msg.data.uptime * 1000).format('HH:mm:ss'));
         }
 
 

@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -->
 
 <template>
-<div class="page" data-name="about">
+<div class="page" data-name="settings">
     <div class="navbar">
         <div class="navbar-bg"></div>
         <div class="navbar-inner sliding">
@@ -45,11 +45,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                             <li>
                                 <div class="item-input">
                                     <div class="item-inner">
-                                        <div class="item-title item-label">{{_t 'Your current time zone'}}</div>
+                                        <div class="item-title item-label">{{_t 'Language'}}</div>
                                         <div class="item-input-wrap">
-                                            <select @change="changeTimezone">
+                                            <select name="language">
                                                 {{#each languages}}
-                                                    <option value="{{index}}">{{this}}</option>
+                                                    <option value="{{@key}}">{{this}}</option>
                                                 {{/each}}
                                             </select>
                                         </div>
@@ -75,7 +75,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                                     <div class="item-inner">
                                         <div class="item-title item-label">{{_t 'Your current time zone'}}</div>
                                         <div class="item-input-wrap">
-                                            <select @change="changeTimezone">
+                                            <select name="timezone">
                                                 {{#each timezones}}
                                                     <option>{{this}}</option>
                                                 {{/each}}
@@ -133,7 +133,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 </div>
             </div>
             <div class="card-footer jcc">
-                <button class="mw400 button button-fill" @click="changePassword">{{_t 'Change'}}</button>
+                <button class="mw400 button button-fill button-change-password">{{_t 'Change'}}</button>
             </div>
         </div>
 
@@ -149,7 +149,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 </div>
             </div>
             <div class="card-footer jcc">
-                <button class="mw400 button button-fill" @click="upgrade">{{_t 'Upgrade'}}</button>
+                <button class="mw400 button button-fill button-upgrade">{{_t 'Upgrade'}}</button>
             </div>
         </div>
 
@@ -163,11 +163,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 </div>
             </div>
             <div class="card-footer jcc">
-                <button class="mw400 button button-fill" @click="reboot">{{_t 'Reboot'}}</button>
+                <button class="mw400 button button-fill button-reboot">{{_t 'Reboot'}}</button>
             </div>
         </div>
     </div>
-    <input type="file" @change="onChangeFile">
+    <input type="file">
 </div>
 </template>
 <script>
@@ -180,22 +180,22 @@ export default {
         }
     `,
 
-    data: function() {
-        return {
-            timezones: moment.tz.names(),
-            languages: {
-                en: 'English'
-            }
-        }
-    },
+    mounted() {
+        var self = this,
+            $$   = self.$$,
+            app  = self.$app,
+            page = self.$el;
 
-    methods: {
-        /**
-         *
-         */
-        changeTimezone(el) {
-            var self = this,
-                timezone = self.$$(el.target).val();
+        page.on('change', '[name="language"]', function() {
+            var el = $$(this);
+
+            localStorage['language'] = el.val();
+            location.reload();
+        });
+
+        page.on('change', '[name="timezone"]', function() {
+            var el = $$(this),
+                timezone = el.val();
 
             self.$app.request({
                 url: self.$app.data.url + '/settings/timezone',
@@ -204,6 +204,7 @@ export default {
                 dataType: 'json',
                 data: { timezone: timezone },
                 success: function(data, status, xhr) {
+                    localStorage['timezone'] = el.val();
                     //self.$app.dialog.close();
                     //self.refreshList();
                 },
@@ -212,15 +213,23 @@ export default {
                     self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
                 }
             });
-        },
+        });
 
+        page.on('click', '.button-reboot', function() {
+            self.$app.request({
+                url: self.$app.data.url + '/management/reboot',
+                contentType: 'application/json',
+                method: 'POST',
+                dataType: 'json',
+                success: function(data, status, xhr) {
+                },
+                error: function(xhr, status) {
+                }
+            });
+        });
 
-        /**
-         *
-         */
-        changePassword() {
-            var self = this,
-                data = self.$app.form.convertToData('.form-change-password');
+        page.on('click', '.button-change-password', function() {
+            var data = self.$app.form.convertToData('.form-change-password');
 
             self.$app.request({
                 url: self.$app.data.url + '/settings/password',
@@ -249,11 +258,14 @@ export default {
                     }).open();
                 }
             });
-        },
+        });
 
-        onChangeFile(el) {
-            const self = this,
-                  reader = new FileReader(),
+        page.on('click', '.button-upgrade', function() {
+            self.$$('.page-current input[type="file"]').click();
+        });
+
+        page.on('change', '[type="file"]', function() {
+            const reader = new FileReader(),
                   file   = el.target.files[0];
 
             var formData = new FormData();
@@ -273,41 +285,21 @@ export default {
                     self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
                 },
             });
-        },
+        });
 
+        page.find('[name="language"]').val(localStorage['language']);
+        page.find('[name="timezone"]').val(localStorage['timezone']);
+    },
 
-        /**
-         *
-         */
-        upgrade() {
-            const self = this;
-
-            self.$$('.page-current input[type="file"]').click();
-        },
-
-
-        /**
-         *
-         */
-        reboot(el) {
-            var self = this,
-                timezone = self.$$(el.target).val();
-
-            self.$app.request({
-                url: self.$app.data.url + '/management/reboot',
-                contentType: 'application/json',
-                method: 'POST',
-                dataType: 'json',
-                success: function(data, status, xhr) {
-                    //self.$app.dialog.close();
-                    //self.refreshList();
-                },
-                error: function(xhr, status) {
-                    //self.$app.dialog.close();
-                    //self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
-                }
-            });
-        },
-    }
+    data: function() {
+        return {
+            timezones: moment.tz.names(),
+            languages: {
+                en: 'English',
+                ru: 'Russian',
+                ua: 'Ukrainian',
+            }
+        }
+    },
 };
 </script>
