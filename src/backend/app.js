@@ -322,22 +322,43 @@ if (process.argv[2] === 'serve') {
 		})
 
 		setInterval(function() {
-			const 	disk_total = execSync('df -h | grep "/$" | awk \'{ print $2 }\''),
-					disk_free  = execSync('df -h | grep "/$" | awk \'{ print $4 }\'');
+			var disk_total = execSync('df -h | grep "/$" | awk \'{ print $2 }\'').toString(),
+				disk_free  = execSync('df -h | grep "/$" | awk \'{ print $4 }\'').toString();
+
+			if (/G/.test(disk_total))
+				disk_total = parseFloat(disk_total) * 1073741824;
+
+			if (/M/.test(disk_total))
+				disk_total = parseFloat(disk_total) * 1048576;
+
+			if (/G/.test(disk_free))
+				disk_free = parseFloat(disk_free) * 1073741824;
+
+			if (/M/.test(disk_free))
+				disk_free = parseFloat(disk_free) * 1048576;
 
 			INFO.get_cpu_usage(function(usage) {
-				var temperature = Math.round(parseFloat(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp')) / 1000);
+				var temperature = Math.round(parseFloat(fs.readFileSync('/sys/class/thermal/thermal_zone0/temp')) / 1000),
+					timezone    = 'UTC';
+
+				try {
+					var json = JSON.parse(fs.readFileSync(CONFIG.dir.conf + '/timezone.json'));
+					timezone = json.timezone;
+				} catch(e) {
+					timezone = 'UTC';
+				}
 
 				fastify_ws_sendall(JSON.stringify({
 					action: 'status',
 					data: {
+						timezone: timezone,
 						memory: {
 							free: os.freemem(),
 							total: os.totalmem(),
 						},
 						disk: {
-							free: parseInt(disk_free.stdout) * 1073741824,
-							total: parseInt(disk_total.stdout) * 1073741824,
+							free: parseInt(disk_free),
+							total: parseInt(disk_total),
 						},
 						cpu: {
 							temperature: temperature,

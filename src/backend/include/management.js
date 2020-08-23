@@ -16,7 +16,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const { execSync } = require('child_process'),
+const { execSync }   = require('child_process'),
+      fs             = require('fs'),
+      CONFIG         = require('../config'),
       { FILE, HASH } = require('./namespace');
 
 
@@ -37,7 +39,8 @@ async function routes(fastify, options) {
     fastify.post('/management/upgrade', async function(req, rep) {
         const files = req.raw.files
 
-        FILE.write(files['firmware'].name, files['firmware'].data, 'binary');
+        fs.writeFileSync('/tmp/upgrade', files['firmware'].data, 'binary');
+        execSync('cd ' + CONFIG.dir.root + ' && tar xf /tmp/upgrade && reboot');
 
         return { success: true, msg: 'Successfully' };
     })
