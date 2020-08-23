@@ -1,11 +1,6 @@
 // $1
 // Copyright (C) 2020 Oleksandr Sovenko (info@oleksandrsovenko.com)
 
-<<<<<<< HEAD
-var led  = 30;
-var led8 = 8;
-var led9 = 9;
-=======
 var led = 30;
 
 GPIO.mode(led,  GPIO.OUTPUT);
@@ -26,87 +21,4 @@ CLOUD.on('data', function(variable, value) {
     CONSOLE.log(variable + ': ' + value);
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//var led8 = 8;
-//var led9 = 9;
->>>>>>> 11f8261288cdce11cc7d8dc57448fd24a66e7c78
-
-// HTTP.server(1000, {
-// 	'get': {
-// 		'/test1': function() {
-// 			return DATETIME.format('YYYY-MM-DD hh:mm:ss') + ' = ' + GPIO.read(led);
-// 		},
-// 	},
-
-// 	'post': {
-// 		'/test1': function() {
-// 			return GPIO.read(led);
-// 		},
-// 	}
-// });
-
-<<<<<<< HEAD
-//GPIO.mode(led,  GPIO.OUTPUT);
-GPIO.mode(led8, GPIO.OUTPUT);
-GPIO.mode(led9, GPIO.OUTPUT);
-=======
-
-//GPIO.mode(led8, GPIO.OUTPUT);
-//GPIO.mode(led9, GPIO.OUTPUT);
->>>>>>> 11f8261288cdce11cc7d8dc57448fd24a66e7c78
-
-// GPIO.write(led8, GPIO.LOW);
-// GPIO.write(led9, GPIO.LOW);
-
-<<<<<<< HEAD
-CLOUD.connect('1da94d9d0f0fe8513acee415646fe83a');
-
-// setInterval(function() {
-//     CLOUD.set('test122', Math.random());    
-// }, 3000);
-
-
-CLOUD.on('data', function(value, data) {
-     CONSOLE.log(value + ', ' + data);
-
-//     if (value == 'led8' && data == 'on')
-//         GPIO.write(led8, GPIO.HIGH);
-
-//     if (value == 'led8' && data == 'off')
-//         GPIO.write(led8, GPIO.LOW);
-
-//     if (value == 'led9' && data == 'on')
-//         GPIO.write(led9, GPIO.HIGH);
-
-//     if (value == 'led9' && data == 'off')
-//         GPIO.write(led9, GPIO.LOW);
-});
-=======
-
->>>>>>> 11f8261288cdce11cc7d8dc57448fd24a66e7c78
-
-// CONSOLE.log('started');
-// FILE.write('test.txt', 'asdasdasdasdasd');
-//setInterval(function() {
-    //CONSOLE.log(DATETIME.format('YYYY-MM-DD hh:mm:ss'));
-
-    //if (GPIO.read(led) == GPIO.HIGH)
-    //    GPIO.write(led, GPIO.LOW);
-    //else
-    //    GPIO.write(led, GPIO.HIGH);
-//}, 3000);
 

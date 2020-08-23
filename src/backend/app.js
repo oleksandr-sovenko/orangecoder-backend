@@ -188,16 +188,6 @@ if (process.argv[2] === 'vm') {
  *	@command serve
  */
 if (process.argv[2] === 'serve') {
-	// Create Default Directories {
-		if (!DIR.exists(CONFIG.dir.conf)) {
-			DIR.create(CONFIG.dir.conf);
-
-			FILE.write(CONFIG.dir.conf + '/credentials.json', JSON.stringify({ 'username': 'admin', 'password': '21232f297a57a5a743894a0e4a801fc3' }));
-			FILE.write(CONFIG.dir.conf + '/timezone.json', JSON.stringify({ 'timezone': 'UTC' }));
-		}
-	// }
-
-
 	// Inter Process Communications {
 		const connectedSockets = new Set();
 

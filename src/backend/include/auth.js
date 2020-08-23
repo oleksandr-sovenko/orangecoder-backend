@@ -19,7 +19,7 @@
 const fs      = require('fs'),
       CONFIG  = require('../config'),
       SESSION = require('./session'),
-      { DATETIME, HASH } = require('./namespace')
+      { DATETIME, HASH } = require('./namespace');
 
 
 async function routes(fastify, options) {
