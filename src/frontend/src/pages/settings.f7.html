@@ -181,21 +181,21 @@ export default {
     `,
 
     mounted() {
-        var self = this,
-            $$   = self.$$,
-            app  = self.$app,
-            page = self.$el;
+        const self = this,
+              $$   = self.$$,
+              app  = self.$app,
+              page = self.$el;
 
         page.on('change', '[name="language"]', function() {
-            var el = $$(this);
+            const el = $$(this);
 
             localStorage['language'] = el.val();
             location.reload();
         });
 
         page.on('change', '[name="timezone"]', function() {
-            var el = $$(this),
-                timezone = el.val();
+            const el = $$(this),
+                  timezone = el.val();
 
             self.$app.request({
                 url: self.$app.data.url + '/settings/timezone',
@@ -229,7 +229,7 @@ export default {
         });
 
         page.on('click', '.button-change-password', function() {
-            var data = self.$app.form.convertToData('.form-change-password');
+            const data = self.$app.form.convertToData('.form-change-password');
 
             self.$app.request({
                 url: self.$app.data.url + '/settings/password',
@@ -265,10 +265,11 @@ export default {
         });
 
         page.on('change', '[type="file"]', function() {
-            const reader = new FileReader(),
-                  file   = el.target.files[0];
+            const el       = $$(this),
+                  reader   = new FileReader(),
+                  file     = el[0].files[0],
+                  formData = new FormData();
 
-            var formData = new FormData();
             formData.append('firmware', file, file.name);
 
             self.$app.dialog.preloader('Upgrading ...')

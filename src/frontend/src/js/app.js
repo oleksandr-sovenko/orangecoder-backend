@@ -229,7 +229,7 @@ var app = new Framework7({
     root: '#app',
     animate: false,
     name: 'OrangeCoder',
-    version: '1.0.0',
+    version: '1.0.0 (20200824.1)',
     theme: 'aurora',
 
     data: function () {
