@@ -19,6 +19,7 @@
     "fastify-static": "^2.5.0",
     "fastify-ws": "^1.0.3",
     "fs": "0.0.1-security",
+    "got": "^11.5.2",
     "md5": "^2.2.1",
     "moment": "^2.24.0",
     "os-utils": "0.0.14",

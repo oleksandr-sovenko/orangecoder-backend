@@ -27,7 +27,7 @@ const CONFIG       = require('../config'),
 	  { execSync } = require('child_process'),
 	  EventEmitter = require('events'),
 	  WebSocket    = require('ws'),
-	  request      = require('request'),
+	  got          = require('got'),
       // SerialPort   = require('serialport'),
       // Readline     = require('@serialport/parser-readline'),
 	  { GPIO, BMP280, HC_SC04 } = require('../modules/core');
@@ -37,22 +37,21 @@ const CONFIG       = require('../config'),
 	var profileData = {};
 
 	function cloudGetProfile(token, id, callback) {
-		request({
-			method: 'GET',
-			headers: {
-		  		'Authorization': token,
-		  		'Status': 'none',
-		 	},
-		 	json: {},
-		 	uri: CONFIG.url.cloud + '/api/profile/' + id,
-		}, function(error, response, body) {
-			if (callback !== undefined)
-				callback(error, response, body);
-		});
+		(async () => {
+		    const response = await got(CONFIG.url.cloud + '/api/profile/' + id, {
+		        responseType: 'json',
+	        	headers: {
+					'Authorization': token,
+					'Status': 'none',
+				},
+		    });
+		 
+			callback(response.body);
+		})();
 	}
 
 	function cloudGetProfileLoop(token, id) {
-		cloudGetProfile(token, id, function(error, response, body) {
+		cloudGetProfile(token, id, function(body) {
 			if (body !== undefined && body.data !== undefined && body.data.id !== undefined && body.data.data !== undefined) {
 				var profile = body.data.id,
 					json    = body.data.data;
@@ -92,6 +91,45 @@ const CONFIG       = require('../config'),
 
 	CLOUD.listenProfile = function(id) {
 		cloudGetProfileLoop(CLOUD.token, id);
+	};
+
+	CLOUD.getDevices = async function(callback) {
+		(async function() {
+		    const response = await got(CONFIG.url.cloud + '/api/devices', {
+		        responseType: 'json',
+	        	headers: {
+					'Authorization': CLOUD.token,
+					'Status': 'none',
+				},
+		    });
+		 
+		 	if (callback !== undefined)
+				callback(response.body.data);
+		})();
+	}
+
+	CLOUD.sendNotification = function(uuid, title, body, callback) {
+		(async function() {
+		    const response = await got.put(CONFIG.url.cloud + '/api/notification', {
+		        json: { uuid: uuid, title: title, body: body },
+		        responseType: 'json',
+	        	headers: {
+					'Authorization': CLOUD.token,
+					'Status': 'none',
+				},
+		    });
+		 
+		 	if (callback !== undefined)
+				callback(response.body.data);
+		})();
+	};
+
+	CLOUD.sendEmail = function(to, data) {
+
+	};
+
+	CLOUD.sendSMS = function(to, data) {
+
 	};
 // }
 
@@ -181,40 +219,52 @@ const CONFIG       = require('../config'),
 		},
 
 		put: function() {
+			if (typeof options === 'function')
+				callback = options;
+
+			(async () => {
+			    const response = await got.put(url, options);
+			 
+			 	if (callback !== undefined)
+					callback(response.body);
+			})();
 		},
 
-		delete: function() {
-		},
+		get: function(url, options, callback) {
+			if (typeof options === 'function')
+				callback = options;
 
-		get: function() {
-			// request({
-			// 	method: 'GET',
-			// 	headers: {
-			//   		'Authorization': token,
-			//   		'Status': 'none',
-			//  	},
-			//  	json: {},
-			//  	uri: CONFIG.url.cloud + '/api/profile/' + id,
-			// }, function(error, response, body) {
-			// 	if (callback !== undefined)
-			// 		callback(error, response, body);
-			// });
+			(async () => {
+			    const response = await got(url, options);
+			 
+			 	if (callback !== undefined)
+					callback(response.body);
+			})();
 		},
 
 		post: function() {
-			// request({
-			// 	method: 'POST',
-			// 	headers: {
-			//   		'Authorization': token,
-			//   		'Status': 'none',
-			//  	},
-			//  	json: {},
-			//  	uri: CONFIG.url.cloud + '/api/profile/' + id,
-			// }, function(error, response, body) {
-			// 	if (callback !== undefined)
-			// 		callback(error, response, body);
-			// });
-		}
+			if (typeof options === 'function')
+				callback = options;
+
+			(async () => {
+			    const response = await got.post(url, options);
+			 
+			 	if (callback !== undefined)
+					callback(response.body);
+			})();
+		},
+
+		delete: function() {
+			if (typeof options === 'function')
+				callback = options;
+
+			(async () => {
+			    const response = await got.delete(url, options);
+			 
+			 	if (callback !== undefined)
+					callback(response.body);
+			})();
+		},
 	}
 // }
 

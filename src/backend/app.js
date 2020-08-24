@@ -147,6 +147,8 @@ if (process.argv[2] === 'vm') {
 	// namespace CONSOLE {
 		const CONSOLE = {
 			log: function(message) {
+				console.log('CONSOLE.log', message);
+				
 				try {
 					ipc.write(JSON.stringify({ type: 'console', process: { id: filename.replace(/.*\//g, ''), pid: process.pid }, message: message }));
 				} catch(e) {
