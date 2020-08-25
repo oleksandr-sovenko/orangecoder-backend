@@ -24,6 +24,7 @@ const CONFIG  = require('./config'),
 	  vm      = require('vm'),
 	  os      = require('os'),
 	  fs      = require('fs'),
+	  moment  = require('moment'),
 	  fastify = require('fastify')({ logger: false }),
 	  path    = require('path'),
 	  INFO    = require('./include/info'),
@@ -136,7 +137,8 @@ if (process.argv[2] === 'vm') {
 
 	// uncaughtException {
 		process.on('uncaughtException', function(err) {
-			console.log(err);
+			fs.appendFileSync(CONFIG.dir.log + '/' + moment().format('YYYY-MM-DD') + '.log', moment().format('hh:mm:ss') + ' ' + err.stack + '\n\n');
+
 			const message = err.stack.replace(/\n/g, '').replace(/\).*/g, ')').replace(/ +(?= )/g,'');
 
 			ipc.write(JSON.stringify({ type: 'error', process: { id: filename.replace(/.*\//g, ''), pid: process.pid }, message: message }));
@@ -147,7 +149,7 @@ if (process.argv[2] === 'vm') {
 	// namespace CONSOLE {
 		const CONSOLE = {
 			log: function(message) {
-				console.log('CONSOLE.log', message);
+				// console.log('CONSOLE.log', message);
 				
 				try {
 					ipc.write(JSON.stringify({ type: 'console', process: { id: filename.replace(/.*\//g, ''), pid: process.pid }, message: message }));

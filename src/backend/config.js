@@ -30,6 +30,7 @@ const config = {
 		'public'   : ROOT_DIR + '/public',
 		'storage'  : ROOT_DIR + '/storage',
 		'modules'  : ROOT_DIR + '/modules',
+		'log'      : ROOT_DIR + '/log',
 	},
 
 	'url': {
@@ -50,9 +51,11 @@ const config = {
         fs.writeFileSync(config.dir.conf + '/timezone.json', JSON.stringify({ 'timezone': 'UTC' }));
     }
 
-    if (!fs.existsSync(config.dir.algoritms)) {
+    if (!fs.existsSync(config.dir.algoritms))
         fs.mkdirSync(config.dir.algoritms, { recursive: true });
-    }
+
+    if (!fs.existsSync(config.dir.log))
+        fs.mkdirSync(config.dir.log, { recursive: true });
 // }
 
 
