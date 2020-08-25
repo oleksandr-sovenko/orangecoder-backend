@@ -33,7 +33,7 @@ const config = {
 	},
 
 	'url': {
-		'cloud': 'http://mail.orangecoder.org:3000',
+		'cloud': 'https://cloud.orangecoder.org',
 	},
 
 	'socket': {

@@ -1,24 +1,40 @@
 // $1
 // Copyright (C) 2020 Oleksandr Sovenko (info@oleksandrsovenko.com)
 
-var led = 30;
+//var led = 30;
 
-GPIO.mode(led,  GPIO.OUTPUT);
-GPIO.write(led, GPIO.LOW);
+HTTP.get('https://api.myip.com', { responseType: 'json' }, function(data) {
+	CONSOLE.log(data);
+});
+
+HTTP.get('https://api.myip.com', function(data) {
+	CONSOLE.log(data);
+});
+
+
+//GPIO.mode(led,  GPIO.OUTPUT);
+//GPIO.write(led, GPIO.LOW);
 
 CLOUD.auth('0fe6a37a3a9f8b4b923a1d09c3557042');
+CLOUD.getDevices(function(devices) {
+	for (var i in devices) {
+		CONSOLE.log(devices[i]);
+
+		CLOUD.sendNotification(devices[i].uuid, 'test', DATETIME.format('DD-MM-YYYY hh:mm:ss'));
+	}
+});
 
 // Title 1
-CLOUD.listenProfile('535e277c-3d4a-4d3e-b256-9e3783382440');
-CLOUD.on('data', function(variable, value) {
-    if (variable == 'lamp23' && value == 'on')
-        GPIO.write(led, GPIO.HIGH);
+//CLOUD.listenProfile('535e277c-3d4a-4d3e-b256-9e3783382440');
+//CLOUD.on('data', function(variable, value) {
+//    if (variable == 'lamp23' && value == 'on')
+//        GPIO.write(led, GPIO.HIGH);
 
-    if (variable == 'lamp23' && value == 'off')
-        GPIO.write(led, GPIO.LOW);
+//    if (variable == 'lamp23' && value == 'off')
+//        GPIO.write(led, GPIO.LOW);
 
     // Debug 
-    CONSOLE.log(variable + ': ' + value);
-});
+//    CONSOLE.log(variable + ': ' + value);
+//});
 
 

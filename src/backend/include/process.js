@@ -36,7 +36,7 @@ const PROCESS = {
 
     run: function(id, session_id) {
         try {
-            execSync(`kill -9 $(ps aux | grep "${id}" | grep -v "kill" |awk '{ print $2 }') > /dev/null 2>&1`);
+            execSync(`kill -9 $(ps aux | grep "${id}" | grep -v "kill" | awk '{ print $2 }') > /dev/null 2>&1`);
         } catch(e) {
             // console.log(e);
         }
@@ -75,14 +75,15 @@ if (global.backend.process === undefined) {
 setInterval(function() {
     for (var id in global.backend.process) {
         var session_id = global.backend.process[id].session_id,
-            pid        = global.backend.process[id].script.pid;
+            pid        = global.backend.process[id].script.pid,
+            exitCode   = global.backend.process[id].script.exitCode;
 
-        if (!fs.existsSync('/proc/' + pid + '/exe')) {
+        if (exitCode !== null) {
             PROCESS.run(id, session_id);
             console.log('ReSpawn ' + id);
         }
     }
-}, 10000);
+}, 3000);
 
 
 module.exports = PROCESS;
