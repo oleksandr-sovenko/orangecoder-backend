@@ -16,21 +16,22 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const CONFIG       = require('../config'),
-      fs           = require('fs'),
-	  md5          = require('md5'),
-	  base64       = require('js-base64').Base64,
-	  path         = require('path'),
-	  uuid4        = require('uuid4'),
-	  moment       = require('moment'),
-	  fastify      = require('fastify')({ logger: false }),
-	  { execSync } = require('child_process'),
-	  EventEmitter = require('events'),
-	  WebSocket    = require('ws'),
-	  got          = require('got'),
-      // SerialPort   = require('serialport'),
-      // Readline     = require('@serialport/parser-readline'),
-	  { GPIO, BMP280, HC_SC04 } = require('../modules/core');
+const	CONFIG       = require('../config'),
+		LOG          = require('../include/log'),
+		fs           = require('fs'),
+		md5          = require('md5'),
+		base64       = require('js-base64').Base64,
+		path         = require('path'),
+		uuid4        = require('uuid4'),
+		moment       = require('moment'),
+		fastify      = require('fastify')({ logger: false }),
+		{ execSync } = require('child_process'),
+		EventEmitter = require('events'),
+		WebSocket    = require('ws'),
+		got          = require('got'),
+		// SerialPort   = require('serialport'),
+		// Readline     = require('@serialport/parser-readline'),
+		{ GPIO, BMP280, HC_SC04 } = require('../modules/core');
 
 
 // namespace CLOUD {
@@ -38,37 +39,47 @@ const CONFIG       = require('../config'),
 
 	function cloudGetProfile(token, id, callback) {
 		(async () => {
-		    const response = await got(CONFIG.url.cloud + '/api/profile/' + id, {
-		        responseType: 'json',
-	        	headers: {
-					'Authorization': token,
-					'Status': 'none',
-				},
-		    });
-		 
-			callback(response.body);
+			try {
+				const response = await got(CONFIG.url.cloud + '/api/profile/' + id, {
+			    	responseType: 'json',
+					headers: {
+						'Authorization': token,
+						'Status': 'none',
+					},
+				});
+
+				callback(response.body);
+			} catch(err) {
+				callback(undefined);
+
+				LOG.append(err.stack);
+			}
 		})();
 	}
 
 	function cloudGetProfileLoop(token, id) {
 		cloudGetProfile(token, id, function(body) {
-			if (body !== undefined && body.data !== undefined && body.data.id !== undefined && body.data.data !== undefined) {
-				var profile = body.data.id,
-					json    = body.data.data;
+			try {
+				if (body !== undefined && body.data !== undefined && body.data.id !== undefined && body.data.data !== undefined) {
+					var profile = body.data.id,
+						json    = body.data.data;
 
-				if (profileData[profile] === undefined)
-					profileData[profile] = {};
+					if (profileData[profile] === undefined)
+						profileData[profile] = {};
 
-				for (var variable in json) {
-					if (profileData[profile][variable] === undefined)
-						profileData[profile][variable] = json[variable].value;
-					else {
-						if (profileData[profile][variable] !== json[variable].value)
-							CLOUD.emit('data', variable, json[variable].value);
+					for (var variable in json) {
+						if (profileData[profile][variable] === undefined)
+							profileData[profile][variable] = json[variable].value;
+						else {
+							if (profileData[profile][variable] !== json[variable].value)
+								CLOUD.emit('data', variable, json[variable].value);
 
-						profileData[profile][variable] = json[variable].value;
+							profileData[profile][variable] = json[variable].value;
+						}
 					}
 				}
+			} catch(err) {
+				LOG.append(err.stack);
 			}
 
 			setTimeout(function() {
@@ -102,7 +113,7 @@ const CONFIG       = require('../config'),
 					'Status': 'none',
 				},
 		    });
-		 
+
 		 	if (callback !== undefined)
 				callback(response.body.data);
 		})();
@@ -118,7 +129,7 @@ const CONFIG       = require('../config'),
 					'Status': 'none',
 				},
 		    });
-		 
+
 		 	if (callback !== undefined)
 				callback(response.body.data);
 		})();
@@ -224,7 +235,7 @@ const CONFIG       = require('../config'),
 
 			(async () => {
 			    const response = await got.put(url, options);
-			 
+
 			 	if (callback !== undefined)
 					callback(response.body);
 			})();
@@ -236,7 +247,7 @@ const CONFIG       = require('../config'),
 
 			(async () => {
 			    const response = await got(url, options);
-			 
+
 			 	if (callback !== undefined)
 					callback(response.body);
 			})();
@@ -248,7 +259,7 @@ const CONFIG       = require('../config'),
 
 			(async () => {
 			    const response = await got.post(url, options);
-			 
+
 			 	if (callback !== undefined)
 					callback(response.body);
 			})();
@@ -260,7 +271,7 @@ const CONFIG       = require('../config'),
 
 			(async () => {
 			    const response = await got.delete(url, options);
-			 
+
 			 	if (callback !== undefined)
 					callback(response.body);
 			})();

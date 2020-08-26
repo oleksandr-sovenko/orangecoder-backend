@@ -30,6 +30,7 @@ const CONFIG  = require('./config'),
 	  INFO    = require('./include/info'),
 	  PROCESS = require('./include/process'),
 	  SESSION = require('./include/session'),
+      LOG     = require('./include/log'),
 	  { fork, execSync } = require('child_process'),
 	  { HASH, DATETIME, W1, I2C, GPIO, DIR, FILE, HTTP, CLOUD } = require('./include/namespace');
 
@@ -135,13 +136,28 @@ if (process.argv[2] === 'vm') {
 	// }
 
 
-	// uncaughtException {
+	// Trying to capture all nodejs errors {
+		function processLog(err) {
+			LOG.append(err.stack);
+
+			try {
+				const message = err.stack.replace(/\n/g, '').replace(/\).*/g, ')').replace(/ +(?= )/g,'');
+				ipc.write(JSON.stringify({ type: 'error', process: { id: filename.replace(/.*\//g, ''), pid: process.pid }, message: message }));
+			} catch(err) {
+				LOG.append(err.stack);
+			}
+		}
+
+		process.on('uncaughtExceptionMonitor', function(err) {
+			processLog(err)
+		});
+
+		process.on('unhandledRejection', function(err) {
+			processLog(err)
+		});
+
 		process.on('uncaughtException', function(err) {
-			fs.appendFileSync(CONFIG.dir.log + '/' + moment().format('YYYY-MM-DD') + '.log', moment().format('hh:mm:ss') + ' ' + err.stack + '\n\n');
-
-			const message = err.stack.replace(/\n/g, '').replace(/\).*/g, ')').replace(/ +(?= )/g,'');
-
-			ipc.write(JSON.stringify({ type: 'error', process: { id: filename.replace(/.*\//g, ''), pid: process.pid }, message: message }));
+			processLog(err)
 		});
 	// }
 
@@ -150,7 +166,7 @@ if (process.argv[2] === 'vm') {
 		const CONSOLE = {
 			log: function(message) {
 				// console.log('CONSOLE.log', message);
-				
+
 				try {
 					ipc.write(JSON.stringify({ type: 'console', process: { id: filename.replace(/.*\//g, ''), pid: process.pid }, message: message }));
 				} catch(e) {
