@@ -234,10 +234,17 @@ const	CONFIG       = require('../config'),
 				callback = options;
 
 			(async () => {
-			    const response = await got.put(url, options);
+				try {
+			    	const response = await got.put(url, options);
 
-			 	if (callback !== undefined)
-					callback(response.body);
+			 		if (callback !== undefined)
+						callback(response.body);
+				} catch(err) {
+			 		if (callback !== undefined)
+						callback(undefined);
+
+					LOG.append(err.stack);
+				}
 			})();
 		},
 
@@ -246,10 +253,17 @@ const	CONFIG       = require('../config'),
 				callback = options;
 
 			(async () => {
-			    const response = await got(url, options);
+				try {
+			    	const response = await got(url, options);
 
-			 	if (callback !== undefined)
-					callback(response.body);
+			 		if (callback !== undefined)
+						callback(response.body);
+				} catch(err) {
+			 		if (callback !== undefined)
+						callback(undefined);
+
+					LOG.append(err.stack);
+				}
 			})();
 		},
 
@@ -258,10 +272,17 @@ const	CONFIG       = require('../config'),
 				callback = options;
 
 			(async () => {
-			    const response = await got.post(url, options);
+				try {
+			    	const response = await got.post(url, options);
 
-			 	if (callback !== undefined)
-					callback(response.body);
+			 		if (callback !== undefined)
+						callback(response.body);
+				} catch(err) {
+			 		if (callback !== undefined)
+						callback(undefined);
+
+					LOG.append(err.stack);
+				}
 			})();
 		},
 
@@ -270,10 +291,17 @@ const	CONFIG       = require('../config'),
 				callback = options;
 
 			(async () => {
-			    const response = await got.delete(url, options);
+				try {
+			    	const response = await got.delete(url, options);
 
-			 	if (callback !== undefined)
-					callback(response.body);
+			 		if (callback !== undefined)
+						callback(response.body);
+				} catch(err) {
+			 		if (callback !== undefined)
+						callback(undefined);
+
+					LOG.append(err.stack);
+				}
 			})();
 		},
 	}
