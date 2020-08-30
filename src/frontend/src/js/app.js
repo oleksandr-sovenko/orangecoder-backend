@@ -43,7 +43,7 @@ import moment from 'moment-timezone';
 window.ace = ace
 window.base64 = base64
 
-var host = location.host;
+var host = '172.1.1.21';
 
 
 if (localStorage['timezone'] === undefined)
@@ -60,22 +60,31 @@ Template7.global = {
             'Navigation': 'Навігація',
             'Action': 'Дія',
             'Uptime': 'Час роботи',
+            'Board': 'Плата',
             'Temperature': 'Температура',
+            'Usage': 'Використання',
+            'Disk': 'Диск',
+            'Network Interfaces': 'Мережеві інтерфейси',
+            'Interface': 'Інтерфейс',
+            'Address': 'Адреса',
+            'Netmask': 'Маска мережі',
+            'CIDR': 'CIDR',
+            'Mac Address': 'Mac адреса',
 
             'Username': 'І\'мя користувача',
             'Password': 'Пароль',
             'version': 'версія',
             'Login': 'Авторизуватися',
 
-            'GPIO devices': 'GPIO пристрої',
+            //'GPIO devices': 'GPIO пристрої',
             'Programming': 'Програмування',
             'Storage': 'Cховище',
             'Logout': 'Вихід',
 
-            'List GPIO Devices': 'Список GPIO пристроїв',
-            'Name': 'Назва',
-            'Device': 'Пристрій',
-            'Activity': 'Активність',
+            //'List GPIO Devices': 'Список GPIO пристроїв',
+            //'Name': 'Назва',
+            //'Device': 'Пристрій',
+            //'Activity': 'Активність',
 
             'Date': 'Дата',
 
@@ -97,6 +106,8 @@ Template7.global = {
             'List of algorithms': 'Список алгоритмів',
             'New Algorithm': 'Новий алгоритм',
             'Edit Algorithm': 'Редагування алгоритму',
+            'Arbitrary name': 'Довільна назва',
+            'Short description': 'Короткий опис',
 
             // Storage
 
@@ -137,22 +148,31 @@ Template7.global = {
             'Navigation': 'Навигация',
             'Action': 'Действие',
             'Uptime': 'Время работы',
+            'Board': 'Плата',
             'Temperature': 'Температура',
+            'Usage': 'Использование',
+            'Disk': 'Диск',
+            'Network Interfaces': 'Сетевые интерфейсы',
+            'Interface': 'Интерфейс',
+            'Address': 'Адрес',
+            'Netmask': 'Маска сети',
+            'CIDR': 'CIDR',
+            'Mac Address': 'Mac адресс',
 
             'Username': 'Имя пользователя',
             'Password': 'Пароль',
             'version': 'версия',
             'Login': 'Авторизироваться',
 
-            'GPIO devices': 'GPIO устройства',
+            //'GPIO devices': 'GPIO устройства',
             'Programming': 'Программирование',
             'Storage': 'Хранилище',
             'Logout': 'Выход',
 
-            'List GPIO Devices': 'Список GPIO устройств',
-            'Name': 'Название',
-            'Device': 'Устройство',
-            'Activity': 'Активность',
+            //'List GPIO Devices': 'Список GPIO устройств',
+            //'Name': 'Название',
+            //'Device': 'Устройство',
+            //'Activity': 'Активность',
 
             'Date': 'Дата',
 
@@ -174,6 +194,8 @@ Template7.global = {
             'List of algorithms': 'Список алгоритмов',
             'New Algorithm': 'Новый алгоритм',
             'Edit Algorithm': 'Редактирование алгоритма',
+            'Arbitrary name': 'Произвольное имя',
+            'Short description': 'Краткое описание',
 
             // Storage
 
@@ -229,7 +251,7 @@ var app = new Framework7({
     root: '#app',
     animate: false,
     name: 'OrangeCoder',
-    version: '1.0.0 (20200824.1)',
+    version: '1.0.0 (20200830.1)',
     theme: 'aurora',
 
     data: function () {
@@ -246,6 +268,19 @@ var app = new Framework7({
     },
 
     methods: {
+        i18n: function(v) {
+            var t7 = Template7.global,
+                result = '';
+
+            try {
+                result = t7.i18n[t7.locale][v];
+            } catch(e) {
+                result = v;
+            }
+
+            return result !== undefined ? result : v;
+        },
+
         storage: {
             files: function(path, callback) {
                 app.request.json(app.data.url + '/storage/list/' + path, { }, function(files, status, xhr) {
@@ -470,26 +505,29 @@ function rws_start() {
             app.progressbar.set('.disk-usage', Math.round(100 - ((msg.data.disk.free / msg.data.disk.total) * 100)));
             app.progressbar.set('.ram-usage', Math.round(100 - ((msg.data.memory.free / msg.data.memory.total) * 100)));
 
-            var html_network =
-                '<div class="row">' +
-                '   <div class="col"><strong>Interface</strong></div>' +
-                '   <div class="col"><strong>Address</strong></div>' +
-                '   <div class="col"><strong>Netmask</strong></div>' +
-                '   <div class="col"><strong>CIDR</strong></div>' +
-                '   <div class="col"><strong>Mac Address</strong></div>' +
-                '</div>';
+            var html_network = `
+                <div class="row">
+                   <div class="col"><strong>${app.methods.i18n('Interface')}</strong></div>
+                   <div class="col"><strong>${app.methods.i18n('Address')}</strong></div>
+                   <div class="col"><strong>${app.methods.i18n('Netmask')}</strong></div>
+                   <div class="col"><strong>${app.methods.i18n('CIDR')}</strong></div>
+                   <div class="col"><strong>${app.methods.i18n('Mac Address')}</strong></div>
+                </div>
+            `;
 
             for (var intr in msg.data.network) {
                 for (var i in msg.data.network[intr]) {
                     var item = msg.data.network[intr][i];
 
-                    html_network += '<div class="row">';
-                    html_network += '   <div class="col">' + item.family + ' ' + intr + '</div>';
-                    html_network += '   <div class="col">' + item.address + '</div>';
-                    html_network += '   <div class="col">' + item.netmask + '</div>';
-                    html_network += '   <div class="col">' + item.cidr + '</div>';
-                    html_network += '   <div class="col">' + item.mac + '</div>';
-                    html_network += '</div>';
+                    html_network += `
+                        <div class="row">
+                           <div class="col">${item.family} ${intr}</div>
+                           <div class="col">${item.address}</div>
+                           <div class="col">${item.netmask}</div>
+                           <div class="col">${item.cidr}</div>
+                           <div class="col">${item.mac}</div>
+                        </div>
+                    `;
                 }
             }
 
