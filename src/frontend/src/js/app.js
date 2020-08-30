@@ -43,7 +43,7 @@ import moment from 'moment-timezone';
 window.ace = ace
 window.base64 = base64
 
-var host = location.host;
+var host = '172.1.1.21'; //location.host;
 
 
 if (localStorage['timezone'] === undefined)
