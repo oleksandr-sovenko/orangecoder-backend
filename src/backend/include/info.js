@@ -65,28 +65,28 @@ function get_device_info() {
 
         if (items.length > 1 && !/Physical/.test(temp[i])) {
             gpio.push({
-                'H2+': items[1].trim(),
-                'wPi': items[2].trim(),
-                'Name': items[3].trim(),
-                'Mode': items[4].trim(),
-                'V': items[5].trim(),
-                'Physical': items[6].trim()
-            });
-
-            gpio.push({
-                'H2+': items[13].trim(),
-                'wPi': items[12].trim(),
-                'Name': items[11].trim(),
-                'Mode': items[10].trim(),
-                'V': items[9].trim(),
-                'Physical': items[8].trim()
+                left: {
+                    'H2+': items[1].trim(),
+                    'wPi': items[2].trim(),
+                    'Name': items[3].trim(),
+                    'Mode': items[4].trim(),
+                    'V': items[5].trim(),
+                    'Physical': items[6].trim()
+                },
+                right: {
+                    'Physical': items[8].trim(),
+                    'V': items[9].trim(),
+                    'Mode': items[10].trim(),
+                    'Name': items[11].trim(),
+                    'wPi': items[12].trim(),
+                    'H2+': items[13].trim(),
+                }
             });
         }
     }
 
     if (fs.existsSync(CONFIG.dir.public + '/static/imgs/' + board + '.svg'))
-        scheme = fs.readFileSync(CONFIG.dir.public + '/static/imgs/' + board + '.svg').toString()
-                .replace(/.*<svg/s, '<svg');
+        scheme = fs.readFileSync(CONFIG.dir.public + '/static/imgs/' + board + '.svg').toString();
 
     return {
         platform: 'Linux',
