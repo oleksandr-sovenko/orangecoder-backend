@@ -19,7 +19,7 @@
 const fs = require('fs'),
       os = require('os'),
       { execSync } = require('child_process'),
-      CONFIG  = require('./config');
+      CONFIG  = require('../config');
 
 
 /**
@@ -50,7 +50,7 @@ function get_device_info() {
                 .toString()
                 .replace(/.*Serial      : /s, '').trim();
 
-    var result = await execSync('gpio readall').toString(),
+    var result = execSync('gpio readall').toString(),
         temp   = result.split('\n'),
         gpio   = [],
         fields = [];
