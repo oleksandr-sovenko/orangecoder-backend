@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="454px" height="551px" viewBox="0 0 454 551" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>Orange Pi Zero 2</title>
+<svg viewBox="0 0 454 551" version="1.1" xmlns="http://www.w3.org/2000/svg">
     <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <g id="Orange-Pi-Zero" transform="translate(0.000000, 1.000000)">
             <rect id="Board" fill="#3A80BE" fill-rule="nonzero" x="0" y="18" width="454" height="467" rx="8"></rect>
@@ -40,39 +38,41 @@
             <rect id="Chip" stroke="#4A4A4A" fill="#4A4A4A" fill-rule="nonzero" x="113" y="70" width="78" height="133"></rect>
             <rect id="Chip" stroke="#4A4A4A" fill="#4A4A4A" fill-rule="nonzero" x="309" y="251" width="50" height="50"></rect>
             <rect id="USB-OTG" stroke="#979797" fill="#D8D8D8" fill-rule="nonzero" x="317" y="0" width="74" height="57"></rect>
-            <circle id="SCLK" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="376" r="5"></circle>
-            <circle id="GND" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="326" r="5"></circle>
-            <circle id="RTS2" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="351" r="5"></circle>
-            <circle id="MOSI" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="326" r="5"></circle>
-            <circle id="3.3v" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="301" r="5"></circle>
-            <circle id="CTS2" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="276" r="5"></circle>
-            <circle id="TxD2" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="251" r="5"></circle>
-            <circle id="RxD2" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="226" r="5"></circle>
             <circle id="Oval" stroke="#F4D27F" stroke-width="6" fill="#FFFFFF" fill-rule="nonzero" cx="423.5" cy="454.5" r="21.5"></circle>
             <circle id="Oval" stroke="#F4D27F" stroke-width="6" fill="#FFFFFF" fill-rule="nonzero" cx="30.5" cy="454.5" r="21.5"></circle>
             <circle id="Oval" stroke="#F4D27F" stroke-width="6" fill="#FFFFFF" fill-rule="nonzero" cx="30.5" cy="48.5" r="21.5"></circle>
             <circle id="Oval" stroke="#F4D27F" stroke-width="6" fill="#FFFFFF" fill-rule="nonzero" cx="423.5" cy="48.5" r="21.5"></circle>
-            <circle id="GND" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="201" r="5"></circle>
-            <circle id="TxD3" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="176" r="5"></circle>
-            <circle id="CE0" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="376" r="5"></circle>
-            <circle id="GND" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="401" r="5"></circle>
-            <circle id="GPIO.11" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="401" r="5"></circle>
-            <circle id="TX" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="91" cy="415" r="5"></circle>
-            <circle id="RX" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="91" cy="440" r="5"></circle>
             <circle id="GND" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="91" cy="465" r="5"></circle>
-            <circle id="MISO" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="351" r="5"></circle>
-            <circle id="GPIO.5" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="301" r="5"></circle>
-            <circle id="GPIO.4" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="276" r="5"></circle>
-            <circle id="GND" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="251" r="5"></circle>
-            <circle id="GPIO.1" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="226" r="5"></circle>
-            <circle id="RxD3" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="201" r="5"></circle>
-            <circle id="GPIO.7" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="176" r="5"></circle>
-            <circle id="GND" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="151" r="5"></circle>
-            <circle id="SCL.0" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="151" r="5"></circle>
-            <circle id="5v" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="126" r="5"></circle>
-            <circle id="SDA.0" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="126" r="5"></circle>
-            <circle id="5v" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="101" r="5"></circle>
-            <circle id="3.3v" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="101" r="5"></circle>
+            <circle id="RX" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="91" cy="440" r="5"></circle>
+            <circle id="TX" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="91" cy="415" r="5"></circle>
+            <rect data-pin="28" id="PWR-LED" stroke="#7ED321" fill="#7ED321" x="86" y="29" width="28" height="15"></rect>
+            <rect data-pin="27" id="STAT-LED" stroke="#DF122B" fill="#E03348" x="125" y="29" width="28" height="15"></rect>
+            <circle data-pin="26" id="GPIO.11" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="401" r="5"></circle>
+            <circle data-pin="25" id="GND" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="401" r="5"></circle>
+            <circle data-pin="24" id="CE0" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="376" r="5"></circle>
+            <circle data-pin="23" id="SCLK" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="376" r="5"></circle>
+            <circle data-pin="22" id="RTS2" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="351" r="5"></circle>
+            <circle data-pin="21" id="MISO" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="351" r="5"></circle>
+            <circle data-pin="20" id="GND" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="326" r="5"></circle>
+            <circle data-pin="19" id="MOSI" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="326" r="5"></circle>
+            <circle data-pin="18" id="GPIO.5" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="301" r="5"></circle>
+            <circle data-pin="17" id="3.3v" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="301" r="5"></circle>
+            <circle data-pin="16" id="GPIO.4" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="276" r="5"></circle>
+            <circle data-pin="15" id="CTS2" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="276" r="5"></circle>
+            <circle data-pin="14" id="GND" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="251" r="5"></circle>
+            <circle data-pin="13" id="TxD2" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="251" r="5"></circle>
+            <circle data-pin="12" id="GPIO.1" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="226" r="5"></circle>
+            <circle data-pin="11" id="RxD2" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="226" r="5"></circle>
+            <circle data-pin="10" id="RxD3" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="201" r="5"></circle>
+            <circle data-pin="9" id="GND" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="201" r="5"></circle>
+            <circle data-pin="8" id="TxD3" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="176" r="5"></circle>
+            <circle data-pin="7" id="GPIO.7" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="176" r="5"></circle>
+            <circle data-pin="6" id="GND" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="151" r="5"></circle>
+            <circle data-pin="5" id="SCL.0" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="151" r="5"></circle>
+            <circle data-pin="4" id="5v" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="126" r="5"></circle>
+            <circle data-pin="3" id="SDA.0" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="126" r="5"></circle>
+            <circle data-pin="2" id="5v" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="40" cy="101" r="5"></circle>
+            <circle data-pin="1" id="3.3v" stroke="#F4D27F" stroke-width="3" fill="#FFFFFF" fill-rule="nonzero" cx="18" cy="101" r="5"></circle>
             <g id="H2" transform="translate(299.500000, 153.500000) rotate(-90.000000) translate(-299.500000, -153.500000) translate(276.000000, 133.000000)" fill="#FFFFFF" fill-rule="nonzero" font-family="Arial-BoldMT, Arial" font-size="36" font-weight="bold">
                 <text>
                     <tspan x="0" y="33">H2</tspan>
