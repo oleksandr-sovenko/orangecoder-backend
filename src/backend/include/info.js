@@ -17,7 +17,9 @@
 
 
 const fs = require('fs'),
-      os = require('os');
+      os = require('os'),
+      { execSync } = require('child_process'),
+      CONFIG  = require('./config');
 
 
 /**
@@ -28,7 +30,8 @@ const fs = require('fs'),
 function get_device_info() {
     var model   = 'Unknown',
         serial  = 'Unknown',
-        version = '';
+        version = '',
+        scheme  = '';
 
     if (fs.existsSync('/etc/armbian-release')) {
         model = fs.readFileSync('/etc/armbian-release')
@@ -47,12 +50,46 @@ function get_device_info() {
                 .toString()
                 .replace(/.*Serial      : /s, '').trim();
 
+    var result = await execSync('gpio readall').toString(),
+        temp   = result.split('\n'),
+        gpio   = [],
+        fields = [];
+
+    for (var i in temp) {
+        var items = temp[i].split('|');
+
+        if (items.length > 1 && !/Physical/.test(temp[i])) {
+            gpio.push({
+                'H2+': items[1].trim(),
+                'wPi': items[2].trim(),
+                'Name': items[3].trim(),
+                'Mode': items[4].trim(),
+                'V': items[5].trim(),
+                'Physical': items[6].trim()
+            });
+
+            gpio.push({
+                'H2+': items[13].trim(),
+                'wPi': items[12].trim(),
+                'Name': items[11].trim(),
+                'Mode': items[10].trim(),
+                'V': items[9].trim(),
+                'Physical': items[8].trim()
+            });
+        }
+    }
+
+    if (fs.existsSync(CONFIG.dir.public + '/static/imgs/' + model + '.svg'))
+        scheme = fs.readFileSync(CONFIG.dir.public + '/static/imgs/' + model + '.svg');
+
     return {
         platform: 'Linux',
         version: os.release() + (version !== '' ? ', Armbian ' + version : ''),
         model: model,
         manufacturer: 'Xunlong',
-        serial: serial
+        serial: serial,
+        scheme: scheme,
+        gpio: gpio
     }
 }
 

@@ -307,7 +307,6 @@ if (process.argv[2] === 'serve') {
 		fastify.register(require('./include/management'));
 		fastify.register(require('./include/algorithm'));
 		fastify.register(require('./include/storage'));
-		fastify.register(require('./include/gpio'));
 
 		fastify.ready(async function(err) {
  			fastify.ws.on('connection', function(socket, req) {
