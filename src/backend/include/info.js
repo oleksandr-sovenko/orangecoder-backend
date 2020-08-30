@@ -28,27 +28,32 @@ const fs = require('fs'),
  *  @param callback
  */
 function get_device_info() {
-    var model   = 'Unknown',
+    var board   = '',
+        model   = 'Unknown',
         serial  = 'Unknown',
         version = '',
         scheme  = '';
 
     if (fs.existsSync('/etc/armbian-release')) {
-        model = fs.readFileSync('/etc/armbian-release')
-                .toString()
+        var content = fs.readFileSync('/etc/armbian-release').toString();
+
+        board = content
+                .replace(/.*BOARD=/s, '')
+                .replace(/\n.*/s, '').trim();
+
+        model = content
                 .replace(/.*BOARD_NAME="/s, '')
                 .replace(/".*/s, '').trim();
 
-        version = fs.readFileSync('/etc/armbian-release')
-                .toString()
-                .replace(/.*VERSION=/s, '')
-                .replace(/\n.*/s, '').trim();
+        version = content
+                  .replace(/.*VERSION=/s, '')
+                  .replace(/\n.*/s, '').trim();
     }
 
     if (fs.existsSync('/proc/cpuinfo'))
         serial = fs.readFileSync('/proc/cpuinfo')
                 .toString()
-                .replace(/.*Serial      : /s, '').trim();
+                .replace(/.*Serial\t\t: /s, '').trim();
 
     var result = execSync('gpio readall').toString(),
         temp   = result.split('\n'),
@@ -79,8 +84,9 @@ function get_device_info() {
         }
     }
 
-    if (fs.existsSync(CONFIG.dir.public + '/static/imgs/' + model + '.svg'))
-        scheme = fs.readFileSync(CONFIG.dir.public + '/static/imgs/' + model + '.svg');
+    if (fs.existsSync(CONFIG.dir.public + '/static/imgs/' + board + '.svg'))
+        scheme = fs.readFileSync(CONFIG.dir.public + '/static/imgs/' + board + '.svg').toString()
+                .replace(/.*<svg/s, '<svg');
 
     return {
         platform: 'Linux',
