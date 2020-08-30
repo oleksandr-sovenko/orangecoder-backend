@@ -68,14 +68,14 @@ const	CONFIG       = require('../config'),
 						profileData[profile] = {};
 
 					for (var variable in json) {
-						if (profileData[profile][variable] === undefined)
-							profileData[profile][variable] = json[variable].value;
-						else {
+						if (profileData[profile][variable] === undefined) {
+							CLOUD.emit('data', variable, json[variable].value);
+						} else {
 							if (profileData[profile][variable] !== json[variable].value)
 								CLOUD.emit('data', variable, json[variable].value);
-
-							profileData[profile][variable] = json[variable].value;
 						}
+
+						profileData[profile][variable] = json[variable].value;
 					}
 				}
 			} catch(err) {
