@@ -34,7 +34,7 @@ void signalHandler(int signum) {
 	if (bmp280)
 		delete bmp280;
 
-	exit(signum);  
+	exit(signum);
 }
 
 

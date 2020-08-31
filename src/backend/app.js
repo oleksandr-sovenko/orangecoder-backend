@@ -32,7 +32,7 @@ const CONFIG  = require('./config'),
 	  SESSION = require('./include/session'),
       LOG     = require('./include/log'),
 	  { fork, execSync } = require('child_process'),
-	  { HASH, DATETIME, W1, I2C, GPIO, DIR, FILE, HTTP, CLOUD } = require('./include/namespace');
+	  { HASH, DATETIME, W1, I2C, GPIO, HC_SC04, DIR, FILE, HTTP, CLOUD } = require('./include/namespace');
 
 
 var clients = {},
@@ -182,6 +182,7 @@ if (process.argv[2] === 'vm') {
 			W1       : W1,
 			I2C      : I2C,
 			GPIO     : GPIO,
+			HC_SC04  : HC_SC04,
 			CONSOLE  : CONSOLE,
 			DATETIME : DATETIME,
 			DIR      : DIR,

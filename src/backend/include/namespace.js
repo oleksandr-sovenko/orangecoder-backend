@@ -31,7 +31,7 @@ const	CONFIG       = require('../config'),
 		got          = require('got'),
 		// SerialPort   = require('serialport'),
 		// Readline     = require('@serialport/parser-readline'),
-		{ GPIO, BMP280, HC_SC04 } = require('../modules/core');
+		{ GPIO, BMP280, HC_SC04, DS18B20 } = require('../modules/core');
 
 
 // namespace CLOUD {
@@ -344,7 +344,7 @@ const	CONFIG       = require('../config'),
 
 // namespace W1 {
 	const W1 = {
-
+		DS18B20: DS18B20,
 	}
 // }
 
@@ -601,4 +601,4 @@ const	CONFIG       = require('../config'),
 // }
 
 
-module.exports = { HASH, MATH, DATETIME, I2C, GPIO, DIR, FILE, HTTP, CLOUD };
+module.exports = { HASH, MATH, DATETIME, I2C, GPIO, HC_SC04, DIR, FILE, HTTP, CLOUD, W1 };
