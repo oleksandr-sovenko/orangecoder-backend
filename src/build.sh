@@ -19,13 +19,13 @@
 CWD=$(pwd)
 
 npm i -g pkg
+npm i -g node-gyp
 
 # modules
 cd ${CWD}/backend-modules/core/
 npm i
-npm i node-addon-api
-node-gyp configure
-node-gyp rebuild
+# npm i node-addon-api
+node-gyp configure && node-gyp rebuild && \
 cp ${CWD}/backend-modules/core/build/Release/core.node \
    ${CWD}/../modules/core.node
 
@@ -44,6 +44,6 @@ ln -svf orangecoder-node12.2.0-linux-armv7-1.0 orangecoder
 
 
 # pack
-cd ${CWD}/../
-tar Jcfv orangecoder-latest.upd bin/ modules/ public/
+# cd ${CWD}/../
+# tar Jcfv orangecoder-latest.upd bin/ modules/ public/
 
