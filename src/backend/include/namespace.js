@@ -142,6 +142,59 @@ const	CONFIG       = require('../config'),
 	CLOUD.sendSMS = function(to, data) {
 
 	};
+
+	CLOUD.setProfile = async function(id, data, callback) {
+		// if (arguments.length == 2) {
+		// 	if (typeof id === 'string' && typeof callback === 'function') {
+				(async () => {
+					try {
+						const response = await got.post(CONFIG.url.cloud + '/api/profile/' + id, {
+					    	responseType: 'json',
+							headers: {
+								'Authorization': CLOUD.token,
+								'Status': 'none',
+							},
+							json: data
+						});
+
+						callback(response.body);
+					} catch(err) {
+						callback(undefined);
+
+						LOG.append(err.stack);
+					}
+				})();
+		// 	} else
+		// 	    throw new Error('CLOUD.getProfile: Argument have to be string and function!');
+		// } else
+		// 	throw new Error('CLOUD.getProfile: Too few arguments!');
+	};
+
+	CLOUD.getProfile = async function(id, callback) {
+		if (arguments.length == 2) {
+			if (typeof id === 'string' && typeof callback === 'function') {
+				(async () => {
+					try {
+						const response = await got(CONFIG.url.cloud + '/api/profile/' + id, {
+					    	responseType: 'json',
+							headers: {
+								'Authorization': CLOUD.token,
+								'Status': 'none',
+							},
+						});
+
+						callback(response.body);
+					} catch(err) {
+						callback(undefined);
+
+						LOG.append(err.stack);
+					}
+				})();
+			} else
+			    throw new Error('CLOUD.getProfile: Argument have to be string and function!');
+		} else
+			throw new Error('CLOUD.getProfile: Too few arguments!');
+	};
 // }
 
 
