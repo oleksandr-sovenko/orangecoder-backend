@@ -1,1 +1,0 @@
-cmd_Release/obj.target/core.node := g++ -o Release/obj.target/core.node -shared -pthread -rdynamic  -Wl,-soname=core.node -Wl,--start-group Release/obj.target/core/core.o Release/obj.target/core/bmp280/bmp280.o -Wl,--end-group -lwiringPi -lpthread
