@@ -27,6 +27,8 @@ const   CONFIG = require('../config'),
  */
 const LOG = {
     append: function(message) {
+    	console.log('{ LOG.append } =>', message);
+
         fs.appendFileSync(CONFIG.dir.log + '/' + moment().format('YYYY-MM-DD') + '.log', moment().format('hh:mm:ss') + ' ' + message + '\n\n');
     }
 }

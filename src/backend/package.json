@@ -28,7 +28,8 @@
     "serialport": "^9.0.1",
     "system-health-monitor": "^1.2.0",
     "uuid4": "^1.1.4",
-    "vm2": "^3.8.4"
+    "vm2": "^3.8.4",
+    "wiring-pi": "^2.2.1"
   },
   "scripts": {
     "start": "nodejs app.js"

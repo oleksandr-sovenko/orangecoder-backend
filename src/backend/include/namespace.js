@@ -31,7 +31,7 @@ const	CONFIG       = require('../config'),
 		got          = require('got'),
 		// SerialPort   = require('serialport'),
 		// Readline     = require('@serialport/parser-readline'),
-		{ GPIO, BMP280, HC_SC04, DS18B20 } = require('../modules/core');
+		{ GPIO, BMP280, HC_SC04 } = require('../modules/core');
 
 
 // namespace CLOUD {
@@ -344,7 +344,54 @@ const	CONFIG       = require('../config'),
 
 // namespace W1 {
 	const W1 = {
-		DS18B20: DS18B20,
+		_path: '/sys/bus/w1/devices',
+
+		getDevices: function() {
+			var result = [];
+
+			if (!fs.existsSync(this._path))
+				return result;
+
+			var list = fs.readdirSync(this._path);
+
+			for (var i in list) {
+				if (fs.existsSync(this._path + '/' + list[i] + '/w1_slave'))
+					result.push({ addr: list[i] });
+			}
+
+			return result;
+		},
+
+		DS18B20: function(addr) {
+			this._addr = addr;
+
+			this.getTemperatureC = function() {
+				var filename = this._path + '/' + this._addr + '/w1_slave',
+					value    = null;
+
+				if (!fs.existsSync(filename))
+					return value;
+
+				try {
+					value = parseFloat(fs.readFileSync(filename).toString().replace(/.*t=/s, '').trim()) / 1000;
+				} catch(err) {
+					return null;					
+				}
+
+				return value;
+			}
+
+			this.getTemperatureF = function() {
+				var value = this.getTemperatureC();
+
+				if (value === null)
+					return value;
+
+				return (value * 1.8) + 32;
+			}
+
+			return this;
+		},
 	}
 // }
 

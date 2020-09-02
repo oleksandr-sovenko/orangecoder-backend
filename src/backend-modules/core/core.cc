@@ -133,56 +133,6 @@ void signalHandler(int signum) {
 // }
 
 
-// DS18B20 {
-	Napi::Value DS18B20_Temperature_C(const Napi::CallbackInfo& info) {
-		Napi::Env env = info.Env();
-
-		const std::string addr = info.This().As<Napi::Object>().Get("_addr").As<Napi::String>();
-
-		FILE  *file;
-		char  buffer[1024];
-
-		strcpy(buffer, "/sys/bus/w1/devices/");
-		strcat(buffer, addr.c_str());
-		strcat(buffer, "/w1_slave");
-
-		file = fopen(buffer, "r");
-		if (file) {
-			size_t size = fread(&buffer, 1, sizeof(buffer), file);
-
-			if (size > 0) {
-
-			}
-
-			fclose(file);
-
-			return Napi::Number::New(env, (float) atoi(strstr(buffer, "t=") + 2) / 1000);
-		} else {
-			return env.Null();
-		}
-	}
-
-	Napi::Value DS18B20_Init(const Napi::CallbackInfo& info) {
-		Napi::Env env = info.Env();
-
-		if (!info[0].IsString()) {
-			Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
-			return env.Null();
-		}
-
-		const std::string addr = info[0].As<Napi::String>();
-
-		Napi::Object object = Napi::Object::New(env);
-		object.Set(Napi::String::New(env, "_addr"),
-			Napi::String::New(env, addr));
-		object.Set(Napi::String::New(env, "temperature_C"),
-			Napi::Function::New(env, DS18B20_Temperature_C));
-
-		return object;
-	}
-// }
-
-
 // HC_SC04 {
 	Napi::Value HC_SC04_Distance_CM(const Napi::CallbackInfo& info) {
 		Napi::Env env = info.Env();
@@ -231,7 +181,7 @@ void signalHandler(int signum) {
 			Napi::Number::New(env, trig));
 		object.Set(Napi::String::New(env, "_echo"),
 			Napi::Number::New(env, echo));
-		object.Set(Napi::String::New(env, "distance_cm"),
+		object.Set(Napi::String::New(env, "getDistanceCM"),
 			Napi::Function::New(env, HC_SC04_Distance_CM));
 
 		return object;
@@ -241,8 +191,6 @@ void signalHandler(int signum) {
 
 Napi::Object Module(Napi::Env env, Napi::Object exports) {
 	Napi::Object GPIO    = Napi::Object::New(env);
-	// Napi::Object BMP280  = Napi::Object::New(env);
-	// Napi::Object DS18B20 = Napi::Object::New(env);
 
 	GPIO.Set(Napi::String::New(env, "mode"),
 		Napi::Function::New(env, GPIO_Mode));
@@ -259,17 +207,6 @@ Napi::Object Module(Napi::Env env, Napi::Object exports) {
 	GPIO.Set(Napi::String::New(env, "HIGH"),
 		Napi::Number::New(env, HIGH));
 	exports.Set(Napi::String::New(env, "GPIO"), GPIO);
-
-	// BMP280.Set(Napi::String::New(env, "BMP280_Init"),
-	//	Napi::Function::New(env, BMP280_Init));
-	// exports.Set(Napi::String::New(env, "BMP280"), BMP280);
-
-	// DS18B20.Set(Napi::String::New(env, "DS18B20"),
-	//	Napi::Function::New(env, DS18B20_Init));
-	// exports.Set(Napi::String::New(env, "DS18B20"), DS18B20);
-
-	exports.Set(Napi::String::New(env, "DS18B20"),
-		Napi::Function::New(env, DS18B20_Init));
 
 	exports.Set(Napi::String::New(env, "BMP280"),
 		Napi::Function::New(env, BMP280_Init));
