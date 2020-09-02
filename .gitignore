@@ -1,3 +1,5 @@
 bin
 orangecoder-latest.upd
+src/backend/node_modules
 src/backend-modules/core/build
+src/frontend/node_modules
