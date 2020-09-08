@@ -48,9 +48,11 @@ const	CONFIG       = require('../config'),
 					},
 				});
 
-				callback(response.body);
+				if (typeof callback === 'function')
+					callback(response.body);
 			} catch(err) {
-				callback(undefined);
+				if (typeof callback === 'function')
+					callback(undefined);
 
 				LOG.append(err.stack);
 			}
@@ -114,7 +116,7 @@ const	CONFIG       = require('../config'),
 				},
 		    });
 
-		 	if (callback !== undefined)
+		 	if (typeof callback === 'function')
 				callback(response.body.data);
 		})();
 	}
@@ -130,7 +132,7 @@ const	CONFIG       = require('../config'),
 				},
 		    });
 
-		 	if (callback !== undefined)
+		 	if (typeof callback === 'function')
 				callback(response.body.data);
 		})();
 	};
@@ -157,9 +159,11 @@ const	CONFIG       = require('../config'),
 							json: data
 						});
 
-						callback(response.body);
+						if (typeof callback === 'function')
+							callback(response.body);
 					} catch(err) {
-						callback(undefined);
+						if (typeof callback === 'function')
+							callback(undefined);
 
 						LOG.append(err.stack);
 					}
@@ -290,10 +294,10 @@ const	CONFIG       = require('../config'),
 				try {
 			    	const response = await got.put(url, options);
 
-			 		if (callback !== undefined)
+			 		if (typeof callback === 'function')
 						callback(response.body);
 				} catch(err) {
-			 		if (callback !== undefined)
+			 		if (typeof callback === 'function')
 						callback(undefined);
 
 					LOG.append(err.stack);
@@ -309,10 +313,10 @@ const	CONFIG       = require('../config'),
 				try {
 			    	const response = await got(url, options);
 
-			 		if (callback !== undefined)
+			 		if (typeof callback === 'function')
 						callback(response.body);
 				} catch(err) {
-			 		if (callback !== undefined)
+			 		if (typeof callback === 'function')
 						callback(undefined);
 
 					LOG.append(err.stack);
@@ -328,10 +332,10 @@ const	CONFIG       = require('../config'),
 				try {
 			    	const response = await got.post(url, options);
 
-			 		if (callback !== undefined)
+			 		if (typeof callback === 'function')
 						callback(response.body);
 				} catch(err) {
-			 		if (callback !== undefined)
+			 		if (typeof callback === 'function')
 						callback(undefined);
 
 					LOG.append(err.stack);
@@ -347,10 +351,10 @@ const	CONFIG       = require('../config'),
 				try {
 			    	const response = await got.delete(url, options);
 
-			 		if (callback !== undefined)
+			 		if (typeof callback === 'function')
 						callback(response.body);
 				} catch(err) {
-			 		if (callback !== undefined)
+			 		if (typeof callback === 'function')
 						callback(undefined);
 
 					LOG.append(err.stack);
