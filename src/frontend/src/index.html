@@ -50,11 +50,57 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 </head>
 <body>
     <div id="app">
-        <div class="view view-main view-init safe-areas" data-url="/"></div>
+        <div class="view view-main view-init safe-areas"></div>
     </div>
 
-    <div class="templates template-app-pannel">
-        <div class="panel panel-left panel-cover theme-dark panel-init" data-visible-breakpoint="960">
+    <script id="loginScreen" type="text/template7">
+        <div class="login-screen">
+            <div class="view">
+                <div class="page">
+                    <div class="page-content login-screen-content">
+                        <div class="login-screen-title text-align-center">
+                            <img width="200" src="static/imgs/orangecoder-logo.png">
+                        </div>
+                        <form>
+                            <div class="list">
+                                <ul>
+                                    <li class="item-content item-input" style="padding-right: 20px;">
+                                        <div class="item-inner">
+                                            <div class="item-title item-label">{{_t 'Username'}}</div>
+                                            <div class="item-input-wrap">
+                                                <input type="text" name="username" placeholder="{{_t 'Your Username'}}" autocomplete="new-password">
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="item-content item-input" style="padding-right: 20px;">
+                                        <div class="item-inner">
+                                            <div class="item-title item-label">{{_t 'Password'}}</div>
+                                            <div class="item-input-wrap">
+                                                <input type="password" name="password" placeholder="{{_t 'Your Password'}}" autocomplete="new-password">
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="list">
+                                <div class="block-footer" style="margin-bottom: 20px;">
+                                    {{_t 'version'}} <span class="version">-</span>
+                                </div>
+                                <ul style="padding-left: 20px; padding-right: 20px;">
+                                    <li>
+                                        <a href="#" class="button button-raised button-fill button-login">{{_t 'Sign In'}}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="leftPanel" type="text/template7">
+        <div class="panel panel-left panel-cover theme-dark">
             <div class="view view-init" data-view="left">
                 <div class="page">
                     <div class="navbar">
@@ -87,50 +133,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="templates template-app-login-screen">
-        <div class="{{className}}">
-            <div class="view">
-                <div class="page">
-                    <div class="page-content login-screen-content">
-                        <p align="center"><img width="200" src="static/imgs/orangecoder-logo.png"></p>
-                        <form>
-                            <div class="list">
-                                <ul>
-                                    <li class="item-content item-input">
-                                        <div class="item-inner">
-                                            <div class="item-title item-label">{{_t 'Username'}}</div>
-                                            <div class="item-input-wrap">
-                                                <input type="text" name="username" placeholder="{{_t 'Username'}}" autocomplete="new-password">
-                                                <span class="input-clear-button"></span>
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li class="item-content item-input">
-                                        <div class="item-inner">
-                                            <div class="item-title item-label">{{_t 'Password'}}</div>
-                                            <div class="item-input-wrap">
-                                                <input type="password" name="password" placeholder="{{_t 'Password'}}" autocomplete="new-password">
-                                                <span class="input-clear-button"></span>
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li class="item-content item-input">
-                                        <div class="item-input-wrap mt15">
-                                            <a href="#" class="button button-raised button-fill">{{_t 'Login'}}</a>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="list">
-                              <div class="block-footer">{{_t 'version'}} <span class="version">-</span></div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    </script>
 </body>
 </html>

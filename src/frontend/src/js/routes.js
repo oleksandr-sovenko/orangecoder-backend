@@ -1,20 +1,43 @@
-import DashboardPage from '../pages/dashboard.f7.html';
-import ProgrammingPage from '../pages/programming.f7.html';
-import SettingsPage from '../pages/settings.f7.html';
-import StoragePage from '../pages/storage.f7.html';
+import dashboardPage   from '../pages/dashboard.f7.html';
+import programmingPage from '../pages/programming.f7.html';
+import settingsPage    from '../pages/settings.f7.html';
+import storagePage     from '../pages/storage.f7.html';
+
 
 var routes = [{
-        path: '/',
-        component: DashboardPage,
+        name: 'dashboard',
+        path: '/dashboard',
+        component: dashboardPage,
     }, {
-        path: '/storage/',
-        component: StoragePage,
+        name: 'storage',
+        path: '/storage',
+        async: function(routeTo, routeFrom, resolve, reject) {
+            var self = this,
+                app  = self.app;
+
+            //app.dialog.preloader(app.methods.i18n('Loading ...'));
+            app.methods.getFiles('/', function(response, status, xhr) {
+                resolve({ component: storagePage }, { context: { storage: { path: [], files: response } }});
+                //app.dialog.close();
+            });
+        }
     }, {
-        path: '/programming/',
-        component: ProgrammingPage,
+        name: 'programming',
+        path: '/programming',
+        async: function(routeTo, routeFrom, resolve, reject) {
+            var self = this,
+                app  = self.app;
+
+            //app.dialog.preloader(app.methods.i18n('Loading ...'));
+            app.methods.getAlgorithms(function(response, status, xhr) {
+                resolve({ component: programmingPage }, { context: { programming: { algorithms: response } }});
+                //app.dialog.close();
+            });
+        }
     }, {
-        path: '/settings/',
-        component: SettingsPage,
+        name: 'settings',
+        path: '/settings',
+        component: settingsPage,
     },
 ];
 

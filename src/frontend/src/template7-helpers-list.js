@@ -5,4 +5,4 @@
   For example:
   module.exports = ['custom-helper', 'formatDate'];
 */
-module.exports = ['e_price', 'e_pins', '_t'];
+module.exports = ['echoDateTime', 'e_pins', '_t'];

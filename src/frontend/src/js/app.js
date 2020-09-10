@@ -16,12 +16,14 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-import $$ from 'dom7';
-import Template7 from 'template7';
-import Framework7 from 'framework7/framework7.esm.bundle.js';
 import 'framework7/css/framework7.bundle.css';
+
+
+import $$                    from 'dom7';
+import Template7             from 'template7';
+import Framework7            from 'framework7/framework7.esm.bundle.js';
 import ReconnectingWebSocket from 'reconnecting-websocket';
-import { Base64 as base64 } from 'js-base64';
+import { Base64 as base64 }  from 'js-base64';
 
 /**
  *
@@ -33,17 +35,18 @@ import '../css/app.less';
 /**
  *
  */
+import              './helpers.js';
+import moment  from 'moment-timezone';
 import routes  from './routes.js';
-import './helpers.js';
-import ace from 'ace-builds'
-import 'ace-builds/webpack-resolver';
-import moment from 'moment-timezone';
+import ace     from 'ace-builds'
+import              'ace-builds/webpack-resolver';
 
 
-window.ace = ace
+window.ace    = ace
 window.base64 = base64
 
-var host = location.host;
+
+var host = '172.1.1.30'; // location.host;
 
 
 if (localStorage['timezone'] === undefined)
@@ -52,10 +55,15 @@ if (localStorage['language'] === undefined)
     localStorage['language'] = 'en';
 
 
+moment.locale(localStorage['language'].replace('ua', 'uk'));
+
+
 Template7.global = {
     locale: localStorage['language'],
     i18n: {
         'ua': {
+            'Error': 'Помилка',
+
             'Dashboard': 'Панель приладів',
             'Navigation': 'Навігація',
             'Action': 'Дія',
@@ -74,18 +82,11 @@ Template7.global = {
             'Username': 'І\'мя користувача',
             'Password': 'Пароль',
             'version': 'версія',
-            'Login': 'Авторизуватися',
+            'Sign In': 'Авторизуватися',
 
-            //'GPIO devices': 'GPIO пристрої',
             'Programming': 'Програмування',
             'Storage': 'Cховище',
             'Logout': 'Вихід',
-
-            //'List GPIO Devices': 'Список GPIO пристроїв',
-            //'Name': 'Назва',
-            //'Device': 'Пристрій',
-            //'Activity': 'Активність',
-
             'Date': 'Дата',
 
             'Editor': 'Редактор',
@@ -144,6 +145,8 @@ Template7.global = {
             'Reboot': 'Перезавантажити',
         },
         'ru': {
+            'Error': 'Ошибка',
+
             'Dashboard': 'Панель приборов',
             'Navigation': 'Навигация',
             'Action': 'Действие',
@@ -162,18 +165,11 @@ Template7.global = {
             'Username': 'Имя пользователя',
             'Password': 'Пароль',
             'version': 'версия',
-            'Login': 'Авторизироваться',
+            'Sign In': 'Авторизироваться',
 
-            //'GPIO devices': 'GPIO устройства',
             'Programming': 'Программирование',
             'Storage': 'Хранилище',
             'Logout': 'Выход',
-
-            //'List GPIO Devices': 'Список GPIO устройств',
-            //'Name': 'Название',
-            //'Device': 'Устройство',
-            //'Activity': 'Активность',
-
             'Date': 'Дата',
 
             'Editor': 'Редактор',
@@ -237,22 +233,24 @@ Template7.global = {
     },
 };
 
-var appPanel = Template7.compile($$('.template-app-pannel').html()),
-    appLoginScreen = Template7.compile($$('.template-app-login-screen').html());
 
-$$('#app').append(appPanel());
-$$('#app').append(appLoginScreen({ className: 'login-screen' }));
+var leftPanel   = Template7.compile($$('script#leftPanel').html()),
+    loginScreen = Template7.compile($$('script#loginScreen').html());
+
+
+$$('#app').append(loginScreen({ className: 'login-screen' })).append(leftPanel());
 
 
 /**
  *
  */
 var app = new Framework7({
-    root: '#app',
-    animate: false,
-    name: 'OrangeCoder',
-    version: '1.0.0 (20200830.1)',
-    theme: 'aurora',
+    root   : '#app',
+    name   : 'OrangeCoder',
+    version: '1.0.0 (20200909.1)',
+    theme  : 'aurora',
+
+    checkLogin: false,
 
     data: function () {
         return {
@@ -281,98 +279,134 @@ var app = new Framework7({
             return result !== undefined ? result : v;
         },
 
-        storage: {
-            files: function(path, callback) {
-                app.request.json(app.data.url + '/storage/list/' + path, { }, function(files, status, xhr) {
-                    app.data.storage.files = files;
-                    if (callback !== undefined)
-                        callback(files);
-                }, function(xhr, status) {
-                    if (callback !== undefined)
-                        callback(undefined);
-                });
-            },
+        ajax(method, path, data, success, error, complete) {
+            app.request({
+                url: app.data.url + path,
+                method: method,
+                dataType: 'json',
+                data: data,
+                success: function(result, status, xhr) {
+                    if (typeof success === 'function')
+                        success(result);
+                },
+                error: function(xhr, status) {
+                    if (typeof error === 'function')
+                        error();
+                },
+                complete: function(xhr, status) {
+                    if (typeof error === 'complete')
+                        complete();
+                }
+            });
         },
 
-        programming: {
-            algorithms: function(callback) {
-                app.request.json(app.data.url + '/algorithms', { }, function(algorithms, status, xhr) {
-                    app.data.programming.algorithms = algorithms;
-                    if (callback !== undefined)
-                        callback(algorithms);
-                }, function(xhr, status) {
-                    if (callback !== undefined)
-                        callback(undefined);
-                });
-            },
+        // Algorithms
+
+        getAlgorithms: function(success, error, complete) {
+            app.methods.ajax('GET', '/algorithms', { }, success, error, complete);
         },
 
-        device: function(callback) {
-            app.request.json(app.data.url + '/device', { }, function(device, status, xhr) {
-                app.data.device = device;
-                if (callback !== undefined)
-                    callback(device);
+        addAlgorithm: function(data, success, error, complete) {
+            app.methods.ajax('PUT', '/algorithm', data, success, error, complete);
+        },
+
+        updateAlgorithm: function(data, success, error, complete) {
+            app.methods.ajax('POST', '/algorithm/' + data.id, data, success, error, complete);
+        },
+
+        deleteAlgorithm: function(id, success, error, complete) {
+            app.methods.ajax('DELETE', '/algorithm/' + id, { }, success, error, complete);
+        },
+
+        runAlgorithm: function(id, success, error, complete) {
+            app.methods.ajax('POST', '/algorithm/run/' + id, { }, success, error, complete);
+        },
+
+        stopAlgorithm: function(id, success, error, complete) {
+            app.methods.ajax('POST', '/algorithm/stop/' + id, { }, success, error, complete);
+        },
+
+        runCode: function(data, success, error, complete) {
+            app.methods.ajax('POST', '/algorithm/runcode', data, success, error, complete);
+        },
+
+        stopCode: function(data, success, error, complete) {
+            app.methods.ajax('POST', '/algorithm/stopcode/' + data.id, { }, success, error, complete);
+        },
+
+        // Files
+
+        getFiles: function(path, success, error, complete) {
+            app.methods.ajax('GET', '/storage/list' + path, { }, success, error, complete);
+        },
+
+        addFile: function(data, success, error, complete) {
+            app.methods.ajax('PUT', '/algorithm', data, success, error, complete);
+        },
+
+        deleteFile: function(success, error, complete) {
+
+        },
+
+        getDevice: function(callback) {
+            app.methods.ajax('GET', '/device', { }, function(response, status, xhr) {
+                app.data.device = response;
+
+                if (typeof callback === 'function')
+                    callback(response);
             }, function(xhr, status) {
-                if (callback !== undefined)
+                if (typeof callback === 'function')
                     callback(undefined);
             });
         },
 
-        signin: function(data, callback) {
-            app.request.postJSON(app.data.url + '/signin', data, function(res, status, xhr) {
-                if (res.success) {
+        signIn: function(data, callback) {
+            app.methods.ajax('POST', '/signin', data, function(response, status, xhr) {
+                rws_stop();
+
+                if (response.success) {
                     app.request.setup({
                         headers: {
-                            'Backend-Authorization': res.data
+                            'Backend-Authorization': response.data
                         }
                     });
 
-                    localStorage['Backend-Authorization'] = res.data;
+                    if (app.panel.get('.panel-left') === undefined)
+                        app.panel.create({ el: '.panel-left', visibleBreakpoint: 960 });
 
+                    app.views.main.router.navigate('/dashboard', { animate: false });
+
+                    localStorage['Backend-Authorization'] = response.data;
                     app.loginScreen.close('.login-screen');
-
-                    if (callback !== undefined)
-                        callback(res.data);
-
-                    // app.methods.device();
-                    app.methods.programming.algorithms();
-                    app.methods.storage.files('');
 
                     rws_start();
                 } else {
                     if (data === undefined)
                         app.loginScreen.open('.login-screen');
                     else
-                        app.dialog.alert(res.msg, 'Error', function() { });
-
-                    if (callback !== undefined)
-                        callback(res.data);
-
-                    rws_stop();
+                        app.dialog.alert(response.msg, app.methods.i18n('Error'));
                 }
-            },function(xhr, status) {
-                if (callback !== undefined)
-                    callback(undefined);
+            }, function(status, xhr) {
+                app.dialog.alert(app.methods.i18n('Something went wrong'));
             });
         },
 
-        signout: function() {
-            app.request.postJSON(app.data.url + '/signout', {}, function(data, status, xhr) {
-                if (data.success) {
+        signOut: function() {
+            app.methods.ajax('POST', '/signout', {}, function(response, status, xhr) {
+                if (response.success) {
                     app.request.setup({
                         headers: { }
                     });
 
                     localStorage.removeItem('Backend-Authorization');
-
                     app.loginScreen.open('.login-screen');
-
-                    rws_stop();
                 } else {
-                    app.dialog.alert(data.msg, 'Error', function() { });
+                    app.dialog.alert(response.msg, app.methods.i18n('Error'));
                 }
-            },function(xhr, status) {
+            }, function(xhr, status) {
 
+            }, function(xhr, status) {
+                rws_stop();
             });
         }
     },
@@ -388,20 +422,10 @@ $$('.version').text(app.version);
 /**
  *
  */
-// $$(document).on('page:init', function(e) {
-//     $$('[data-' + app.data.lang + ']').each(function(i, e) {
-//         e.innerHTML = e.getAttribute('data-' + app.data.lang);
-//     });
-// })
-
-
-/**
- *
- */
 $$(document).on('click', '.login-screen .button', function() {
-    var data = app.form.convertToData('.login-screen form');
-
-    app.methods.signin(data);
+    app.methods.signIn(
+        app.form.convertToData('.login-screen form')
+    );
 });
 
 
@@ -409,7 +433,7 @@ $$(document).on('click', '.login-screen .button', function() {
  *
  */
 $$(document).on('click', '.signout', function() {
-    app.methods.signout();
+    app.methods.signOut();
 });
 
 
@@ -419,7 +443,8 @@ $$(document).on('click', '.signout', function() {
 if (localStorage['Backend-Authorization'] !== undefined) {
     app.request.setup({
         headers: {
-            'Backend-Authorization': localStorage['Backend-Authorization']
+            'Backend-Authorization': localStorage['Backend-Authorization'],
+            'Locale': localStorage['language']
         }
     });
 }
@@ -428,7 +453,7 @@ if (localStorage['Backend-Authorization'] !== undefined) {
 /**
  *
  */
-app.methods.signin();
+app.methods.signIn();
 
 
 /**
@@ -460,19 +485,20 @@ function rws_start() {
     window.rws = new ReconnectingWebSocket('ws://' + host + '/'+ localStorage['Backend-Authorization']);
 
     window.rws.addEventListener('open', function(e) {
-        console.log('open');
         app.dialog.close();
+
+        if (app.params.checkLogin) {
+            app.params.checkLogin = false;
+            app.methods.signIn();
+        }
     });
 
     window.rws.addEventListener('error', function(e) {
-        console.log('error');
-        app.dialog.preloader('Connecting ...')
-    });
+        app.params.checkLogin = true;
 
-    // window.rws.addEventListener('close', function(e) {
-    //     console.log('close');
-    //     app.dialog.preloader('Connecting ...')
-    // });
+        if (!$$('.dialog.dialog-preloader.modal-in').length)
+            app.dialog.preloader('Connecting ...')
+    });
 
     window.rws.addEventListener('message', function(msg) {
         try { msg = JSON.parse(msg.data); } catch(e) { msg = {}; }
@@ -532,7 +558,12 @@ function rws_start() {
             }
 
             $$('.info-network').html(html_network);
-            $$('.info-uptime').html(moment.utc(msg.data.uptime * 1000).format('HH:mm:ss'));
+            if (parseInt(msg.data.uptime) > 86400)
+                $$('.info-uptime').html(`${moment.utc(msg.data.uptime * 1000).add(-1, 'days')
+                    .format('D')} day(s) ${moment.utc(msg.data.uptime * 1000).format('HH:mm:ss')}`);
+            else
+                $$('.info-uptime').html(`${moment.utc(msg.data.uptime * 1000)
+                    .format('HH:mm:ss')}`);
         }
 
 
@@ -555,4 +586,3 @@ function rws_start() {
         }
     });
 }
-

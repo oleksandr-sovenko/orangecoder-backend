@@ -1,3 +1,4 @@
+import moment    from 'moment';
 import Template7 from 'template7';
 
 
@@ -15,6 +16,14 @@ Template7.registerHelper('_t', function(v) {
     }
 
     return result !== undefined ? result : v;
+});
+
+
+/** Test helper
+ *
+ */
+Template7.registerHelper('echoDateTime', function(v, f) {
+    return moment(v).format(f);
 });
 
 

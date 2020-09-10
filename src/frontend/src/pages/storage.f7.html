@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -->
 
+
 <template>
     <div class="page" data-name="storage">
         <div class="navbar">
@@ -81,12 +82,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                                     <td class="label-cell" width="100%" @click="clickItem">{{name}}</td>
                                     <td class="label-cell" nowrap @click="clickItem">
                                         {{#js_if ' this.name != ".." '}}
-                                            {{date}}
+                                            {{echoDateTime updated_at 'lll'}}
                                         {{/js_if}}
                                     </td>
                                     <td class="label-cell text-align-right" nowrap @click="clickItem">
                                         {{#js_if ' this.name != ".." '}}
-                                            {{size}}
+                                            {{#js_if ' this.type == "dir" '}}
+                                                &lt;DIR&gt;
+                                            {{else}}
+                                                {{size}}
+                                            {{/js_if}}
                                         {{/js_if}}
                                     </td>
                                     <td class="actions-cell" nowrap>
@@ -109,18 +114,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     </div>
 </template>
 
+
 <script>
 export default {
     style: `
-        .fm-item {
+        .page[data-name="storage"] .fm-item {
             cursor: pointer;
         }
 
-        .fm-item .material-icons {
+        .page[data-name="storage"] .fm-item .material-icons {
             color: var(--f7-theme-color);
         }
 
-        input[type="file"] {
+        .page[data-name="storage"] input[type="file"] {
             display: none;
         }
     `,
@@ -191,37 +197,6 @@ export default {
                     self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
                 },
             });
-
-            // const self = this,
-            //       reader = new FileReader(),
-            //       file   = el.target.files[0],
-            //       path   = self.storage.path.join('/') + '/' + file.name;
-
-            // reader.readAsDataURL(file);
-            // reader.onload = function() {
-            //     const content = reader.result;
-
-            //     self.$app.dialog.preloader('Uploading ...')
-            //     self.$app.request({
-            //         url: self.$app.data.url + '/storage/file/' + path,
-            //         //contentType: 'text/plain',
-            //         method: 'PUT',
-            //         dataType: 'json',
-            //         data: content,
-            //         success: function(data, status, xhr) {
-            //             self.$app.dialog.close();
-            //             self.refreshList();
-            //         },
-            //         error: function(xhr, status) {
-            //             self.$app.dialog.close();
-            //             self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
-            //         }
-            //     });
-
-            // };
-            // reader.onerror = function(error) {
-            //      console.log('Error: ', error);
-            // };
         },
 
         addDirectory() {
@@ -247,15 +222,6 @@ export default {
                 self.storage.files = files;
                 self.$update();
             });
-        }
-    },
-
-    data: function() {
-        return {
-            storage: {
-                path: [],
-                files: this.$app.data.storage.files
-            }
         }
     },
 };

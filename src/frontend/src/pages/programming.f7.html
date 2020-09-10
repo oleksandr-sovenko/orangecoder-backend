@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -->
 
+
 <template>
     <div class="page" data-name="programming">
         <div class="navbar">
@@ -30,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 </div>
                 <div class="title">{{_t 'Programming'}}</div>
                 <div class="right">
-                    <a href="#" class="link" @click="openConsole">
+                    <a href="#" class="link link-open-console">
                         <i class="material-icons">airplay</i>
                     </a>
                 </div>
@@ -45,7 +46,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                     <div class="data-table-links">
                     </div>
                     <div class="data-table-actions">
-                        <a class="link" @click="openPopup('.popup-add-algorithm', null, 'addAlgorithm')">
+                        <a class="link link-add-algorithm">
                             <i class="material-icons">code</i>&nbsp;&nbsp;{{_t 'Add'}}
                         </a>
                     </div>
@@ -74,18 +75,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                                     </td>
                                     <td class="actions-cell" nowrap>
                                         {{#if running}}
-                                            <a class="link icon-only" @click="stopAlgorithm">
+                                            <a class="link link-stop-algorithm icon-only" click111="stopAlgorithm">
                                                 <i class="material-icons">stop</i>
                                             </a>
                                         {{else}}
-                                            <a class="link icon-only" @click="runAlgorithm">
+                                            <a class="link link-run-algorithm icon-only">
                                                 <i class="material-icons">play_arrow</i>
                                             </a>
                                         {{/if}}
-                                        <a class="link icon-only {{js 'this.running ? "disabled" : ""'}}" @click="openPopup('.popup-edit-algorithm', '{{id}}', 'editAlgorithm')">
+                                        <a class="link link-edit-algorithm icon-only {{js 'this.running ? "disabled" : ""'}}">
                                             <i class="material-icons">edit</i>
                                         </a>
-                                        <a class="link icon-only {{js 'this.running ? "disabled" : ""'}}" @click="removeAlgorithm">
+                                        <a class="link link-delete-algorithm icon-only {{js 'this.running ? "disabled" : ""'}}">
                                             <i class="material-icons">delete</i>
                                         </a>
                                     </td>
@@ -221,210 +222,86 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
     </div>
 </template>
 
+
 <script>
 export default {
     style: `
-        .icon-cell .material-icons {
+        .page[data-name="programming"] .icon-cell .material-icons {
             color: var(--f7-theme-color);
             margin-top: 5px;
         }
     `,
-    methods: {
-        /**
-         *
-         */
-        openConsole: function(el) {
-            var self = this;
+    mounted() {
+        const self = this,
+              $$   = self.$$,
+              app  = self.$app,
+              page = self.$el;
 
-            self.$app.request({
-                url: self.$app.data.url + '/console',
-                contentType: 'application/json',
-                method: 'GET',
-                dataType: 'json',
-                success: function(data, status, xhr) {
-                    var html = '';
+        page.on('click', '.link-open-console', function() {
+            app.methods.ajax('GET', '/console', { }, function(data, status, xhr) {
+                var html = '';
 
-                    for (var i in data)
-                        html += '<p class="text-color-gray">PROC' + data[i].process.pid + ', ' + data[i].message + '</p>';
+                for (var i in data)
+                    html += '<p class="text-color-gray">PROC' + data[i].process.pid + ', ' + data[i].message + '</p>';
 
-                    self.$$('.popup-console .console').html(html).scrollTop(999999);;
-                    self.$app.popup.open('.popup-console');
-                }
+                $$('.popup-console .console').html(html).scrollTop(999999);;
+                app.popup.open('.popup-console');
             });
-        },
+        });
 
+        page.on('click', '.link-add-algorithm', function() {
+            self.openPopup('.popup-add-algorithm', null, 'addAlgorithm');
+        });
 
-        /**
-         *
-         */
-        runAlgorithm: function(el) {
-            var self = this,
-                id = self.$$(el.target).closest('tr').data('id');
+        page.on('click', '.link-edit-algorithm', function() {
+            var id = $$(this).closest('tr').data('id');
 
-            self.$app.request({
-                url: self.$app.data.url + '/algorithm/run/' + id,
-                contentType: 'application/json',
-                method: 'POST',
-                dataType: 'json',
-                success: function(data, status, xhr) {
-                    self.$app.methods.programming.algorithms(function(algorithms) {
-                        self.programming.algorithms = algorithms;
-                        self.$update();
-                    });
-                }
-            });
-        },
+            self.openPopup('.popup-edit-algorithm', id, 'updateAlgorithm');
+        });
 
+        page.on('click', '.link-delete-algorithm', function() {
+            var id = $$(this).closest('tr').data('id');
 
-        /**
-         *
-         */
-        stopAlgorithm: function(el) {
-            var self = this,
-                id = self.$$(el.target).closest('tr').data('id');
-
-            self.$app.request({
-                url: self.$app.data.url + '/algorithm/stop/' + id,
-                contentType: 'application/json',
-                method: 'POST',
-                dataType: 'json',
-                success: function(data, status, xhr) {
-                    self.$app.methods.programming.algorithms(function(algorithms) {
-                        self.programming.algorithms = algorithms;
-                        self.$update();
-                    });
-                }
-            });
-        },
-
-
-        /**
-         *
-         */
-        removeAlgorithm: function(el) {
-            var self = this,
-                id = this.$$(el.target).closest('tr').data('id');
-
-            self.$app.dialog.confirm('Remove algorithm ' + id + '?', 'Delete', function() {
-                self.$app.request({
-                    url: self.$app.data.url + '/algorithm/' + id,
-                    contentType: 'application/json',
-                    method: 'DELETE',
-                    dataType: 'json',
-                    success: function(data, status, xhr) {
-                        self.$app.methods.programming.algorithms(function(algorithms) {
-                            self.programming.algorithms = algorithms;
-                            self.$update();
-                        });
-                    }
+            app.dialog.confirm('Remove algorithm ' + id + '?', 'Delete', function() {
+                app.methods.deleteAlgorithm(id, function(data, status, xhr) {
+                    self.getAlgorithms();
                 });
             });
-        },
+        });
 
+        page.on('click', '.link-run-algorithm', function() {
+            var id = $$(this).closest('tr').data('id');
 
-        /**
-         *
-         */
-        addAlgorithm: function(data, popup) {
-            var self = this;
+            app.methods.runAlgorithm(id, function(data, status, xhr) {
+                self.getAlgorithms();
+            });
+        });
 
-            self.$app.request({
-                url: self.$app.data.url + '/algorithm',
-                data: data,
-                contentType: 'application/json',
-                method: 'PUT',
-                dataType: 'json',
-                success: function(data, status, xhr) {
-                    if (data.success) {
-                        self.$app.methods.programming.algorithms(function(algorithms) {
-                            self.programming.algorithms = algorithms;
-                            self.$update();
+        page.on('click', '.link-stop-algorithm', function() {
+            var id = $$(this).closest('tr').data('id');
 
-                            if (popup !== undefined)
-                                self.$app.popup.close(popup);
-                        });
-                    } else {
-                        self.$app.dialog.alert(data.msg, 'Error');
-                    }
-                }
+            app.methods.stopAlgorithm(id, function(data, status, xhr) {
+                self.getAlgorithms();
+            });
+        });
+    },
+    methods: {
+        getAlgorithms() {
+            var self  = this,
+                app   = self.$app;
+
+            app.methods.getAlgorithms(function(data, status, xhr) {
+                self.programming.algorithms = data;
+                self.$update();
             });
         },
-
-
-        /**
-         *  Edit a device
-         */
-        editAlgorithm(data, popup) {
-            var self = this;
-
-            self.$app.request({
-                url: self.$app.data.url + '/algorithm/' + data.id,
-                data: data,
-                contentType: 'application/json',
-                method: 'POST',
-                dataType: 'json',
-                success: function(data, status, xhr) {
-                    if (data.success) {
-                        self.$app.methods.programming.algorithms(function(algorithms) {
-                            self.programming.algorithms = algorithms;
-                            self.$update();
-
-                            if (popup !== undefined)
-                                self.$app.popup.close(popup);
-                        });
-                    } else {
-                        self.$app.dialog.alert(data.msg, 'Error');
-                    }
-                }
-            });
-        },
-
-
-        /**
-         *
-         */
-        runCode(data, callback) {
-            var self = this;
-
-            self.$app.request({
-                url: self.$app.data.url + '/algorithm/runcode',
-                data: data,
-                contentType: 'application/json',
-                method: 'POST',
-                dataType: 'json',
-                success: function(data, status, xhr) {
-                    if (callback !== undefined)
-                        callback(data);
-                }
-            });
-        },
-
-
-        /**
-         *
-         */
-        stopCode(data, callback) {
-            var self = this;
-
-            self.$app.request({
-                url: self.$app.data.url + '/algorithm/stopcode/' + data.id,
-                data: data,
-                contentType: 'application/json',
-                method: 'POST',
-                dataType: 'json',
-                success: function(data, status, xhr) {
-                    if (callback !== undefined)
-                        callback(data);
-                }
-            });
-        },
-
 
         /**
          *  Open a popup
          */
         openPopup(class_name, id, method) {
-            var self = this,
+            var self  = this,
+                app   = self.$app,
                 popup = self.$$(self.$$(class_name)[0].cloneNode(true));
 
             popup.find('#editor').attr('id', 'editor-clone');
@@ -433,7 +310,7 @@ export default {
             popup.find('[href="#editor"]').attr('href', '#editor-clone');
             popup.find('[href="#console"]').attr('href', '#console-clone');
 
-            self.$app.popup.open(popup);
+            app.popup.open(popup);
 
             popup.on('popup:closed', function(e) {
                 popup.remove();
@@ -478,7 +355,7 @@ export default {
                     popup.find('.submit,.close').addClass('disabled');
                     popup.find('[href="#console-clone"]').click();
 
-                    self['runCode']({ code: base64.encode(editor.getValue()) }, function(response) {
+                    app.methods.runCode({ code: base64.encode(editor.getValue()) }, function(response, status, xhr) {
                         var id = response.data;
 
                         el.closest('.popup').find('.console').attr('data-algorithm-id', id);
@@ -491,7 +368,7 @@ export default {
                     popup.find('.submit,.close').removeClass('disabled');
                     popup.find('[href="#editor-clone"]').click();
 
-                    self['stopCode']({ id: el.attr('data-algorithm-id') }, function(response) {
+                    app.methods.stopCode({ id: el.attr('data-algorithm-id') }, function(response, status, xhr) {
                         console.log(response);
                     });
                 }
@@ -499,32 +376,30 @@ export default {
 
             popup.find('.submit').on('click', function() {
                 if (method !== undefined) {
-                    var data = self.$app.form.convertToData(popup.find('form'));
+                    var data = app.form.convertToData(popup.find('form'));
 
                     data.code = base64.encode(editor.getValue());
 
-                    self[method](data, popup);
+                    app.methods[method](data, function(response, status, xhr) {
+                        if (response.success) {
+                            self.getAlgorithms();
+                            app.popup.close(popup);
+                        } else
+                            app.dialog.alert(response.msg);
+                    });
                 }
             });
 
             popup.find('.close').on('click', function() {
                 if (editor.changes) {
-                    self.$app.dialog.confirm('Do you want to save the changes you made?', "Your changes will be lost if you don\'t save them.", function() {
+                    app.dialog.confirm('Do you want to save the changes you made?', "Your changes will be lost if you don\'t save them.", function() {
                         popup.find('.submit').click();
                     }, function() {
-                        self.$app.popup.close(popup);
+                        app.popup.close(popup);
                     });
                 } else
-                    self.$app.popup.close(popup);
+                    app.popup.close(popup);
             });
-        }
-    },
-
-    data: function() {
-        return {
-            programming: {
-                algorithms: this.$app.data.programming.algorithms
-            }
         }
     },
 };
