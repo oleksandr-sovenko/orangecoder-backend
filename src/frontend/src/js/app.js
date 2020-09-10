@@ -46,7 +46,7 @@ window.ace    = ace
 window.base64 = base64
 
 
-var host = '172.1.1.30'; // location.host;
+var host = location.host;
 
 
 if (localStorage['timezone'] === undefined)
