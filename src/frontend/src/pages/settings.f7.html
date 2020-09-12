@@ -196,75 +196,79 @@ export default {
             location.reload();
         });
 
+        page.on('click', '.button-upgrade', function() {
+            self.$$('.page-current input[type="file"]').click();
+        });
+
+        page.on('click', '.button-reboot', function() {
+            app.dialog.confirm(app.methods.i18n('Are you sure you want to reload the system?'), app.methods.i18n('Rebooting'), function() {
+                app.params.rebooting = true;
+
+                app.methods.reboot(function(data, status, xhr) {
+
+                }, function(status, xhr) {
+
+                });
+            });
+        });
+
         page.on('change', '[name="timezone"]', function() {
             const el = $$(this),
                   timezone = el.val();
 
-            self.$app.request({
-                url: self.$app.data.url + '/settings/timezone',
-                contentType: 'application/json',
-                method: 'POST',
-                dataType: 'json',
-                data: { timezone: timezone },
-                success: function(data, status, xhr) {
-                    localStorage['timezone'] = el.val();
-                    //self.$app.dialog.close();
-                    //self.refreshList();
-                },
-                error: function(xhr, status) {
-                    self.$app.dialog.close();
-                    self.$app.dialog.alert(xhr.status + ' ' + xhr.statusText);
-                }
-            });
-        });
+            app.methods.setTimezone({ timezone: timezone }, function(data, status, xhr) {
+                if (data.success) {
+                    app.notification.create({
+                        title: app.methods.i18n('Successfully'),
+                        text: data.msg,
+                        closeTimeout: 3000,
+                    }).open();
 
-        page.on('click', '.button-reboot', function() {
-            self.$app.request({
-                url: self.$app.data.url + '/management/reboot',
-                contentType: 'application/json',
-                method: 'POST',
-                dataType: 'json',
-                success: function(data, status, xhr) {
-                },
-                error: function(xhr, status) {
+                    localStorage['timezone'] = el.val();
+                } else {
+                    app.notification.create({
+                        title: app.methods.i18n('Error'),
+                        text: data.msg,
+                        closeTimeout: 3000,
+                    }).open();
                 }
+            }, function(status, xhr) {
+                app.notification.create({
+                    title: app.methods.i18n('Error'),
+                    text: xhr.status + ' ' + xhr.statusText,
+                    closeTimeout: 3000,
+                }).open();
             });
         });
 
         page.on('click', '.button-change-password', function() {
             const data = self.$app.form.convertToData('.form-change-password');
 
-            self.$app.request({
-                url: self.$app.data.url + '/settings/password',
-                contentType: 'application/json',
-                method: 'POST',
-                dataType: 'json',
-                data: data,
-                success: function(data, status, xhr) {
-                    if (data.success) {
-                        self.$app.dialog.alert(data.msg, 'Successfully', function() {
-                            self.$app.methods.signout();
-                        });
-                    } else {
-                        self.$app.notification.create({
-                            title: 'Error',
-                            text: data.msg,
-                            closeTimeout: 3000,
-                        }).open();
-                    }
-                },
-                error: function(xhr, status) {
-                    self.$app.notification.create({
-                        title: 'Error',
-                        text: xhr.status + ' ' + xhr.statusText,
+            app.methods.changePassword(data, function(data, status, xhr) {
+                if (data.success) {
+                    app.notification.create({
+                        title: app.methods.i18n('Successfully'),
+                        text: data.msg,
+                        closeTimeout: 3000,
+                    }).open();
+
+                    setTimeout(function() {
+                        app.methods.signout();
+                    }, 1000);
+                } else {
+                    app.notification.create({
+                        title: app.methods.i18n('Error'),
+                        text: data.msg,
                         closeTimeout: 3000,
                     }).open();
                 }
+            }, function(status, xhr) {
+                app.notification.create({
+                    title: app.methods.i18n('Error'),
+                    text: xhr.status + ' ' + xhr.statusText,
+                    closeTimeout: 3000,
+                }).open();
             });
-        });
-
-        page.on('click', '.button-upgrade', function() {
-            self.$$('.page-current input[type="file"]').click();
         });
 
         page.on('change', '[type="file"]', function() {

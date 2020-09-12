@@ -46,7 +46,7 @@ window.ace    = ace
 window.base64 = base64
 
 
-var host = location.host;
+var host = '172.1.1.30'; //location.host;
 
 
 if (localStorage['timezone'] === undefined)
@@ -79,8 +79,10 @@ Template7.global = {
             'CIDR': 'CIDR',
             'Mac Address': 'Mac адреса',
 
-            'Username': 'І\'мя користувача',
+            'Username': "І'мя користувача",
+            'Your Username': "Ваше і'мя користувача",
             'Password': 'Пароль',
+            'Your Password': "Ваш пароль",
             'version': 'версія',
             'Sign In': 'Авторизуватися',
 
@@ -143,6 +145,8 @@ Template7.global = {
             'System Reboot': 'Перезавантаження системи',
             'You can reboot the system if the board are working abnormally.': 'Ви можете перезавантажити систему, якщо плата працює ненормально.',
             'Reboot': 'Перезавантажити',
+            'Rebooting': 'Перезавантаження',
+            'Are you sure you want to reload the system?': 'Ви впевнені, що хочете перезавантажити систему?',
         },
         'ru': {
             'Error': 'Ошибка',
@@ -163,7 +167,9 @@ Template7.global = {
             'Mac Address': 'Mac адресс',
 
             'Username': 'Имя пользователя',
+            'Your Username': 'Ваше имя пользователя',
             'Password': 'Пароль',
+            'Your Password': "Ваш пароль",
             'version': 'версия',
             'Sign In': 'Авторизироваться',
 
@@ -226,6 +232,8 @@ Template7.global = {
             'System Reboot': 'Перезагрузка системы',
             'You can reboot the system if the board are working abnormally.': 'Вы можете перезагрузить систему, если плата работает ненормально.',
             'Reboot': 'Перезагрузить',
+            'Rebooting': 'Перезагрузка',
+            'Are you sure you want to reload the system?': 'Вы уверены, что хотите перезагрузить систему?',
         },
     },
     gpio: {
@@ -251,6 +259,7 @@ var app = new Framework7({
     theme  : 'aurora',
 
     checkLogin: false,
+    rebooting: false,
 
     data: function () {
         return {
@@ -298,6 +307,20 @@ var app = new Framework7({
                         complete();
                 }
             });
+        },
+
+        // Settings
+
+        reboot: function(success, error, complete) {
+            app.methods.ajax('POST', '/management/reboot', { }, success, error, complete);
+        },
+
+        setTimezone: function(data, success, error, complete) {
+            app.methods.ajax('POST', '/settings/timezone', data, success, error, complete);
+        },
+
+        changePassword: function(data, success, error, complete) {
+            app.methods.ajax('POST', '/settings/password', data, success, error, complete);
         },
 
         // Algorithms
@@ -485,6 +508,8 @@ function rws_start() {
     window.rws = new ReconnectingWebSocket('ws://' + host + '/'+ localStorage['Backend-Authorization']);
 
     window.rws.addEventListener('open', function(e) {
+        app.params.rebooting = false;
+
         app.dialog.close();
 
         if (app.params.checkLogin) {
@@ -497,7 +522,10 @@ function rws_start() {
         app.params.checkLogin = true;
 
         if (!$$('.dialog.dialog-preloader.modal-in').length)
-            app.dialog.preloader('Connecting ...')
+            if (app.params.rebooting)
+                app.dialog.preloader(app.methods.i18n('Rebooting') + ' ...');
+            else
+                app.dialog.preloader(app.methods.i18n('Connecting') + ' ...');
     });
 
     window.rws.addEventListener('message', function(msg) {
