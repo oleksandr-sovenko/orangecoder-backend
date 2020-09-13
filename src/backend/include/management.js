@@ -16,10 +16,11 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const { execSync }   = require('child_process'),
-      fs             = require('fs'),
-      CONFIG         = require('../config'),
-      { FILE, HASH } = require('./namespace');
+const   { execSync }   = require('child_process'),
+        fs             = require('fs'),
+        CONFIG         = require('../config'),
+        I18N           = require('./i18n'),
+        { FILE, HASH } = require('./namespace');
 
 
 async function routes(fastify, options) {
@@ -29,7 +30,7 @@ async function routes(fastify, options) {
     fastify.post('/management/reboot', async function(req, rep) {
         execSync('reboot');
 
-        return { success: true, msg: 'Successfully' };
+        return { success: true, msg: I18N.translate(locale, 'Successfully') };
     })
 
 
@@ -42,7 +43,7 @@ async function routes(fastify, options) {
         fs.writeFileSync('/tmp/upgrade', files['firmware'].data, 'binary');
         execSync('cd ' + CONFIG.dir.root + ' && tar xf /tmp/upgrade && reboot');
 
-        return { success: true, msg: 'Successfully' };
+        return { success: true, msg: I18N.translate(locale, 'Successfully') };
     })
 }
 

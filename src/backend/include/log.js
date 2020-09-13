@@ -1,5 +1,5 @@
 // log.js
-// Copyright (C) 2019 Oleksandr Sovenko (info@oleksandrsovenko.com)
+// Copyright (C) 2020 Oleksandr Sovenko (info@oleksandrsovenko.com)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License

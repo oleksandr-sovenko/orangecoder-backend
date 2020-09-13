@@ -16,11 +16,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const fs       = require('fs'),
-      CONFIG   = require('../config'),
-      SESSION  = require('./session'),
-      PROCESS  = require('./process'),
-      { HASH } = require('./namespace');
+const   fs       = require('fs'),
+        I18N     = require('./i18n'),
+        CONFIG   = require('../config'),
+        SESSION  = require('./session'),
+        PROCESS  = require('./process'),
+        { HASH } = require('./namespace');
 
 
 async function routes(fastify, options) {
@@ -48,8 +49,6 @@ async function routes(fastify, options) {
      *  @method   GET
      */
     fastify.get('/algorithms', async function(req, rep) {
-        // var files = fs.readdirSync(CONFIG.dir.algoritms);
-
         if (fs.existsSync(index)) {
             var algorithms = JSON.parse(fs.readFileSync(index, 'utf8'));
             for (var i in algorithms)
@@ -68,14 +67,16 @@ async function routes(fastify, options) {
      *  @method   PUT
      */
     fastify.put('/algorithm', async function(req, rep) {
+        const locale = req.headers['locale'];
+
         if (!SESSION.get(req.headers['backend-authorization']))
-            return { success: false, msg: 'Authorization required' };
+            return { success: false, msg: I18N.translate(locale, 'Authorization required') };
 
         if (req.body.title === null || req.body.description === null || req.body.code === null)
-            return { success: false, msg: 'Required fields: string(title), string(description), base64(code)' };
+            return { success: false, msg: I18N.translate(locale, 'Required fields are not filled'), fields: ['title', 'description', 'code'] };
 
         if (req.body.title === '')
-            return { success: false, msg: 'Title can\'t be empty' };
+            return { success: false, msg: I18N.translate(locale, "Title can't be empty") };
 
         var id = HASH.uuid4();
 
@@ -93,7 +94,7 @@ async function routes(fastify, options) {
         fs.writeFileSync(CONFIG.dir.algoritms + '/' + id, HASH.base64Decode(req.body.code));
         fs.writeFileSync(index, JSON.stringify(algorithms));
 
-        return { success: true, msg: 'Successfully' };
+        return { success: true, msg: I18N.translate(locale, 'Successfully') };
     });
 
 
@@ -105,7 +106,7 @@ async function routes(fastify, options) {
      */
     fastify.get('/algorithm/:id', async function(req, rep) {
         if (!SESSION.get(req.headers['backend-authorization']))
-            return { success: false, msg: 'Authorization required' };
+            return { success: false, msg: I18N.translate(locale, 'Authorization required') };
 
         if (fs.existsSync(index)) {
             var algorithms = JSON.parse(fs.readFileSync(index, 'utf8'));
@@ -133,11 +134,13 @@ async function routes(fastify, options) {
      *  @method   POST
      */
     fastify.post('/algorithm/:id', async function(req, rep) {
+        const locale = req.headers['locale'];
+
         if (!SESSION.get(req.headers['backend-authorization']))
-            return { success: false, msg: 'Authorization required' };
+            return { success: false, msg: I18N.translate(locale, 'Authorization required') };
 
         if (req.body.title === undefined || req.body.description === undefined || req.body.code === undefined)
-            return { success: false, msg: 'Required fields: string(title), string(description), base64(code)' };
+            return { success: false, msg: I18N.translate(locale, 'Required fields are not filled'), fields: ['title', 'description', 'code'] };
 
         if (fs.existsSync(index)) {
             var algorithms = JSON.parse(fs.readFileSync(index, 'utf8'));
@@ -153,12 +156,12 @@ async function routes(fastify, options) {
                     fs.writeFileSync(CONFIG.dir.algoritms + '/' + algorithms[i].id, HASH.base64Decode(req.body.code));
                     fs.writeFileSync(index, JSON.stringify(algorithms));
 
-                    return { success: true, msg: 'Successfully' }
+                    return { success: true, msg: I18N.translate(locale, 'Successfully') };
                 }
             }
         }
 
-        return { success: false, msg: 'Failure' }
+        return { success: false, msg: I18N.translate(locale, 'Something went wrong') };
     });
 
 
@@ -169,8 +172,10 @@ async function routes(fastify, options) {
      *  @method   DELETE
      */
     fastify.delete('/algorithm/:id', async function(req, rep) {
+        const locale = req.headers['locale'];
+
         if (!SESSION.get(req.headers['backend-authorization']))
-            return { success: false, msg: 'Authorization required' };
+            return { success: false, msg: I18N.translate(locale, 'Authorization required') };
 
         if (fs.existsSync(index)) {
             var algorithms = JSON.parse(fs.readFileSync(index, 'utf8')),
@@ -191,7 +196,7 @@ async function routes(fastify, options) {
             fs.writeFileSync(index, JSON.stringify(filter));
         }
 
-        return { success: true, msg: 'Successfully' }
+        return { success: true, msg: I18N.translate(locale, 'Successfully') }
     });
 
 
@@ -202,8 +207,10 @@ async function routes(fastify, options) {
      *  @method   POST
      */
     fastify.post('/algorithm/run/:id', async function(req, rep) {
+        const locale = req.headers['locale'];
+
         if (!SESSION.get(req.headers['backend-authorization']))
-            return { success: false, msg: 'Authorization required' };
+            return { success: false, msg: I18N.translate(locale, 'Authorization required') };
 
         if (fs.existsSync(index)) {
             var algorithms = JSON.parse(fs.readFileSync(index, 'utf8')),
@@ -217,12 +224,12 @@ async function routes(fastify, options) {
 
                     fs.writeFileSync(index, JSON.stringify(algorithms));
 
-                    return { success: true, msg: 'Successfully' };
+                    return { success: true, msg: I18N.translate(locale, 'Successfully') };
                 }
             }
         }
 
-        return { success: false, msg: '' };
+        return { success: false, msg: I18N.translate(locale, 'Something went wrong') };
     });
 
 
@@ -233,8 +240,10 @@ async function routes(fastify, options) {
      *  @method   POST
      */
     fastify.post('/algorithm/stop/:id', async function(req, rep) {
+        const locale = req.headers['locale'];
+
         if (!SESSION.get(req.headers['backend-authorization']))
-            return { success: false, msg: 'Authorization required' };
+            return { success: false, msg: I18N.translate(locale, 'Authorization required') };
 
         if (fs.existsSync(index)) {
             var algorithms = JSON.parse(fs.readFileSync(index, 'utf8')),
@@ -248,12 +257,12 @@ async function routes(fastify, options) {
 
                     fs.writeFileSync(index, JSON.stringify(algorithms));
 
-                    return { success: true, msg: 'Successfully' };
+                    return { success: true, msg: I18N.translate(locale, 'Successfully') };
                 }
             }
         }
 
-        return { success: false, msg: '' };
+        return { success: false, msg: I18N.translate(locale, 'Something went wrong') };
     });
 
 
@@ -262,11 +271,13 @@ async function routes(fastify, options) {
      *
      */
     fastify.post('/algorithm/runcode', async function(req, rep) {
+        const locale = req.headers['locale'];
+
         if (!SESSION.get(req.headers['backend-authorization']))
-            return { success: false, msg: 'Authorization required' };
+            return { success: false, msg: I18N.translate(locale, 'Authorization required') };
 
         if (req.body.code === undefined)
-            return { success: false, msg: 'Required fields: base64(code)' };
+            return { success: false, msg: I18N.translate(locale, 'Required fields are not filled'), fields: ['code'] };
 
         var id = 'temp-' + HASH.uuid4(),
             session_id = req.headers['backend-authorization'];
@@ -279,7 +290,7 @@ async function routes(fastify, options) {
         // Execute new one
         PROCESS.run(id, req.headers['backend-authorization']);
 
-        return { success: true, msg: 'Successfully', data: id };
+        return { success: true, msg: I18N.translate(locale, 'Successfully'), data: id };
     });
 
 
@@ -288,8 +299,10 @@ async function routes(fastify, options) {
      *
      */
     fastify.post('/algorithm/stopcode/:id', async function(req, rep) {
+        const locale = req.headers['locale'];
+
         if (!SESSION.get(req.headers['backend-authorization']))
-            return { success: false, msg: 'Authorization required' };
+            return { success: false, msg: I18N.translate(locale, 'Authorization required') };
 
         var id = req.params.id;
 
@@ -301,7 +314,7 @@ async function routes(fastify, options) {
 
         }
 
-        return { success: true, msg: 'Successfully' };
+        return { success: true, msg: I18N.translate(locale, 'Successfully') };
     });
 }
 

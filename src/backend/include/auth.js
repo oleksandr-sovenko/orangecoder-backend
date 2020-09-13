@@ -17,6 +17,7 @@
 
 
 const fs      = require('fs'),
+      I18N    = require('./i18n'),
       CONFIG  = require('../config'),
       SESSION = require('./session'),
       { DATETIME, HASH } = require('./namespace');
@@ -24,19 +25,24 @@ const fs      = require('fs'),
 
 async function routes(fastify, options) {
     var credentials_json = CONFIG.dir.conf + '/credentials.json',
-        timezone_json = CONFIG.dir.conf + '/timezone.json';
+        timezone_json    = CONFIG.dir.conf + '/timezone.json';
 
 
     /**
      *
      */
     fastify.post('/settings/timezone', async function(req, rep) {
+        const locale = req.headers['locale'];
+
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: I18N.translate(locale, 'Authorization required') };
+
         if (req.body === null || req.body.timezone === null)
-            return { success: false, msg: 'Required fields: string(timezone)' };
+            return { success: false, msg: I18N.translate(locale, 'Required fields are not filled'), fields:['timezone'] };
 
         fs.writeFileSync(timezone_json, JSON.stringify({ 'timezone': req.body.timezone }));
 
-        return { success: true, msg: 'Successfully' };
+        return { success: true, msg: I18N.translate(locale, 'Successfully') };
     })
 
 
@@ -44,27 +50,31 @@ async function routes(fastify, options) {
      *
      */
     fastify.post('/settings/password', async function(req, rep) {
-        var credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8'));
+        const   credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8')),
+                locale      = req.headers['locale'];
+
+        if (!SESSION.get(req.headers['backend-authorization']))
+            return { success: false, msg: I18N.translate(locale, 'Authorization required') };
 
         if (req.body === null || req.body.password_current === null || req.body.password_new === null ||req.body.password_confirm === null)
-            return { success: false, msg: 'Required fields: string(password_current), string(password_new), string(password_confirm)' };
+            return { success: false, msg: I18N.translate(locale, 'Required fields are not filled'), fields: ['password_current', 'password_new', 'password_confirm'] };
 
         if (credentials.password !== HASH.md5(req.body.password_current))
-            return { success: false, msg: 'Wrong current password' };
+            return { success: false, msg: I18N.translate(locale, 'Wrong current password') };
 
         if (req.body.password_new === '')
-            return { success: false, msg: "New password can't be empty" };
+            return { success: false, msg: I18N.translate(locale, "New password can't be empty") };
 
         if (req.body.password_new !== req.body.password_confirm)
-            return { success: false, msg: 'Passwords do not match' };
+            return { success: false, msg: I18N.translate(locale, 'Passwords do not match') };
 
         fs.writeFileSync(credentials_json, JSON.stringify({ "username": "admin", "password": HASH.md5(req.body.password_new) }));
         credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8'))
 
         if (credentials.password === HASH.md5(req.body.password_new))
-            return { success: true, msg: 'Password changed' };
+            return { success: true, msg: I18N.translate(locale, 'Successfully') };
         else
-            return { success: false, msg: 'Something went wrong' };
+            return { success: false, msg: I18N.translate(locale, 'Something went wrong') };
     })
 
 
@@ -72,7 +82,8 @@ async function routes(fastify, options) {
      *
      */
     fastify.post('/signin', async function(req, rep) {
-        const credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8'));
+        const   credentials = JSON.parse(fs.readFileSync(credentials_json, 'utf8')),
+                locale      = req.headers['locale'];
 
         if (req.headers['backend-authorization'] !== undefined)
             session_id = req.headers['backend-authorization'];
@@ -80,17 +91,17 @@ async function routes(fastify, options) {
             session_id  = HASH.md5(Math.random());
 
         if (SESSION.get(session_id))
-            return { success: true, msg: 'Already authorized', data: session_id };
+            return { success: true, msg: I18N.translate(locale, 'Successfully'), data: session_id };
 
         if (req.body === null || req.body.username === null || req.body.password === null)
-            return { success: false, msg: 'Required fields: string(username), string(password)' };
+            return { success: false, msg: I18N.translate(locale, 'Required fields are not filled'), fields: ['username', 'password'] };
 
         if (credentials.username !== req.body.username || credentials.password !== HASH.md5(req.body.password))
-            return { success: false, msg: 'Wrong username or password' };
+            return { success: false, msg: I18N.translate(locale, 'Wrong username or password') };
 
         SESSION.set(session_id, {});
 
-        return { success: true, msg: 'Authorized successfully', data: session_id };
+        return { success: true, msg: I18N.translate(locale, 'Successfully'), data: session_id };
     })
 
 
@@ -98,7 +109,8 @@ async function routes(fastify, options) {
      *
      */
     fastify.post('/signout', async function(req, rep) {
-        var session_id = req.headers['backend-authorization'];
+        var session_id = req.headers['backend-authorization'],
+            locale     = req.headers['locale']
 
         if (!SESSION.get(session_id)) {
 
@@ -106,7 +118,7 @@ async function routes(fastify, options) {
             SESSION.unset(session_id);
         }
 
-        return { success: true, msg: 'Successfully' }
+        return { success: true, msg: I18N.translate(locale, 'Successfully') }
     })
 }
 

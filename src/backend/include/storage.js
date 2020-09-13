@@ -16,8 +16,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const CONFIG  = require('../config'),
-      { DIR, FILE, HASH } = require('./namespace');
+const   CONFIG              = require('../config'),
+        I18N                = require('./i18n'),
+        { DIR, FILE, HASH } = require('./namespace');
 
 
 async function routes(fastify, options) {
@@ -42,7 +43,7 @@ async function routes(fastify, options) {
 
         DIR.create(path);
 
-        return { success: true, msg: 'Successfully' };
+        return { success: true, msg: I18N.translate(locale, 'Successfully') };
     });
 
 
@@ -56,7 +57,7 @@ async function routes(fastify, options) {
 
         FILE.write(path, files['file'].data, 'binary');
 
-        return { success: true, msg: 'Successfully' };
+        return { success: true, msg: I18N.translate(locale, 'Successfully') };
     });
 
 
@@ -79,7 +80,7 @@ async function routes(fastify, options) {
         var path = req.params['*'];
 
         if (!FILE.exists(path))
-            return { success: false, msg: 'File or directory not exists' };
+            return { success: false, msg: I18N.translate(locale, 'File or directory not exists') };
 
         if (FILE.is(path) == 'dir')
             DIR.remove(path);

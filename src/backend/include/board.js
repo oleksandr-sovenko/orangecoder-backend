@@ -16,7 +16,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-const { execSync } = require('child_process');
+const   { execSync } = require('child_process'),
+        I18N         = require('./i18n');
 
 
 async function routes(fastify, options) {
@@ -53,7 +54,7 @@ async function routes(fastify, options) {
             }
         }
 
-        return { success: true, msg: 'Successfully', data: { gpio: gpio } }
+        return { success: true, msg: I18N.translate(locale, 'Successfully'), data: { gpio: gpio } }
     })
 }
 
