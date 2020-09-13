@@ -42,10 +42,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
                 <div class="card-content">
                     <div class="row">
                         <div class="col-40" style="padding: 15px;">
-                            <figure>{{device.scheme}}</figure>
+                            <figure class="image-scheme">{{device.scheme}}</figure>
                         </div>
                         <div class="col-60" style="padding: 15px;">
-                            <table width="100%" cellpadding="0" cellspacing="0">
+                            <table width="100%" cellpadding="0" cellspacing="0" class="table-scheme">
                                 <thead>
                                     <tr>
                                         <th>H2+</th>
@@ -234,7 +234,7 @@ export default {
                 app  = self.$app,
                 page = self.$el;
 
-        page.on('mouseover', 'circle[data-pin]', function() {
+        page.on('mouseover', '[data-pin]', function() {
             var el = $$(this),
                 pin = el.attr('data-pin');
 
@@ -244,6 +244,12 @@ export default {
         page.on('mouseout', '[data-pin]', function() {
             page.find('.pin').removeClass('pin-active');
         });
+
+        setTimeout(function() {
+            page.find('.image-scheme svg').attr('style', 'max-height: ' + page.find('.table-scheme').height() + 'px');
+
+            console.log(page.find('.table-scheme').height());
+        }, 300);
     }
 }
 </script>
