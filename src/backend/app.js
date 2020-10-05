@@ -131,7 +131,7 @@ if (process.argv[2] === 'vm') {
 		});
 
 		ipc.on('error', function(err) {
-			// console.log(err);
+			console.log(err);
 		});
 	// }
 

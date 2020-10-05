@@ -23,6 +23,7 @@ const	CONFIG       = require('../config'),
 		base64       = require('js-base64').Base64,
 		path         = require('path'),
 		uuid4        = require('uuid4'),
+		https        = require('https'),
 		moment       = require('moment'),
 		fastify      = require('fastify')({ logger: false }),
 		{ execSync } = require('child_process'),
@@ -35,62 +36,62 @@ const	CONFIG       = require('../config'),
 
 
 // namespace CLOUD {
-	var profileData = {};
+	// function cloudGetProfile(token, id, callback) {
+	// 	(async () => {
+	// 		try {
+	// 			const response = await got(CONFIG.url.cloud + '/api/profile/' + id, {
+	// 		    	responseType: 'json',
+	// 				headers: {
+	// 					'Authorization': token,
+	// 					'Status': 'none',
+	// 				},
+	// 			});
 
-	function cloudGetProfile(token, id, callback) {
-		(async () => {
-			try {
-				const response = await got(CONFIG.url.cloud + '/api/profile/' + id, {
-			    	responseType: 'json',
-					headers: {
-						'Authorization': token,
-						'Status': 'none',
-					},
-				});
+	// 			if (typeof callback === 'function')
+	// 				callback(response.body);
+	// 		} catch(err) {
+	// 			if (typeof callback === 'function')
+	// 				callback(undefined);
 
-				if (typeof callback === 'function')
-					callback(response.body);
-			} catch(err) {
-				if (typeof callback === 'function')
-					callback(undefined);
+	// 			LOG.append(err.stack);
+	// 		}
+	// 	})();
+	// }
 
-				LOG.append(err.stack);
-			}
-		})();
-	}
+	// function cloudGetProfileLoop(token, id) {
+	// 	cloudGetProfile(token, id, function(body) {
+	// 		try {
+	// 			if (body !== undefined && body.data !== undefined && body.data.id !== undefined && body.data.data !== undefined) {
+	// 				var profile = body.data.id,
+	// 					json    = body.data.data;
 
-	function cloudGetProfileLoop(token, id) {
-		cloudGetProfile(token, id, function(body) {
-			try {
-				if (body !== undefined && body.data !== undefined && body.data.id !== undefined && body.data.data !== undefined) {
-					var profile = body.data.id,
-						json    = body.data.data;
+	// 				if (profileData[profile] === undefined)
+	// 					profileData[profile] = {};
 
-					if (profileData[profile] === undefined)
-						profileData[profile] = {};
+	// 				for (var variable in json) {
+	// 					if (profileData[profile][variable] === undefined) {
+	// 						CLOUD.emit('data', variable, json[variable].value);
+	// 					} else {
+	// 						if (profileData[profile][variable] !== json[variable].value)
+	// 							CLOUD.emit('data', variable, json[variable].value);
+	// 					}
 
-					for (var variable in json) {
-						if (profileData[profile][variable] === undefined) {
-							CLOUD.emit('data', variable, json[variable].value);
-						} else {
-							if (profileData[profile][variable] !== json[variable].value)
-								CLOUD.emit('data', variable, json[variable].value);
-						}
+	// 					profileData[profile][variable] = json[variable].value;
+	// 				}
+	// 			}
+	// 		} catch(err) {
+	// 			LOG.append(err.stack);
+	// 		}
 
-						profileData[profile][variable] = json[variable].value;
-					}
-				}
-			} catch(err) {
-				LOG.append(err.stack);
-			}
-
-			setTimeout(function() {
-				cloudGetProfileLoop(token, id);
-			}, MATH.randInt(2, 4) * 1000);
-		});
-	}
+	// 		setTimeout(function() {
+	// 			cloudGetProfileLoop(token, id);
+	// 		}, MATH.randInt(2, 4) * 1000);
+	// 	});
+	// }
 
 	const CLOUD = new EventEmitter();
+	CLOUD.profileInfo = {};
+	CLOUD.profileData = {};
 	CLOUD.auth = function(token) {
 		if (!/^[a-z0-9]+$/.test(token)) {
 			CLOUD.emit('error', '"token" must have symbols only a-z and 0-9.');
@@ -103,7 +104,65 @@ const	CONFIG       = require('../config'),
 	};
 
 	CLOUD.listenProfile = function(id) {
-		cloudGetProfileLoop(CLOUD.token, id);
+		// cloudGetProfileLoop(CLOUD.token, id);
+
+		CLOUD.profileInfo[id] = { nextRun: true };
+
+		CLOUD.profileInfo[id].timer = setInterval(function() {
+			var pInfo   = CLOUD.profileInfo[id],
+				options = {
+    				headers: {
+	 					'Authorization': CLOUD.token,
+	 					'Status': 'none',
+    				}
+				};
+
+			if (pInfo.nextRun) {
+				pInfo.nextRun = false;
+				https.get(CONFIG.url.cloud + '/api/profile/' + id, options, function(res) {
+					res.on('data', function(body) {
+						try {
+							body = JSON.parse(body.toString());
+						} catch(e) {
+							body = undefined;
+						}
+
+						try {
+							if (body !== undefined && body.data !== undefined && body.data.id !== undefined && body.data.data !== undefined) {
+								var profile = body.data.id,
+									json    = body.data.data;
+
+								if (CLOUD.profileData[id] === undefined)
+									CLOUD.profileData[id] = {};
+
+								for (var variable in json) {
+									if (CLOUD.profileData[id][variable] === undefined) {
+										CLOUD.emit('data', variable, json[variable].value);
+									} else {
+										if (CLOUD.profileData[id][variable] !== json[variable].value)
+											CLOUD.emit('data', variable, json[variable].value);
+									}
+
+									CLOUD.profileData[id][variable] = json[variable].value;
+								}
+							}
+						} catch(err) {
+							LOG.append(err.stack);
+						}
+
+						setTimeout(function() {
+							pInfo.nextRun = true;
+						}, MATH.randInt(2, 4) * 1000);
+					});
+				}).on('error', function(e) {
+					console.log(e);
+
+					setTimeout(function() {
+						pInfo.nextRun = true;
+					}, MATH.randInt(2, 4) * 1000);
+				});
+			}
+		}, 1000);
 	};
 
 	CLOUD.getDevices = async function(callback) {
@@ -146,32 +205,26 @@ const	CONFIG       = require('../config'),
 	};
 
 	CLOUD.setProfile = async function(id, data, callback) {
-		// if (arguments.length == 2) {
-		// 	if (typeof id === 'string' && typeof callback === 'function') {
-				(async () => {
-					try {
-						const response = await got.post(CONFIG.url.cloud + '/api/profile/' + id, {
-					    	responseType: 'json',
-							headers: {
-								'Authorization': CLOUD.token,
-								'Status': 'none',
-							},
-							json: data
-						});
+		data = JSON.stringify(data);
 
-						if (typeof callback === 'function')
-							callback(response.body);
-					} catch(err) {
-						if (typeof callback === 'function')
-							callback(undefined);
+		const options = {
+  			hostname: CONFIG.url.cloud.replace('https://', ''),
+  			port: 443,
+  			path: '/api/profile/' + id,
+  			method: 'POST',
+  			headers: {
+				'Authorization': CLOUD.token,
+				'Status': 'none',
+    			'Content-Type': 'application/json',
+  			},
+		}
 
-						LOG.append(err.stack);
-					}
-				})();
-		// 	} else
-		// 	    throw new Error('CLOUD.getProfile: Argument have to be string and function!');
-		// } else
-		// 	throw new Error('CLOUD.getProfile: Too few arguments!');
+		const req = https.request(options)
+		// req.on('error', (error) => {
+		// 	// console.error(error);
+		// })
+		req.write(data);
+		req.end();
 	};
 
 	CLOUD.getProfile = async function(id, callback) {
@@ -432,7 +485,7 @@ const	CONFIG       = require('../config'),
 				try {
 					value = parseFloat(fs.readFileSync(filename).toString().replace(/.*t=/s, '').trim()) / 1000;
 				} catch(err) {
-					return null;					
+					return null;
 				}
 
 				return value;

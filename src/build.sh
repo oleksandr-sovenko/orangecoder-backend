@@ -30,10 +30,9 @@ node-gyp configure && node-gyp rebuild && \
 cp ${CWD}/backend-modules/core/build/Release/core.node \
    ${CWD}/../modules/core.node
 
-
 # build (frontend)
-#rm -rf ${CWD}/../public/*
-#cp -vR ${CWD}/frontend/www/* ${CWD}/../public
+rm -rf ${CWD}/../public/*
+cp -vR ${CWD}/frontend/www/* ${CWD}/../public
 
 
 # build (backend)

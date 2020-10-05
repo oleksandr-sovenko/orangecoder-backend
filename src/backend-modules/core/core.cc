@@ -97,6 +97,8 @@ void signalHandler(int signum) {
 			object.Set("pressure", bmp280Data->getPressure());
 			object.Set("temperature", bmp280Data->getTemperature());
 			object.Set("altitude", bmp280Data->getAltitude());
+
+			return object;
 		}
 
 		return env.Null();
@@ -125,7 +127,7 @@ void signalHandler(int signum) {
 	    }
 
 		Napi::Object object = Napi::Object::New(env);
-		object.Set(Napi::String::New(env, "data"),
+		object.Set(Napi::String::New(env, "getData"),
 			Napi::Function::New(env, BMP280_Data));
 
 		return object;
