@@ -155,8 +155,6 @@ const	CONFIG       = require('../config'),
 						}, MATH.randInt(2, 4) * 1000);
 					});
 				}).on('error', function(e) {
-					console.log(e);
-
 					setTimeout(function() {
 						pInfo.nextRun = true;
 					}, MATH.randInt(2, 4) * 1000);

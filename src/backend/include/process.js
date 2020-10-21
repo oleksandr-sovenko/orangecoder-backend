@@ -41,7 +41,7 @@ const PROCESS = {
             // console.log(e);
         }
 
-        var script = spawn(process.argv[0], [process.argv[1], 'vm', CONFIG.dir.algoritms + '/' + id]);
+        var script = spawn(process.argv[0], [process.argv[1], 'vm', CONFIG.dir.algoritms + '/' + id, '>', CONFIG.dir.log + '/' + id, '2>&1']);
 
         global.backend.process[id] = {
             session_id: session_id,
